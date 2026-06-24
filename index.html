@@ -1,0 +1,995 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Daily Energy Map</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0d1117;
+      --bg-soft: #151b25;
+      --bg-card: #1b2330;
+      --line: #2d3748;
+      --text: #edf2f7;
+      --muted: #a7b1c2;
+      --accent: #84dcc6;
+      --accent-2: #f6c177;
+      --good: #71e39b;
+      --warn: #ffd166;
+      --low: #ff7a7a;
+      --defined: #d7a4ff;
+      --transit: #84dcc6;
+      --both: #f6c177;
+      --shadow: 0 24px 80px rgba(0,0,0,.32);
+      --radius: 22px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 20% 0%, rgba(132,220,198,.16), transparent 34rem),
+        radial-gradient(circle at 90% 10%, rgba(246,193,119,.12), transparent 36rem),
+        var(--bg);
+      color: var(--text);
+    }
+
+    button, select, input {
+      font: inherit;
+      color: inherit;
+    }
+
+    button, select {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.04);
+      border-radius: 999px;
+      padding: .72rem 1rem;
+      cursor: pointer;
+      transition: border-color .2s, background .2s, transform .2s;
+    }
+
+    button:hover, select:hover {
+      border-color: var(--accent);
+      background: rgba(132,220,198,.08);
+      transform: translateY(-1px);
+    }
+
+    .app {
+      width: min(1440px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 48px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 22px;
+      align-items: stretch;
+      margin-bottom: 22px;
+    }
+
+    .panel, .hero-card {
+      border: 1px solid rgba(255,255,255,.08);
+      background: linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.025));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .hero-card {
+      padding: 30px;
+      min-height: 310px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .eyebrow {
+      color: var(--accent);
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      font-size: .78rem;
+      font-weight: 700;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+    h1 {
+      font-size: clamp(2.35rem, 5vw, 5rem);
+      line-height: .92;
+      letter-spacing: -.06em;
+      margin-bottom: 1.1rem;
+    }
+
+    .lead {
+      color: var(--muted);
+      font-size: clamp(1.05rem, 1.8vw, 1.35rem);
+      max-width: 62rem;
+      line-height: 1.55;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-top: 24px;
+    }
+
+    .score-card {
+      padding: 26px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .score-ring {
+      width: 190px;
+      height: 190px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      margin: 0 auto;
+      background: conic-gradient(var(--ring) calc(var(--score) * 10%), rgba(255,255,255,.07) 0);
+      position: relative;
+    }
+
+    .score-ring::before {
+      content: "";
+      position: absolute;
+      inset: 15px;
+      border-radius: inherit;
+      background: var(--bg-soft);
+    }
+
+    .score-ring strong {
+      position: relative;
+      font-size: 3.6rem;
+      letter-spacing: -.08em;
+    }
+
+    .score-ring span {
+      position: relative;
+      color: var(--muted);
+      align-self: end;
+    }
+
+    .date-line {
+      color: var(--muted);
+      text-align: center;
+      margin-bottom: 0;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(320px, .88fr) minmax(420px, 1.35fr) minmax(320px, .92fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      padding: 20px;
+      overflow: hidden;
+    }
+
+    .panel h2 {
+      font-size: 1rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 14px;
+    }
+
+    .profile-card {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .tag-row, .metric-row, .planet-grid, .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tag, .chip, .metric {
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.045);
+      border-radius: 999px;
+      padding: .45rem .72rem;
+      color: var(--muted);
+      font-size: .88rem;
+    }
+
+    .tag strong, .metric strong { color: var(--text); }
+    .metric { display: inline-flex; gap: 7px; align-items: center; }
+
+    .reading {
+      background: rgba(132,220,198,.08);
+      border: 1px solid rgba(132,220,198,.2);
+      border-radius: 18px;
+      padding: 16px;
+      line-height: 1.55;
+      color: #dceee9;
+      margin-bottom: 16px;
+    }
+
+    .dimension {
+      display: grid;
+      gap: 6px;
+      margin: 11px 0;
+    }
+
+    .dimension-head {
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: .92rem;
+    }
+
+    .bar {
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.07);
+      overflow: hidden;
+    }
+
+    .bar > i {
+      display: block;
+      height: 100%;
+      width: calc(var(--value) * 10%);
+      background: linear-gradient(90deg, var(--ring), var(--accent));
+      border-radius: inherit;
+    }
+
+    .bodygraph-wrap {
+      display: grid;
+      gap: 14px;
+    }
+
+    svg {
+      width: 100%;
+      height: auto;
+      display: block;
+      background: rgba(0,0,0,.14);
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.07);
+    }
+
+    .center-shape {
+      fill: rgba(255,255,255,.055);
+      stroke: rgba(255,255,255,.35);
+      stroke-width: 2;
+      cursor: pointer;
+    }
+
+    .center-shape.defined { fill: rgba(215,164,255,.58); stroke: rgba(215,164,255,.95); }
+    .channel-line { stroke: rgba(255,255,255,.13); stroke-width: 8; stroke-linecap: round; }
+    .channel-line.active-personal { stroke: rgba(215,164,255,.58); }
+    .channel-line.active-transit { stroke: rgba(132,220,198,.58); }
+    .channel-line.active-both { stroke: rgba(246,193,119,.78); }
+    .gate-dot { fill: #222b38; stroke: rgba(255,255,255,.38); stroke-width: 1.5; cursor: pointer; }
+    .gate-dot.personal { fill: var(--defined); stroke: #fff; }
+    .gate-dot.transit { fill: var(--transit); stroke: #fff; }
+    .gate-dot.both { fill: var(--both); stroke: #fff; }
+    .gate-label { fill: var(--text); font-size: 10px; font-weight: 700; pointer-events: none; text-anchor: middle; dominant-baseline: central; }
+    .center-label { fill: rgba(255,255,255,.72); font-size: 11px; font-weight: 700; pointer-events: none; text-anchor: middle; text-transform: uppercase; letter-spacing: .06em; }
+
+    .detail-box, .small-card {
+      border-radius: 16px;
+      background: rgba(255,255,255,.045);
+      border: 1px solid rgba(255,255,255,.08);
+      padding: 14px;
+      color: var(--muted);
+      line-height: 1.48;
+    }
+
+    .detail-box strong, .small-card strong { color: var(--text); }
+    .small-card { margin-bottom: 10px; }
+
+    .planet-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .planet {
+      border-radius: 14px;
+      background: rgba(255,255,255,.045);
+      padding: 10px;
+      border: 1px solid rgba(255,255,255,.08);
+    }
+
+    .planet b { display: block; font-size: .88rem; }
+    .planet span { color: var(--muted); font-size: .82rem; }
+
+    .penta-members {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .member-toggle {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      border: 1px solid rgba(255,255,255,.08);
+      padding: 10px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.035);
+      cursor: pointer;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    .member-toggle input { accent-color: var(--accent); }
+
+    .warning {
+      border-color: rgba(255,209,102,.28);
+      background: rgba(255,209,102,.08);
+    }
+
+    .footer {
+      color: var(--muted);
+      text-align: center;
+      margin: 22px 0 0;
+      font-size: .9rem;
+    }
+
+    @media (max-width: 1120px) {
+      .hero, .grid { grid-template-columns: 1fr; }
+      .score-card { order: -1; }
+    }
+
+    @media (max-width: 620px) {
+      .app { width: min(100% - 18px, 1440px); padding-top: 12px; }
+      .hero-card, .panel { padding: 16px; }
+      .planet-grid, .penta-members { grid-template-columns: 1fr; }
+      h1 { font-size: 2.55rem; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app" id="app"></main>
+
+  <script>
+    const BL = (de, en) => ({ de, en });
+    let lang = "de";
+    let dayIndex = 0;
+    let activeProfile = "daniel";
+    const pentaOn = { daniel: true, patrick: true, paradise: true };
+
+    const T = value => typeof value === "string" ? value : (value[lang] || value.de);
+    const clamp = (value, min = 0, max = 10) => Math.max(min, Math.min(max, value));
+    const norm = value => ((value % 360) + 360) % 360;
+    const today = () => {
+      const d = new Date();
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    };
+    const currentDate = () => {
+      const d = today();
+      d.setDate(d.getDate() + dayIndex);
+      return d;
+    };
+    const isoDate = date => date.toISOString().slice(0, 10);
+
+    const CENTER_LABELS = {
+      Head: BL("Kopf", "Head"),
+      Ajna: BL("Ajna", "Ajna"),
+      Throat: BL("Kehle", "Throat"),
+      G: BL("G-Zentrum", "G Center"),
+      Ego: BL("Ego", "Ego"),
+      Spleen: BL("Milz", "Spleen"),
+      Solar: BL("Solarplexus", "Solar Plexus"),
+      Sacral: BL("Sakral", "Sacral"),
+      Root: BL("Wurzel", "Root")
+    };
+
+    const DIMENSIONS = {
+      energy: { label: BL("Energie", "Energy"), weight: 1.18 },
+      intuition: { label: BL("Intuition", "Intuition"), weight: 1.08 },
+      expression: { label: BL("Ausdruck", "Expression"), weight: 1.02 },
+      clarity: { label: BL("Klarheit", "Clarity"), weight: 1.05 },
+      flow: { label: BL("Flow", "Flow"), weight: 1.02 },
+      nutrition: { label: BL("Ernaehrung", "Nutrition"), weight: .82 }
+    };
+
+    const PROFILES = {
+      daniel: {
+        id: "daniel",
+        name: "Daniel",
+        subtitle: BL("Person | schneller Koerper-Kompass", "Person | fast body compass"),
+        authority: BL("Sakrale Antwort", "Sacral response"),
+        strategy: BL("Auf das reagieren, was wirklich da ist", "Respond to what is actually present"),
+        definedCenters: ["Sacral", "G", "Throat", "Spleen"],
+        definedGates: [1, 2, 5, 7, 8, 10, 13, 14, 15, 16, 20, 23, 29, 31, 34, 43, 46, 48, 57, 62],
+        tone: BL("Konstant wird es, wenn der Koerper zuerst Ja oder Nein sagen darf.", "Consistency appears when the body can say yes or no first.")
+      },
+      patrick: {
+        id: "patrick",
+        name: "Patrick",
+        subtitle: BL("Person | ruhige Praezision", "Person | calm precision"),
+        authority: BL("Emotionale Klarheit", "Emotional clarity"),
+        strategy: BL("Druck nicht sofort beantworten", "Do not answer pressure immediately"),
+        definedCenters: ["Solar", "Ego", "Throat", "Root"],
+        definedGates: [6, 12, 21, 22, 26, 30, 35, 36, 37, 39, 40, 41, 45, 49, 51, 55, 60],
+        tone: BL("Klarheit entsteht ueber Wellen, nicht ueber Tempo.", "Clarity arrives through waves, not through speed.")
+      },
+      paradise: {
+        id: "paradise",
+        name: "Paradise Ventures",
+        subtitle: BL("Marke | Kommunikation als Entitaet", "Brand | communication as an entity"),
+        authority: BL("Marken-Autoritaet: Stimmigkeit + Timing", "Brand authority: coherence + timing"),
+        strategy: BL("Sichtbar werden, wenn Nutzen konkret ist", "Become visible when the value is concrete"),
+        definedCenters: ["G", "Throat", "Ajna"],
+        definedGates: [1, 4, 8, 11, 13, 17, 23, 24, 31, 33, 43, 47, 56, 62, 64],
+        tone: BL("Die Marke wirkt stark, wenn sie klare Sprache mit Orientierung verbindet.", "The brand is strongest when clear language carries orientation.")
+      }
+    };
+
+    const CENTER_DESCRIPTIONS = {
+      Head: BL("Hier entstehen Fragen, Bilder und mentaler Druck. Definiert heisst: eine konstante Art, Inspiration zu verarbeiten. Offen heisst: nicht jede Frage ist deine Aufgabe.", "Questions, images, and mental pressure start here. Defined means a consistent way of processing inspiration. Open means not every question is yours to solve."),
+      Ajna: BL("Dieses Zentrum sortiert, prueft und formuliert innere Modelle. Offen ist es beweglich; definiert hat es eine verlaessliche Denkspur.", "This center sorts, tests, and shapes inner models. Open is flexible; defined has a reliable thinking track."),
+      Throat: BL("Die Kehle bringt Energie in Worte, Handlung und Sichtbarkeit. Wenn sie aktiv ist, will etwas ausgedrueckt oder umgesetzt werden.", "The throat turns energy into words, action, and visibility. When it is active, something wants to be expressed or done."),
+      G: BL("Das G-Zentrum steht fuer Richtung, Identitaet und natuerliche Haltung. Definiert wirkt es wie ein innerer Kompass.", "The G center carries direction, identity, and natural stance. Defined, it acts like an inner compass."),
+      Ego: BL("Hier liegen Willenskraft, Versprechen und Ressourcensteuerung. Offen: keine Energie aus Beweisen machen. Definiert: klares Commitment zaehlt.", "Willpower, promises, and resource control live here. Open: do not turn proving into fuel. Defined: clear commitments matter."),
+      Spleen: BL("Die Milz meldet Koerper-Intuition, Sicherheit und Timing im Moment. Ihre Signale sind leise und schnell.", "The spleen signals body intuition, safety, and timing in the moment. Its signals are quiet and fast."),
+      Solar: BL("Das emotionale Zentrum faerbt Verbindung, Lust, Reibung und Klarheit. Gute Entscheidungen brauchen hier eine ganze Welle.", "The emotional center colors connection, desire, friction, and clarity. Good decisions here need a full wave."),
+      Sacral: BL("Das Sakral liefert Arbeitsenergie, Ausdauer und echte Resonanz. Es ist stark, wenn die Antwort aus dem Koerper kommt.", "The sacral provides work energy, stamina, and real resonance. It is strong when the answer comes from the body."),
+      Root: BL("Die Wurzel erzeugt Druck fuer Start, Tempo und Abschluss. Druck ist Information, nicht automatisch ein Auftrag.", "The root creates pressure to start, move, and finish. Pressure is information, not automatically a command.")
+    };
+
+    const PROFILE_CENTER_NOTES = {
+      daniel: {
+        Head: BL("Bei Daniel ist der Kopf offen: Inspiration kommt stark ueber Umfeld, Gesprache und Tageswetter. Gute Praxis: Fragen notieren, aber nicht jede sofort loesen.", "For Daniel the head is open: inspiration is strongly shaped by place, conversation, and the day. Good practice: note questions without solving every one immediately."),
+        Ajna: BL("Daniels Ajna bleibt beweglich. Er kann Muster schnell sehen, sollte aber nicht zu frueh eine Meinung festnageln, nur um sicher zu wirken.", "Daniel's ajna stays flexible. He can see patterns quickly, but should not lock an opinion too early just to appear certain."),
+        Throat: BL("Daniels Kehle ist definiert: Ausdruck hat eine konstante Spur. Wenn Koerperantwort und Anlass zusammenkommen, kann Sprache sehr direkt wirken.", "Daniel's throat is defined: expression has a consistent track. When body response and context align, language can land very directly."),
+        G: BL("Daniels G-Zentrum ist definiert und gibt Richtung ueber Haltung statt Argument. Ein stimmiger Ort und klare Werte machen ihn sofort praesenter.", "Daniel's G center is defined and gives direction through stance rather than argument. A coherent place and clear values make him immediately more present."),
+        Ego: BL("Daniels Ego ist offen. Commitments sollten klein, konkret und koerperlich richtig sein; Beweisenergie kostet mehr als sie bringt.", "Daniel's ego is open. Commitments should be small, concrete, and bodily correct; proving costs more than it gives."),
+        Spleen: BL("Daniels Milz ist definiert: leise Koerperintuition ist verlaesslich, aber schnell. Der erste Sicherheitsimpuls ist oft der klarste.", "Daniel's spleen is defined: quiet body intuition is reliable, but fast. The first safety signal is often the clearest."),
+        Solar: BL("Daniels Solarplexus ist offen. Er nimmt Stimmungen anderer stark wahr; emotionale Ladung ist Information, nicht automatisch seine Wahrheit.", "Daniel's solar plexus is open. He strongly picks up others' moods; emotional charge is information, not automatically his truth."),
+        Sacral: BL("Daniels Sakral ist definiert. Energie kommt ueber echte Reaktion, nicht ueber abstrakte Plaene; ein klares Ja macht ihn belastbar.", "Daniel's sacral is defined. Energy comes through real response, not abstract plans; a clear yes makes him durable."),
+        Root: BL("Daniels Wurzel ist offen. Druck von aussen kann Tempo vortaeuschen; gute Tage brauchen klare Stopps und Pausen.", "Daniel's root is open. Outside pressure can fake urgency; good days need clear stops and pauses.")
+      },
+      patrick: {
+        Head: BL("Patricks Kopf ist offen: Fragen koennen gross werden, wenn sie im Feld liegen. Er gewinnt, wenn er zwischen echter Vision und mentalem Laerm unterscheidet.", "Patrick's head is open: questions can become large when they are in the field. He gains by separating real vision from mental noise."),
+        Ajna: BL("Patricks Ajna ist offen und kann Perspektiven wechseln. Das ist stark fuer Beratung, aber schlecht fuer Entscheidungen unter Rechtfertigungsdruck.", "Patrick's ajna is open and can change perspectives. This is strong for advising, but poor for decisions under pressure to justify."),
+        Throat: BL("Patricks Kehle ist definiert. Seine Stimme wirkt besonders, wenn emotionale Klarheit bereits da ist und nicht waehrend der Welle gesucht wird.", "Patrick's throat is defined. His voice works best when emotional clarity is already present, not while the wave is still searching."),
+        G: BL("Patricks G-Zentrum ist offen. Richtung wird ueber Menschen und Orte verstaerkt; falsche Umgebungen fuehlen sich schnell wie falsche Identitaet an.", "Patrick's G center is open. Direction is amplified by people and places; wrong environments can quickly feel like wrong identity."),
+        Ego: BL("Patricks Ego ist definiert. Wenn er ein echtes Versprechen gibt, hat es Kraft; deshalb sollte jedes Ja ressourcenbewusst und eindeutig sein.", "Patrick's ego is defined. When he makes a real promise, it has force; every yes should therefore be resource-aware and explicit."),
+        Spleen: BL("Patricks Milz ist offen. Sicherheitsgefuehle koennen fremd oder alt sein; Koerpercheck und Realitaetspruefung gehoeren zusammen.", "Patrick's spleen is open. Safety feelings may be borrowed or old; body check and reality check belong together."),
+        Solar: BL("Patricks Solarplexus ist definiert. Klarheit reift ueber eine ganze emotionale Welle; sofortige Antworten verkuerzen seine Autoritaet.", "Patrick's solar plexus is defined. Clarity matures through a full emotional wave; immediate answers shorten his authority."),
+        Sacral: BL("Patricks Sakral ist offen. Konstante Arbeitsenergie ist nicht die Basis; er sollte Belastung rhythmisieren und Fremdenergie rechtzeitig ablegen.", "Patrick's sacral is open. Constant work energy is not the base; he should rhythmize load and put down borrowed energy early."),
+        Root: BL("Patricks Wurzel ist definiert. Druck kann produktiv kanalisiert werden, solange Abschluss nicht wichtiger wird als Klarheit.", "Patrick's root is defined. Pressure can be channeled productively as long as finishing does not outrank clarity.")
+      },
+      paradise: {
+        Head: BL("Bei Paradise Ventures ist der Kopf offen: Die Marke muss nicht jede Trendfrage beantworten. Staerke entsteht, wenn nur relevante Fragen aufgenommen werden.", "For Paradise Ventures the head is open: the brand does not need to answer every trend question. Strength appears when only relevant questions are taken in."),
+        Ajna: BL("Das Ajna der Marke ist definiert. Sie kann komplexe Themen sortieren und in wiedererkennbare Denkmodelle uebersetzen.", "The brand's ajna is defined. It can sort complex topics and translate them into recognizable thinking models."),
+        Throat: BL("Die Marken-Kehle ist definiert. Sichtbarkeit ist kein Extra, sondern Teil des Designs; Sprache muss konkret und nutzbar bleiben.", "The brand throat is defined. Visibility is not an add-on but part of the design; language must stay concrete and useful."),
+        G: BL("Das G-Zentrum der Marke ist definiert. Paradise Ventures wirkt stark, wenn Richtung, Aesthetik und Werte konsistent auftreten.", "The brand's G center is defined. Paradise Ventures is strongest when direction, aesthetics, and values appear consistently."),
+        Ego: BL("Das Marken-Ego ist offen. Angebote sollten nicht aus Beweislogik kommen, sondern aus klarem Nutzen und sauberer Ressourcensteuerung.", "The brand ego is open. Offers should not come from proving, but from clear value and clean resource control."),
+        Spleen: BL("Die Marken-Milz ist offen. Marktinstinkt entsteht ueber Menschen im Team; deshalb lohnt sich Feedback, bevor Risiken dramatisiert werden.", "The brand spleen is open. Market instinct comes through people in the team; feedback is useful before risks are dramatized."),
+        Solar: BL("Der Marken-Solarplexus ist offen. Kommunikation sollte Emotionen halten, ohne sich von Tagesstimmungen treiben zu lassen.", "The brand solar plexus is open. Communication should hold emotion without being driven by daily moods."),
+        Sacral: BL("Das Marken-Sakral ist offen. Die Marke hat keine konstante Arbeitsenergie; sie braucht Menschen mit echtem Ja fuer Umsetzung.", "The brand sacral is open. The brand has no constant work energy; it needs people with a real yes for implementation."),
+        Root: BL("Die Marken-Wurzel ist offen. Launch-Druck darf nicht die Botschaft verzerren; Deadlines muessen dem Sinn dienen.", "The brand root is open. Launch pressure must not distort the message; deadlines should serve meaning.")
+      }
+    };
+
+    const OPEN_CENTER_WARNINGS = {
+      Head: BL("Offener Kopf: Lass fremde Fragen durchziehen, bevor du sie zu deiner Agenda machst.", "Open head: let other people's questions pass before making them your agenda."),
+      Ajna: BL("Offenes Ajna: Du musst heute keine Meinung fixieren, nur weil jemand Sicherheit will.", "Open ajna: you do not need to lock an opinion just because someone wants certainty."),
+      Throat: BL("Offene Kehle: Sichtbarkeit funktioniert besser, wenn ein echter Anlass da ist.", "Open throat: visibility works better when there is a real reason."),
+      G: BL("Offenes G: Umgebung und Menschen koennen deinen Richtungssinn stark faerben.", "Open G: place and people can strongly color your sense of direction."),
+      Ego: BL("Offenes Ego: Nicht beweisen, nicht ueberversprechen, nicht aus Stolz handeln.", "Open ego: do not prove, overpromise, or act from pride."),
+      Spleen: BL("Offene Milz: Ein alter Sicherheitsimpuls ist nicht automatisch Wahrheit.", "Open spleen: an old safety signal is not automatically truth."),
+      Solar: BL("Offener Solarplexus: Nimm Stimmungen wahr, aber unterschreibe sie nicht sofort.", "Open solar plexus: notice moods, but do not sign them immediately."),
+      Sacral: BL("Offenes Sakral: Arbeite in Wellen und stoppe, bevor Fremdenergie dich ueberzieht.", "Open sacral: work in waves and stop before borrowed energy overextends you."),
+      Root: BL("Offene Wurzel: Druck darf da sein, ohne dass du sofort beschleunigst.", "Open root: pressure can be present without requiring immediate acceleration.")
+    };
+
+    const GATE_NAMES = {
+      1: BL("Kreativer Impuls", "Creative impulse"), 2: BL("Richtung", "Direction"), 3: BL("Ordnung aus Chaos", "Ordering chaos"),
+      4: BL("Antwort", "Answer"), 5: BL("Rhythmus", "Rhythm"), 6: BL("Reibung", "Friction"),
+      7: BL("Fuehrung", "Guidance"), 8: BL("Beitrag", "Contribution"), 9: BL("Fokus", "Focus"),
+      10: BL("Natuerliches Verhalten", "Natural behavior"), 11: BL("Ideen", "Ideas"), 12: BL("Stimme mit Timing", "Timed voice"),
+      13: BL("Zuhoren", "Listening"), 14: BL("Ressourcen", "Resources"), 15: BL("Takt", "Pace"),
+      16: BL("Faehigkeit", "Skill"), 17: BL("Meinung", "Opinion"), 18: BL("Korrektur", "Correction"),
+      19: BL("Beduerfnisse", "Needs"), 20: BL("Praesenz", "Presence"), 21: BL("Steuerung", "Control"),
+      22: BL("Offenheit", "Openness"), 23: BL("Erklaerung", "Explanation"), 24: BL("Rueckkehr", "Return"),
+      25: BL("Unschuld", "Innocence"), 26: BL("Einfluss", "Influence"), 27: BL("Fuersorge", "Care"),
+      28: BL("Risiko", "Risk"), 29: BL("Commitment", "Commitment"), 30: BL("Verlangen", "Desire"),
+      31: BL("Leitung", "Leadership"), 32: BL("Fortbestand", "Continuity"), 33: BL("Rueckzug", "Retreat"),
+      34: BL("Kraft", "Power"), 35: BL("Fortschritt", "Progress"), 36: BL("Erfahrung", "Experience"),
+      37: BL("Gemeinschaft", "Community"), 38: BL("Widerstand", "Opposition"), 39: BL("Funke", "Spark"),
+      40: BL("Grenze", "Boundary"), 41: BL("Vorstellung", "Imagination"), 42: BL("Abschluss", "Completion"),
+      43: BL("Einsicht", "Insight"), 44: BL("Muster", "Pattern memory"), 45: BL("Verteilung", "Stewardship"),
+      46: BL("Koerper-Glueck", "Embodied luck"), 47: BL("Sinn", "Meaning"), 48: BL("Tiefe", "Depth"),
+      49: BL("Prinzip", "Principle"), 50: BL("Werte", "Values"), 51: BL("Weckruf", "Wake-up"),
+      52: BL("Stille", "Stillness"), 53: BL("Start", "Start"), 54: BL("Ambition", "Ambition"),
+      55: BL("Stimmung", "Spirit"), 56: BL("Story", "Story"), 57: BL("Instinkt", "Instinct"),
+      58: BL("Vitalitaet", "Vitality"), 59: BL("Naehe", "Intimacy"), 60: BL("Grenze des Systems", "System limit"),
+      61: BL("Innere Wahrheit", "Inner truth"), 62: BL("Details", "Details"), 63: BL("Pruefung", "Doubt"),
+      64: BL("Bilder", "Images")
+    };
+
+    const DIMENSION_GATES = {
+      energy: [3, 5, 9, 14, 21, 27, 29, 34, 42, 53, 54, 58, 60],
+      intuition: [18, 28, 32, 44, 48, 50, 57, 61, 63, 64],
+      expression: [1, 8, 11, 12, 16, 20, 23, 31, 33, 35, 45, 56, 62],
+      clarity: [4, 6, 17, 22, 24, 30, 36, 37, 40, 47, 49],
+      flow: [2, 7, 10, 13, 15, 25, 39, 41, 46, 51, 55],
+      nutrition: [19, 26, 27, 50, 52, 59]
+    };
+
+    const focusByDimension = {
+      energy: BL("heute Koerperenergie sauber einsetzen", "using body energy cleanly today"),
+      intuition: BL("leise Koerpersignale ernst nehmen", "taking quiet body signals seriously"),
+      expression: BL("klar sagen, was wirklich reif ist", "saying clearly what is truly ripe"),
+      clarity: BL("Entscheidungen entwirren und Timing pruefen", "untangling decisions and checking timing"),
+      flow: BL("mit Richtung statt Druck bewegen", "moving with direction rather than pressure"),
+      nutrition: BL("Tempo, Essen und Aufnahme feiner steuern", "tuning pace, food, and intake")
+    };
+
+    const dimensionForGate = gate => {
+      for (const [dim, gates] of Object.entries(DIMENSION_GATES)) if (gates.includes(gate)) return dim;
+      return "flow";
+    };
+
+    const GATE_INFO = Object.fromEntries(Array.from({ length: 64 }, (_, i) => {
+      const gate = i + 1;
+      const dimension = dimensionForGate(gate);
+      return [gate, {
+        name: GATE_NAMES[gate],
+        center: null,
+        dimension,
+        description: BL(
+          `Tor ${gate} (${T(GATE_NAMES[gate])}) zeigt, wie ${T(focusByDimension[dimension])}. Es ist kein Charakterurteil, sondern ein Hinweis darauf, welche Art von Aufmerksamkeit heute tragfaehig ist.`,
+          `Gate ${gate} (${GATE_NAMES[gate].en}) shows a pattern for ${focusByDimension[dimension].en}. It is not a character label, but a cue for the kind of attention that can hold today.`
+        ),
+        theme: BL(
+          `Wenn Tor ${gate} aktiv ist, lohnt sich ${T(focusByDimension[dimension])}.`,
+          `When gate ${gate} is active, it supports ${focusByDimension[dimension].en}.`
+        )
+      }];
+    }));
+
+    const CHANNELS = [
+      [64,47,"Head","Ajna"], [61,24,"Head","Ajna"], [63,4,"Head","Ajna"],
+      [17,62,"Ajna","Throat"], [43,23,"Ajna","Throat"], [11,56,"Ajna","Throat"],
+      [31,7,"Throat","G"], [8,1,"Throat","G"], [33,13,"Throat","G"], [20,10,"Throat","G"],
+      [20,34,"Throat","Sacral"], [16,48,"Throat","Spleen"], [57,20,"Spleen","Throat"],
+      [12,22,"Throat","Solar"], [35,36,"Throat","Solar"], [21,45,"Ego","Throat"],
+      [2,14,"G","Sacral"], [5,15,"Sacral","G"], [29,46,"Sacral","G"], [25,51,"G","Ego"],
+      [34,57,"Sacral","Spleen"], [27,50,"Sacral","Spleen"], [44,26,"Spleen","Ego"],
+      [59,6,"Sacral","Solar"], [37,40,"Solar","Ego"], [49,19,"Solar","Root"], [30,41,"Solar","Root"], [55,39,"Solar","Root"],
+      [3,60,"Sacral","Root"], [42,53,"Sacral","Root"], [9,52,"Sacral","Root"],
+      [32,54,"Spleen","Root"], [28,38,"Spleen","Root"], [18,58,"Spleen","Root"]
+    ].map(([a,b,from,to]) => ({ a, b, from, to, key: `${a}-${b}` }));
+
+    const PENTA_CHANNELS = [
+      { a: 1, b: 8, name: BL("Kreativer Beitrag", "Creative contribution"), text: BL("Die Gruppe kann eine klare Handschrift nach aussen tragen.", "The group can carry a distinct signature outward.") },
+      { a: 7, b: 31, name: BL("Gemeinsame Richtung", "Shared direction"), text: BL("Entscheidungen lassen sich leichter fuehren, wenn Rollen klar sind.", "Decisions are easier to lead when roles are clear.") },
+      { a: 13, b: 33, name: BL("Erinnerung und Story", "Memory and story"), text: BL("Erlebtes kann als gute Geschichte oder Lernpunkt verarbeitet werden.", "Experience can become a useful story or learning point.") },
+      { a: 2, b: 14, name: BL("Ressourcen-Kompass", "Resource compass"), text: BL("Geld, Zeit und Aufmerksamkeit finden leichter eine Richtung.", "Money, time, and attention find direction more easily.") },
+      { a: 5, b: 15, name: BL("Team-Rhythmus", "Team rhythm"), text: BL("Ein gemeinsamer Takt stabilisiert Arbeit und Kommunikation.", "A shared pace stabilizes work and communication.") },
+      { a: 29, b: 46, name: BL("Commitment im Koerper", "Embodied commitment"), text: BL("Das Team spuert schneller, wozu es wirklich Ja sagt.", "The team senses faster what it truly says yes to.") },
+      { a: 21, b: 45, name: BL("Ressourcensteuerung", "Resource stewardship"), text: BL("Verteilung und Verantwortung koennen konkret besprochen werden.", "Allocation and responsibility can be discussed concretely.") },
+      { a: 44, b: 26, name: BL("Marktinstinkt", "Market instinct"), text: BL("Muster, Positionierung und Angebot greifen besser ineinander.", "Patterns, positioning, and offer fit together better.") },
+      { a: 54, b: 32, name: BL("Ambition mit Bestand", "Durable ambition"), text: BL("Wachstum wirkt tragfaehiger, wenn es an Bewaehrtes andockt.", "Growth becomes more durable when it connects to what is proven.") }
+    ];
+
+    const TRIGGER_TEXTS = {
+      Head: BL("Mehr Fragen als Antworten: erst sammeln, dann entscheiden.", "More questions than answers: collect first, decide later."),
+      Ajna: BL("Mentale Fixierung moeglich: Annahmen sichtbar machen.", "Mental fixation possible: make assumptions visible."),
+      Solar: BL("Emotionale Ladung im Feld: Tempo rausnehmen.", "Emotional charge in the field: slow the pace."),
+      Root: BL("Druck zum Abschluss: Prioritaeten hart begrenzen.", "Pressure to finish: limit priorities firmly."),
+      Ego: BL("Beweisenergie im Raum: Versprechen klein halten.", "Proving energy in the room: keep promises small."),
+      Spleen: BL("Sicherheitsfragen werden lauter: Instinkt pruefen, nicht dramatisieren.", "Safety questions get louder: test instinct, do not dramatize.")
+    };
+
+    const SYNERGY_CARDS = [
+      BL("Daniel + Patrick: Daniels direkte Koerperantwort trifft auf Patricks emotionale Welle. Gute gemeinsame Entscheidungen brauchen deshalb erst Resonanz, dann Schlaf oder Abstand.", "Daniel + Patrick: Daniel's direct body response meets Patrick's emotional wave. Good joint decisions need resonance first, then sleep or distance."),
+      BL("Daniel + Paradise Ventures: Die Marke gibt Sprache und Richtung, Daniel liefert Umsetzungsenergie. Stark fuer Launches, wenn der Nutzen konkret ist.", "Daniel + Paradise Ventures: the brand brings language and direction, Daniel brings implementation energy. Strong for launches when the value is concrete."),
+      BL("Patrick + Paradise Ventures: Patrick prueft Commitment und Ressourcen, die Marke scharf die Botschaft. Stark fuer Preis, Angebot und Positionierung.", "Patrick + Paradise Ventures: Patrick tests commitment and resources, the brand sharpens the message. Strong for price, offer, and positioning."),
+      BL("Alle drei: Wenn Koerper-Ja, emotionale Klarheit und Marken-Sprache zusammenkommen, ist das ein gutes Fenster fuer oeffentliche Kommunikation.", "All three: when body yes, emotional clarity, and brand language align, it is a good window for public communication."),
+      BL("Daniel bringt Tempo, Patrick prueft Tragfaehigkeit, Paradise Ventures formt die Sprache. Heute ist stark, wenn diese Reihenfolge bewusst bleibt.", "Daniel brings pace, Patrick tests durability, Paradise Ventures shapes language. Today is strong when that sequence stays conscious."),
+      BL("Wenn Daniel und die Marke schnell wollen, kann Patrick die Entscheidung erden. Das ist keine Bremse, sondern Qualitaetssicherung.", "When Daniel and the brand want speed, Patrick can ground the decision. That is not a brake; it is quality control."),
+      BL("Wenn Patrick viel Ladung spuert, hilft Daniels Sakral als Realitaetscheck: Gibt es ein echtes Ja im Koerper oder nur Druck?", "When Patrick senses a lot of charge, Daniel's sacral helps as a reality check: is there a real body yes, or only pressure?"),
+      BL("Paradise Ventures verstaerkt, was zwischen den Menschen strukturell schon da ist. Deshalb zuerst Team-Klarheit, dann Marken-Kommunikation.", "Paradise Ventures amplifies what is structurally present between the people. Team clarity first, brand communication second."),
+      BL("Bei Reibung lohnt sich die Frage: Ist das persoenlich, oder treffen offene und definierte Zentren gerade nur sehr deutlich aufeinander?", "When friction appears, ask: is this personal, or are open and defined centers simply meeting very clearly right now?")
+    ];
+
+    const DREAM_CARDS = [
+      BL("Wenn du nachts viele Bilder hast, pruefe morgens nur die eine konkrete Handlung, die uebrig bleibt.", "If the night brings many images, check the one concrete action that remains in the morning."),
+      BL("Ein wiederkehrendes Koerpergefuehl ist heute wichtiger als eine perfekte Erklaerung.", "A recurring body sensation matters more today than a perfect explanation."),
+      BL("Traeume mit Orten weisen auf Umfeld hin: Raum wechseln, bevor du dich selbst falsch machst.", "Dreams with places point to environment: change the room before making yourself wrong."),
+      BL("Wenn ein Traum laut war, starte den Tag leiser und gib Entscheidungen mehr Abstand.", "If a dream was loud, start the day quieter and give decisions more distance.")
+    ];
+
+    const MOON_NOTES = Array.from({ length: 18 }, (_, i) => BL(
+      [
+        "Mond auf Empfang: kleine Stimmungswechsel ernst nehmen.",
+        "Mond im Koerper: Bewegung klaert mehr als Nachdenken.",
+        "Mond im Ausdruck: Gespraeche brauchen klare Absicht.",
+        "Mond in der Ruhe: weniger Input bringt bessere Antworten.",
+        "Mond im Fokus: eine Sache abschliessen, bevor Neues startet.",
+        "Mond in Verbindung: erst Kontakt, dann Entscheidung."
+      ][i % 6],
+      [
+        "Moon receptive: take small mood shifts seriously.",
+        "Moon in the body: movement clarifies more than thinking.",
+        "Moon in expression: conversations need clear intent.",
+        "Moon in quiet: less input brings better answers.",
+        "Moon in focus: finish one thing before starting another.",
+        "Moon in connection: contact first, decision second."
+      ][i % 6]
+    ));
+
+    const HD_WHEEL = [41,19,13,49,30,55,37,63,22,36,25,17,21,51,42,3,27,24,2,23,8,20,16,35,45,12,15,52,39,53,62,56,31,33,7,4,29,59,40,64,47,6,46,18,48,57,32,50,28,44,1,43,14,34,9,5,26,11,10,58,38,54,61,60];
+    const MANDALA_LEVELS = { gates: 64, lines: 6, colors: 6, tones: 6, bases: 5 };
+    const MANDALA_SEGMENTS = MANDALA_LEVELS.gates * MANDALA_LEVELS.lines * MANDALA_LEVELS.colors * MANDALA_LEVELS.tones * MANDALA_LEVELS.bases;
+    const MANDALA_STEP = 360 / MANDALA_SEGMENTS;
+    const MAN = HD_WHEEL.flatMap((gate, gateIndex) =>
+      Array.from({ length: MANDALA_LEVELS.lines }, (_, lineIndex) =>
+        Array.from({ length: MANDALA_LEVELS.colors }, (_, colorIndex) =>
+          Array.from({ length: MANDALA_LEVELS.tones }, (_, toneIndex) =>
+            Array.from({ length: MANDALA_LEVELS.bases }, (_, baseIndex) => {
+              const index = (((gateIndex * MANDALA_LEVELS.lines + lineIndex) * MANDALA_LEVELS.colors + colorIndex) * MANDALA_LEVELS.tones + toneIndex) * MANDALA_LEVELS.bases + baseIndex;
+              return {
+                gate,
+                line: lineIndex + 1,
+                color: colorIndex + 1,
+                tone: toneIndex + 1,
+                base: baseIndex + 1,
+                start: +(index * MANDALA_STEP).toFixed(6),
+                end: +((index + 1) * MANDALA_STEP).toFixed(6)
+              };
+            })
+          ).flat()
+        ).flat()
+      ).flat()
+    );
+
+    const PLANETS = [
+      { id: "sun", name: BL("Sonne", "Sun"), offset: 280.61, speed: .985647 },
+      { id: "earth", name: BL("Erde", "Earth"), offset: 100.61, speed: .985647 },
+      { id: "moon", name: BL("Mond", "Moon"), offset: 218.32, speed: 13.176358 },
+      { id: "mercury", name: BL("Merkur", "Mercury"), offset: 252.25, speed: 4.092334 },
+      { id: "venus", name: BL("Venus", "Venus"), offset: 181.98, speed: 1.60213 },
+      { id: "mars", name: BL("Mars", "Mars"), offset: 355.44, speed: .524021 },
+      { id: "jupiter", name: BL("Jupiter", "Jupiter"), offset: 34.35, speed: .083086 },
+      { id: "saturn", name: BL("Saturn", "Saturn"), offset: 50.08, speed: .033459 },
+      { id: "chiron", name: BL("Chiron", "Chiron"), offset: 16.5, speed: .01935 }
+    ];
+
+    const daysSinceEpoch = date => Math.floor((Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) - Date.UTC(2025, 0, 1)) / 86400000);
+    const mandalaAt = longitude => MAN[Math.floor(norm(longitude) / MANDALA_STEP) % MAN.length];
+    const transitsFor = date => {
+      const days = daysSinceEpoch(date);
+      return PLANETS.map(planet => {
+        const longitude = norm(planet.offset + planet.speed * days);
+        const segment = mandalaAt(longitude);
+        return { ...planet, longitude, ...segment, center: gateCenter(segment.gate) };
+      });
+    };
+    const transitAddress = transit => T(BL(
+      `Tor ${transit.gate}.${transit.line} | Farbe ${transit.color} | Ton ${transit.tone} | Basis ${transit.base}`,
+      `Gate ${transit.gate}.${transit.line} | Color ${transit.color} | Tone ${transit.tone} | Base ${transit.base}`
+    ));
+
+    const CENTER_GATES = {
+      Head: [64,61,63],
+      Ajna: [47,24,4,17,43,11],
+      Throat: [62,23,56,31,8,33,20,16,45,12,35],
+      G: [7,1,13,2,15,10,25,46],
+      Ego: [21,26,51,40],
+      Spleen: [48,57,44,50,32,28,18],
+      Solar: [22,36,6,37,49,30,55],
+      Sacral: [34,14,5,29,59,27,3,42,9],
+      Root: [53,60,52,19,39,41,54,38,58]
+    };
+
+    Object.entries(CENTER_GATES).forEach(([center, gates]) => gates.forEach(gate => GATE_INFO[gate].center = center));
+    const gateCenter = gate => GATE_INFO[gate] ? GATE_INFO[gate].center : null;
+
+    const CENTER_LAYOUT = {
+      Head: { x: 262, y: 20, w: 116, h: 72, type: "triangle" },
+      Ajna: { x: 262, y: 118, w: 116, h: 86, type: "diamond" },
+      Throat: { x: 250, y: 240, w: 140, h: 82, type: "rect" },
+      G: { x: 258, y: 368, w: 124, h: 116, type: "diamond" },
+      Ego: { x: 420, y: 375, w: 94, h: 82, type: "triangle-right" },
+      Spleen: { x: 120, y: 430, w: 112, h: 150, type: "triangle-left" },
+      Solar: { x: 430, y: 508, w: 120, h: 150, type: "triangle-right" },
+      Sacral: { x: 254, y: 535, w: 132, h: 100, type: "rect" },
+      Root: { x: 254, y: 700, w: 132, h: 88, type: "rect" }
+    };
+
+    const gateCoords = (() => {
+      const coords = {};
+      const place = (center, points) => CENTER_GATES[center].forEach((gate, index) => coords[gate] = points[index]);
+      place("Head", [[283,80],[320,42],[357,80]]);
+      place("Ajna", [[282,145],[320,130],[358,145],[278,179],[320,190],[362,179]]);
+      place("Throat", [[268,254],[298,254],[342,254],[372,254],[266,292],[295,306],[320,306],[346,306],[374,292],[284,276],[356,276]]);
+      place("G", [[279,394],[320,382],[361,394],[320,470],[280,440],[360,440],[294,416],[346,416]]);
+      place("Ego", [[438,398],[466,421],[496,438],[450,446]]);
+      place("Spleen", [[205,455],[188,479],[170,505],[152,532],[187,555],[151,559],[215,548]]);
+      place("Solar", [[448,535],[485,537],[526,548],[488,586],[528,603],[465,621],[510,635]]);
+      place("Sacral", [[274,555],[302,555],[330,555],[358,555],[274,590],[302,615],[330,615],[358,590],[320,585]]);
+      place("Root", [[272,722],[298,722],[324,722],[350,722],[272,766],[298,766],[324,766],[350,766],[320,744]]);
+      return coords;
+    })();
+
+    function scoreFor(profile, date) {
+      const transits = transitsFor(date);
+      const transitGates = new Set(transits.map(t => t.gate));
+      const personal = new Set(profile.definedGates);
+      const values = Object.fromEntries(Object.keys(DIMENSIONS).map(dim => [dim, 4.2]));
+      const activatedChannels = [];
+
+      transits.forEach(t => {
+        const dim = GATE_INFO[t.gate].dimension;
+        values[dim] += personal.has(t.gate) ? 2.1 : 1.05;
+        if (!profile.definedCenters.includes(t.center)) values.clarity -= .15;
+      });
+
+      CHANNELS.forEach(channel => {
+        const personalA = personal.has(channel.a), personalB = personal.has(channel.b);
+        const transitA = transitGates.has(channel.a), transitB = transitGates.has(channel.b);
+        const completedByTransit = (personalA && transitB) || (personalB && transitA);
+        const nativeChannel = personalA && personalB;
+        if (completedByTransit || nativeChannel) {
+          const dimA = GATE_INFO[channel.a].dimension;
+          const dimB = GATE_INFO[channel.b].dimension;
+          values[dimA] += completedByTransit ? 1.4 : .45;
+          values[dimB] += completedByTransit ? .9 : .35;
+          activatedChannels.push({ ...channel, completedByTransit, nativeChannel });
+        }
+      });
+
+      if (transitGates.has(14) || transitGates.has(45) || transitGates.has(26)) values.energy += .9;
+      if (transitGates.has(57) || transitGates.has(48)) values.intuition += .9;
+      if (transitGates.has(12) || transitGates.has(23) || transitGates.has(62)) values.expression += .75;
+      if (transitGates.has(5) || transitGates.has(15) || transitGates.has(46)) values.flow += .75;
+
+      Object.keys(values).forEach(dim => values[dim] = +clamp(values[dim]).toFixed(1));
+      const weighted = Object.entries(values).reduce((sum, [dim, value]) => sum + value * DIMENSIONS[dim].weight, 0);
+      const weight = Object.values(DIMENSIONS).reduce((sum, dim) => sum + dim.weight, 0);
+      const overall = +(weighted / weight).toFixed(1);
+      const abundance = (values.energy >= 7.2 && values.flow >= 6.2) || [14, 45, 26, 44, 21].some(g => transitGates.has(g) && personal.has(g));
+      return { transits, transitGates, values, overall, activatedChannels, abundance };
+    }
+
+    const ringColor = score => score >= 7 ? "var(--good)" : score >= 5 ? "var(--warn)" : "var(--low)";
+
+    function dailyReading(profile, model) {
+      const sorted = Object.entries(model.values).sort((a, b) => b[1] - a[1]);
+      const [topDim, topValue] = sorted[0];
+      const [lowDim] = sorted[sorted.length - 1];
+      const sun = model.transits.find(t => t.id === "sun");
+      const moon = model.transits.find(t => t.id === "moon");
+      const dayType = model.overall >= 7 ? BL("ein starker Tag", "a strong day") : model.overall >= 5 ? BL("ein gemischter, gut steuerbarer Tag", "a mixed but steerable day") : BL("ein ruhiger Tag", "a quiet day");
+      const line1 = BL(`Heute ist fuer ${profile.name} ${T(dayType)}.`, `For ${profile.name}, today is ${T(dayType)}.`);
+      const line2 = BL(`Am meisten traegt ${T(DIMENSIONS[topDim].label).toLowerCase()} (${topValue}/10), besonders ueber Tor ${sun.gate}: ${T(GATE_INFO[sun.gate].name)}.`, `${T(DIMENSIONS[topDim].label)} carries the day most (${topValue}/10), especially through gate ${sun.gate}: ${T(GATE_INFO[sun.gate].name)}.`);
+      const line3 = model.abundance
+        ? BL("Ein Abundance-Fenster ist offen: Angebot, Preis, Ressourcen oder ein konkreter naechster Schritt duerfen sichtbar werden.", "An abundance window is open: offer, price, resources, or a concrete next step can become visible.")
+        : BL(`Halte ${T(DIMENSIONS[lowDim].label).toLowerCase()} leicht und vermeide Entscheidungen nur aus Druck.`, `Keep ${T(DIMENSIONS[lowDim].label).toLowerCase()} light and avoid decisions made only from pressure.`);
+      const line4 = BL(`${T(MOON_NOTES[moon.gate % MOON_NOTES.length])} Praktisch: ${model.overall >= 7 ? "wichtige Gespraeche oder klare Veroeffentlichung sind moeglich" : model.overall >= 5 ? "ein fokussierter Schritt reicht" : "zurueckhalten, sortieren und Koerper-Intuition vertrauen"}.`, `${T(MOON_NOTES[moon.gate % MOON_NOTES.length])} Practically: ${model.overall >= 7 ? "important conversations or clear publishing are supported" : model.overall >= 5 ? "one focused step is enough" : "hold back, sort, and trust body intuition"}.`);
+      return [line1, line2, line3, line4].map(T).join(" ");
+    }
+
+    function activeChannelClass(channel, profile, model) {
+      const personal = new Set(profile.definedGates);
+      const aPersonal = personal.has(channel.a), bPersonal = personal.has(channel.b);
+      const aTransit = model.transitGates.has(channel.a), bTransit = model.transitGates.has(channel.b);
+      if ((aPersonal || bPersonal) && (aTransit || bTransit)) return "active-both";
+      if (aPersonal && bPersonal) return "active-personal";
+      if (aTransit && bTransit) return "active-transit";
+      return "";
+    }
+
+    function shapeFor(center, defined) {
+      const l = CENTER_LAYOUT[center];
+      const cls = `center-shape ${defined ? "defined" : ""}`;
+      const label = `<text class="center-label" x="${l.x + l.w / 2}" y="${l.y + l.h / 2}">${T(CENTER_LABELS[center])}</text>`;
+      let shape = "";
+      if (l.type === "rect") {
+        shape = `<rect class="${cls}" data-center="${center}" x="${l.x}" y="${l.y}" width="${l.w}" height="${l.h}" rx="14"></rect>`;
+      } else if (l.type === "diamond") {
+        shape = `<polygon class="${cls}" data-center="${center}" points="${l.x + l.w / 2},${l.y} ${l.x + l.w},${l.y + l.h / 2} ${l.x + l.w / 2},${l.y + l.h} ${l.x},${l.y + l.h / 2}"></polygon>`;
+      } else if (l.type === "triangle-right") {
+        shape = `<polygon class="${cls}" data-center="${center}" points="${l.x},${l.y} ${l.x + l.w},${l.y + l.h / 2} ${l.x},${l.y + l.h}"></polygon>`;
+      } else if (l.type === "triangle-left") {
+        shape = `<polygon class="${cls}" data-center="${center}" points="${l.x + l.w},${l.y} ${l.x},${l.y + l.h / 2} ${l.x + l.w},${l.y + l.h}"></polygon>`;
+      } else {
+        shape = `<polygon class="${cls}" data-center="${center}" points="${l.x + l.w / 2},${l.y} ${l.x + l.w},${l.y + l.h} ${l.x},${l.y + l.h}"></polygon>`;
+      }
+      return shape + label;
+    }
+
+    function renderBodygraph(profile, model) {
+      const personal = new Set(profile.definedGates);
+      const channels = CHANNELS.map(channel => {
+        const p1 = gateCoords[channel.a], p2 = gateCoords[channel.b];
+        return `<line class="channel-line ${activeChannelClass(channel, profile, model)}" x1="${p1[0]}" y1="${p1[1]}" x2="${p2[0]}" y2="${p2[1]}"></line>`;
+      }).join("");
+      const centers = Object.keys(CENTER_LAYOUT).map(center => shapeFor(center, profile.definedCenters.includes(center))).join("");
+      const gates = Object.entries(gateCoords).map(([gate, xy]) => {
+        const g = Number(gate);
+        const personalClass = personal.has(g);
+        const transitClass = model.transitGates.has(g);
+        const cls = personalClass && transitClass ? "both" : personalClass ? "personal" : transitClass ? "transit" : "";
+        return `<g data-gate="${g}"><circle class="gate-dot ${cls}" cx="${xy[0]}" cy="${xy[1]}" r="12"></circle><text class="gate-label" x="${xy[0]}" y="${xy[1]}">${g}</text></g>`;
+      }).join("");
+      return `<svg viewBox="0 0 660 820" role="img" aria-label="Bodygraph">${channels}${centers}${gates}</svg>`;
+    }
+
+    function detailForGate(profile, model, gate) {
+      const info = GATE_INFO[gate];
+      const transit = model.transits.filter(t => t.gate === gate).map(t => T(t.name)).join(", ");
+      const personal = profile.definedGates.includes(gate);
+      const status = personal && transit ? BL("im Chart und heute im Transit aktiv", "active in chart and today's transit") : personal ? BL("im Chart definiert", "defined in chart") : transit ? BL(`heute durch ${transit} aktiviert`, `activated today by ${transit}`) : BL("nicht aktiv, aber als Referenz sichtbar", "not active, visible as reference");
+      return `<strong>Tor ${gate}: ${T(info.name)}</strong><br>${T(status)}.<br>${T(info.description)}<br><span>${T(CENTER_LABELS[info.center])} | ${T(DIMENSIONS[info.dimension].label)}</span>`;
+    }
+
+    function renderProfilePanel(profile, model) {
+      const openCenters = Object.keys(CENTER_LABELS).filter(center => !profile.definedCenters.includes(center));
+      return `
+        <section class="panel">
+          <h2>${T(BL("Profil", "Profile"))}</h2>
+          <div class="profile-card">
+            <select id="profileSelect" aria-label="Profile">
+              ${Object.values(PROFILES).map(p => `<option value="${p.id}" ${p.id === profile.id ? "selected" : ""}>${p.name}</option>`).join("")}
+            </select>
+            <div class="small-card">
+              <strong>${profile.name}</strong><br>
+              ${T(profile.subtitle)}<br><br>
+              <span>${T(BL("Autoritaet", "Authority"))}: ${T(profile.authority)}</span><br>
+              <span>${T(BL("Strategie", "Strategy"))}: ${T(profile.strategy)}</span>
+            </div>
+            <div class="tag-row">
+              ${profile.definedCenters.map(center => `<span class="tag"><strong>${T(CENTER_LABELS[center])}</strong></span>`).join("")}
+            </div>
+          </div>
+          <div class="reading">${dailyReading(profile, model)}</div>
+          <h2>${T(BL("Offene Zentren", "Open centers"))}</h2>
+          ${openCenters.slice(0, 5).map(center => `<div class="small-card warning"><strong>${T(CENTER_LABELS[center])}</strong><br>${T(OPEN_CENTER_WARNINGS[center])}</div>`).join("")}
+          <h2>${T(BL("Traum-Notiz", "Dream note"))}</h2>
+          <div class="small-card">${T(DREAM_CARDS[(daysSinceEpoch(currentDate()) + profile.definedGates.length) % DREAM_CARDS.length])}</div>
+        </section>`;
+    }
+
+    function renderScores(model) {
+      return Object.entries(model.values).map(([dim, value]) => `
+        <div class="dimension">
+          <div class="dimension-head"><span>${T(DIMENSIONS[dim].label)}</span><strong>${value}/10</strong></div>
+          <div class="bar" style="--value:${value};--ring:${ringColor(value)}"><i></i></div>
+        </div>
+      `).join("");
+    }
+
+    function renderTransitPanel(model) {
+      return `
+        <section class="panel">
+          <h2>${T(BL("Transite", "Transits"))}</h2>
+          <div class="planet-grid">
+            ${model.transits.map(t => `<div class="planet"><b>${T(t.name)}</b><span>${transitAddress(t)}<br>${T(GATE_INFO[t.gate].name)}</span></div>`).join("")}
+          </div>
+          <h2 style="margin-top:18px">${T(BL("Aktive Kanaele", "Active channels"))}</h2>
+          ${model.activatedChannels.length ? model.activatedChannels.slice(0, 6).map(c => `<div class="small-card"><strong>${c.a}-${c.b}</strong><br>${T(GATE_INFO[c.a].name)} + ${T(GATE_INFO[c.b].name)}</div>`).join("") : `<div class="small-card">${T(BL("Heute wird kein persoenlicher Kanal voll aktiviert. Das spricht fuer Beobachten statt Forcieren.", "No personal channel is fully activated today. This supports observing rather than forcing."))}</div>`}
+          <h2>${T(BL("Synergie", "Synergy"))}</h2>
+          <div class="small-card">${T(SYNERGY_CARDS[daysSinceEpoch(currentDate()) % SYNERGY_CARDS.length])}</div>
+        </section>`;
+    }
+
+    function renderPenta(date) {
+      const members = Object.values(PROFILES).filter(profile => pentaOn[profile.id]);
+      const gatePool = new Set(members.flatMap(profile => profile.definedGates));
+      const completed = PENTA_CHANNELS.filter(channel => gatePool.has(channel.a) && gatePool.has(channel.b));
+      const triggerCenters = Object.keys(TRIGGER_TEXTS).filter(center => CENTER_GATES[center].some(gate => gatePool.has(gate)));
+      return `
+        <section class="panel">
+          <h2>${T(BL("Penta / Team", "Penta / Team"))}</h2>
+          <div class="penta-members">
+            ${Object.values(PROFILES).map(p => `
+              <label class="member-toggle">
+                <input type="checkbox" data-member="${p.id}" ${pentaOn[p.id] ? "checked" : ""}>
+                <span>${p.name}</span>
+              </label>`).join("")}
+          </div>
+          <div class="small-card">
+            <strong>${T(BL("Gate-Pool", "Gate pool"))}</strong><br>
+            ${members.length ? Array.from(gatePool).sort((a,b) => a - b).join(", ") : T(BL("Kein Mitglied aktiv.", "No member active."))}
+          </div>
+          <h2>${T(BL("Vollstaendige Penta-Kanaele", "Complete Penta channels"))}</h2>
+          ${completed.length ? completed.map(c => `<div class="small-card"><strong>${c.a}-${c.b} | ${T(c.name)}</strong><br>${T(c.text)}</div>`).join("") : `<div class="small-card">${T(BL("Noch kein Penta-Kanal ist vollstaendig. Gut fuer lose Abstimmung, weniger fuer finale Gruppenentscheidungen.", "No Penta channel is complete yet. Good for loose alignment, less for final group decisions."))}</div>`}
+          <h2>${T(BL("Trigger ausserhalb des Kerns", "Triggers outside the core"))}</h2>
+          ${triggerCenters.map(center => `<div class="small-card warning"><strong>${T(CENTER_LABELS[center])}</strong><br>${T(TRIGGER_TEXTS[center])}</div>`).join("") || `<div class="small-card">${T(BL("Keine starken Rand-Trigger im aktuellen Team-Pool.", "No strong edge triggers in the current team pool."))}</div>`}
+        </section>`;
+    }
+
+    function renderApp() {
+      const profile = PROFILES[activeProfile];
+      const date = currentDate();
+      const model = scoreFor(profile, date);
+      const scoreLabel = model.overall >= 7 ? BL("stark", "strong") : model.overall >= 5 ? BL("steuerbar", "steerable") : BL("ruhig", "quiet");
+      document.documentElement.lang = lang;
+      document.getElementById("app").innerHTML = `
+        <section class="hero">
+          <div class="hero-card">
+            <div>
+              <div class="eyebrow">${T(BL("Daily Energy Map", "Daily Energy Map"))}</div>
+              <h1>${T(BL("Wann ist der beste Moment fuer was?", "When is the best moment for what?"))}</h1>
+              <p class="lead">${T(BL("Eine lokale, taegliche Karte fuer Person, Marke und Team: Transit-Gates, definierte Zentren, Abundance-Fenster und praktische Sprache ohne Fachjargon.", "A local daily map for person, brand, and team: transit gates, defined centers, abundance windows, and practical language without jargon."))}</p>
+            </div>
+            <div class="toolbar">
+              <button id="prevDay" type="button">${T(BL("Zurueck", "Previous"))}</button>
+              <button id="todayBtn" type="button">${T(BL("Heute", "Today"))}</button>
+              <button id="nextDay" type="button">${T(BL("Weiter", "Next"))}</button>
+              <button id="langBtn" type="button">${lang === "de" ? "EN" : "DE"}</button>
+            </div>
+          </div>
+          <div class="hero-card score-card">
+            <p class="date-line">${date.toLocaleDateString(lang === "de" ? "de-DE" : "en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p>
+            <div class="score-ring" style="--score:${model.overall};--ring:${ringColor(model.overall)}">
+              <strong>${model.overall}</strong>
+            </div>
+            <p class="date-line">${T(BL("Gesamtscore", "Overall score"))}: ${T(scoreLabel)} ${model.abundance ? "· " + T(BL("Abundance-Fenster offen", "abundance window open")) : ""}</p>
+            <div class="metric-row">
+              <span class="metric"><strong>${model.transits.length}</strong> ${T(BL("Planeten", "planets"))}</span>
+              <span class="metric"><strong>${model.transitGates.size}</strong> ${T(BL("Transit-Gates", "transit gates"))}</span>
+              <span class="metric"><strong>${model.activatedChannels.length}</strong> ${T(BL("Kanaele", "channels"))}</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="grid">
+          ${renderProfilePanel(profile, model)}
+          <section class="panel bodygraph-wrap">
+            <h2>${T(BL("Live Bodygraph", "Live bodygraph"))}</h2>
+            ${renderBodygraph(profile, model)}
+            <div class="chips">
+              <span class="chip">${T(BL("Violett: definiert", "Purple: defined"))}</span>
+              <span class="chip">${T(BL("Gruen: Transit", "Green: transit"))}</span>
+              <span class="chip">${T(BL("Gold: beides", "Gold: both"))}</span>
+            </div>
+            <div class="detail-box" id="detailBox"><strong>${T(BL("Klicke ein Tor oder Zentrum.", "Click a gate or center."))}</strong><br>${T(profile.tone)}</div>
+            <h2>${T(BL("6 Dimensionen", "6 dimensions"))}</h2>
+            ${renderScores(model)}
+          </section>
+          <div>
+            ${renderTransitPanel(model)}
+            ${renderPenta(date)}
+          </div>
+        </section>
+        <p class="footer">${T(BL("Offline-faehig: eine HTML-Datei, keine Libraries, keine Datenbank, keine Netzwerkaufrufe.", "Offline-capable: one HTML file, no libraries, no database, no network calls."))}</p>
+      `;
+
+      bindEvents(profile, model);
+    }
+
+    function bindEvents(profile, model) {
+      document.getElementById("prevDay").addEventListener("click", () => { dayIndex -= 1; renderApp(); });
+      document.getElementById("nextDay").addEventListener("click", () => { dayIndex += 1; renderApp(); });
+      document.getElementById("todayBtn").addEventListener("click", () => { dayIndex = 0; renderApp(); });
+      document.getElementById("langBtn").addEventListener("click", () => { lang = lang === "de" ? "en" : "de"; renderApp(); });
+      document.getElementById("profileSelect").addEventListener("change", event => { activeProfile = event.target.value; renderApp(); });
+      document.querySelectorAll("[data-gate]").forEach(node => node.addEventListener("click", () => {
+        document.getElementById("detailBox").innerHTML = detailForGate(profile, model, Number(node.dataset.gate));
+      }));
+      document.querySelectorAll("[data-center]").forEach(node => node.addEventListener("click", () => {
+        const center = node.dataset.center;
+        const defined = profile.definedCenters.includes(center);
+        const profileNote = PROFILE_CENTER_NOTES[profile.id][center] || CENTER_DESCRIPTIONS[center];
+        document.getElementById("detailBox").innerHTML = `<strong>${T(CENTER_LABELS[center])}</strong><br>${T(profileNote)}<br><span>${defined ? T(BL("Bei diesem Profil definiert.", "Defined in this profile.")) : T(OPEN_CENTER_WARNINGS[center])}</span>`;
+      }));
+      document.querySelectorAll("[data-member]").forEach(node => node.addEventListener("change", event => {
+        pentaOn[event.target.dataset.member] = event.target.checked;
+        renderApp();
+      }));
+    }
+
+    renderApp();
+  </script>
+</body>
+</html>
