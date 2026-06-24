@@ -440,6 +440,42 @@
       Root: BL("Die Wurzel erzeugt Druck fuer Start, Tempo und Abschluss. Druck ist Information, nicht automatisch ein Auftrag.", "The root creates pressure to start, move, and finish. Pressure is information, not automatically a command.")
     };
 
+    const PROFILE_CENTER_NOTES = {
+      daniel: {
+        Head: BL("Bei Daniel ist der Kopf offen: Inspiration kommt stark ueber Umfeld, Gesprache und Tageswetter. Gute Praxis: Fragen notieren, aber nicht jede sofort loesen.", "For Daniel the head is open: inspiration is strongly shaped by place, conversation, and the day. Good practice: note questions without solving every one immediately."),
+        Ajna: BL("Daniels Ajna bleibt beweglich. Er kann Muster schnell sehen, sollte aber nicht zu frueh eine Meinung festnageln, nur um sicher zu wirken.", "Daniel's ajna stays flexible. He can see patterns quickly, but should not lock an opinion too early just to appear certain."),
+        Throat: BL("Daniels Kehle ist definiert: Ausdruck hat eine konstante Spur. Wenn Koerperantwort und Anlass zusammenkommen, kann Sprache sehr direkt wirken.", "Daniel's throat is defined: expression has a consistent track. When body response and context align, language can land very directly."),
+        G: BL("Daniels G-Zentrum ist definiert und gibt Richtung ueber Haltung statt Argument. Ein stimmiger Ort und klare Werte machen ihn sofort praesenter.", "Daniel's G center is defined and gives direction through stance rather than argument. A coherent place and clear values make him immediately more present."),
+        Ego: BL("Daniels Ego ist offen. Commitments sollten klein, konkret und koerperlich richtig sein; Beweisenergie kostet mehr als sie bringt.", "Daniel's ego is open. Commitments should be small, concrete, and bodily correct; proving costs more than it gives."),
+        Spleen: BL("Daniels Milz ist definiert: leise Koerperintuition ist verlaesslich, aber schnell. Der erste Sicherheitsimpuls ist oft der klarste.", "Daniel's spleen is defined: quiet body intuition is reliable, but fast. The first safety signal is often the clearest."),
+        Solar: BL("Daniels Solarplexus ist offen. Er nimmt Stimmungen anderer stark wahr; emotionale Ladung ist Information, nicht automatisch seine Wahrheit.", "Daniel's solar plexus is open. He strongly picks up others' moods; emotional charge is information, not automatically his truth."),
+        Sacral: BL("Daniels Sakral ist definiert. Energie kommt ueber echte Reaktion, nicht ueber abstrakte Plaene; ein klares Ja macht ihn belastbar.", "Daniel's sacral is defined. Energy comes through real response, not abstract plans; a clear yes makes him durable."),
+        Root: BL("Daniels Wurzel ist offen. Druck von aussen kann Tempo vortaeuschen; gute Tage brauchen klare Stopps und Pausen.", "Daniel's root is open. Outside pressure can fake urgency; good days need clear stops and pauses.")
+      },
+      patrick: {
+        Head: BL("Patricks Kopf ist offen: Fragen koennen gross werden, wenn sie im Feld liegen. Er gewinnt, wenn er zwischen echter Vision und mentalem Laerm unterscheidet.", "Patrick's head is open: questions can become large when they are in the field. He gains by separating real vision from mental noise."),
+        Ajna: BL("Patricks Ajna ist offen und kann Perspektiven wechseln. Das ist stark fuer Beratung, aber schlecht fuer Entscheidungen unter Rechtfertigungsdruck.", "Patrick's ajna is open and can change perspectives. This is strong for advising, but poor for decisions under pressure to justify."),
+        Throat: BL("Patricks Kehle ist definiert. Seine Stimme wirkt besonders, wenn emotionale Klarheit bereits da ist und nicht waehrend der Welle gesucht wird.", "Patrick's throat is defined. His voice works best when emotional clarity is already present, not while the wave is still searching."),
+        G: BL("Patricks G-Zentrum ist offen. Richtung wird ueber Menschen und Orte verstaerkt; falsche Umgebungen fuehlen sich schnell wie falsche Identitaet an.", "Patrick's G center is open. Direction is amplified by people and places; wrong environments can quickly feel like wrong identity."),
+        Ego: BL("Patricks Ego ist definiert. Wenn er ein echtes Versprechen gibt, hat es Kraft; deshalb sollte jedes Ja ressourcenbewusst und eindeutig sein.", "Patrick's ego is defined. When he makes a real promise, it has force; every yes should therefore be resource-aware and explicit."),
+        Spleen: BL("Patricks Milz ist offen. Sicherheitsgefuehle koennen fremd oder alt sein; Koerpercheck und Realitaetspruefung gehoeren zusammen.", "Patrick's spleen is open. Safety feelings may be borrowed or old; body check and reality check belong together."),
+        Solar: BL("Patricks Solarplexus ist definiert. Klarheit reift ueber eine ganze emotionale Welle; sofortige Antworten verkuerzen seine Autoritaet.", "Patrick's solar plexus is defined. Clarity matures through a full emotional wave; immediate answers shorten his authority."),
+        Sacral: BL("Patricks Sakral ist offen. Konstante Arbeitsenergie ist nicht die Basis; er sollte Belastung rhythmisieren und Fremdenergie rechtzeitig ablegen.", "Patrick's sacral is open. Constant work energy is not the base; he should rhythmize load and put down borrowed energy early."),
+        Root: BL("Patricks Wurzel ist definiert. Druck kann produktiv kanalisiert werden, solange Abschluss nicht wichtiger wird als Klarheit.", "Patrick's root is defined. Pressure can be channeled productively as long as finishing does not outrank clarity.")
+      },
+      paradise: {
+        Head: BL("Bei Paradise Ventures ist der Kopf offen: Die Marke muss nicht jede Trendfrage beantworten. Staerke entsteht, wenn nur relevante Fragen aufgenommen werden.", "For Paradise Ventures the head is open: the brand does not need to answer every trend question. Strength appears when only relevant questions are taken in."),
+        Ajna: BL("Das Ajna der Marke ist definiert. Sie kann komplexe Themen sortieren und in wiedererkennbare Denkmodelle uebersetzen.", "The brand's ajna is defined. It can sort complex topics and translate them into recognizable thinking models."),
+        Throat: BL("Die Marken-Kehle ist definiert. Sichtbarkeit ist kein Extra, sondern Teil des Designs; Sprache muss konkret und nutzbar bleiben.", "The brand throat is defined. Visibility is not an add-on but part of the design; language must stay concrete and useful."),
+        G: BL("Das G-Zentrum der Marke ist definiert. Paradise Ventures wirkt stark, wenn Richtung, Aesthetik und Werte konsistent auftreten.", "The brand's G center is defined. Paradise Ventures is strongest when direction, aesthetics, and values appear consistently."),
+        Ego: BL("Das Marken-Ego ist offen. Angebote sollten nicht aus Beweislogik kommen, sondern aus klarem Nutzen und sauberer Ressourcensteuerung.", "The brand ego is open. Offers should not come from proving, but from clear value and clean resource control."),
+        Spleen: BL("Die Marken-Milz ist offen. Marktinstinkt entsteht ueber Menschen im Team; deshalb lohnt sich Feedback, bevor Risiken dramatisiert werden.", "The brand spleen is open. Market instinct comes through people in the team; feedback is useful before risks are dramatized."),
+        Solar: BL("Der Marken-Solarplexus ist offen. Kommunikation sollte Emotionen halten, ohne sich von Tagesstimmungen treiben zu lassen.", "The brand solar plexus is open. Communication should hold emotion without being driven by daily moods."),
+        Sacral: BL("Das Marken-Sakral ist offen. Die Marke hat keine konstante Arbeitsenergie; sie braucht Menschen mit echtem Ja fuer Umsetzung.", "The brand sacral is open. The brand has no constant work energy; it needs people with a real yes for implementation."),
+        Root: BL("Die Marken-Wurzel ist offen. Launch-Druck darf nicht die Botschaft verzerren; Deadlines muessen dem Sinn dienen.", "The brand root is open. Launch pressure must not distort the message; deadlines should serve meaning.")
+      }
+    };
+
     const OPEN_CENTER_WARNINGS = {
       Head: BL("Offener Kopf: Lass fremde Fragen durchziehen, bevor du sie zu deiner Agenda machst.", "Open head: let other people's questions pass before making them your agenda."),
       Ajna: BL("Offenes Ajna: Du musst heute keine Meinung fixieren, nur weil jemand Sicherheit will.", "Open ajna: you do not need to lock an opinion just because someone wants certainty."),
@@ -556,7 +592,12 @@
       BL("Daniel + Patrick: Daniels direkte Koerperantwort trifft auf Patricks emotionale Welle. Gute gemeinsame Entscheidungen brauchen deshalb erst Resonanz, dann Schlaf oder Abstand.", "Daniel + Patrick: Daniel's direct body response meets Patrick's emotional wave. Good joint decisions need resonance first, then sleep or distance."),
       BL("Daniel + Paradise Ventures: Die Marke gibt Sprache und Richtung, Daniel liefert Umsetzungsenergie. Stark fuer Launches, wenn der Nutzen konkret ist.", "Daniel + Paradise Ventures: the brand brings language and direction, Daniel brings implementation energy. Strong for launches when the value is concrete."),
       BL("Patrick + Paradise Ventures: Patrick prueft Commitment und Ressourcen, die Marke scharf die Botschaft. Stark fuer Preis, Angebot und Positionierung.", "Patrick + Paradise Ventures: Patrick tests commitment and resources, the brand sharpens the message. Strong for price, offer, and positioning."),
-      BL("Alle drei: Wenn Koerper-Ja, emotionale Klarheit und Marken-Sprache zusammenkommen, ist das ein gutes Fenster fuer oeffentliche Kommunikation.", "All three: when body yes, emotional clarity, and brand language align, it is a good window for public communication.")
+      BL("Alle drei: Wenn Koerper-Ja, emotionale Klarheit und Marken-Sprache zusammenkommen, ist das ein gutes Fenster fuer oeffentliche Kommunikation.", "All three: when body yes, emotional clarity, and brand language align, it is a good window for public communication."),
+      BL("Daniel bringt Tempo, Patrick prueft Tragfaehigkeit, Paradise Ventures formt die Sprache. Heute ist stark, wenn diese Reihenfolge bewusst bleibt.", "Daniel brings pace, Patrick tests durability, Paradise Ventures shapes language. Today is strong when that sequence stays conscious."),
+      BL("Wenn Daniel und die Marke schnell wollen, kann Patrick die Entscheidung erden. Das ist keine Bremse, sondern Qualitaetssicherung.", "When Daniel and the brand want speed, Patrick can ground the decision. That is not a brake; it is quality control."),
+      BL("Wenn Patrick viel Ladung spuert, hilft Daniels Sakral als Realitaetscheck: Gibt es ein echtes Ja im Koerper oder nur Druck?", "When Patrick senses a lot of charge, Daniel's sacral helps as a reality check: is there a real body yes, or only pressure?"),
+      BL("Paradise Ventures verstaerkt, was zwischen den Menschen strukturell schon da ist. Deshalb zuerst Team-Klarheit, dann Marken-Kommunikation.", "Paradise Ventures amplifies what is structurally present between the people. Team clarity first, brand communication second."),
+      BL("Bei Reibung lohnt sich die Frage: Ist das persoenlich, oder treffen offene und definierte Zentren gerade nur sehr deutlich aufeinander?", "When friction appears, ask: is this personal, or are open and defined centers simply meeting very clearly right now?")
     ];
 
     const DREAM_CARDS = [
@@ -916,7 +957,8 @@
       document.querySelectorAll("[data-center]").forEach(node => node.addEventListener("click", () => {
         const center = node.dataset.center;
         const defined = profile.definedCenters.includes(center);
-        document.getElementById("detailBox").innerHTML = `<strong>${T(CENTER_LABELS[center])}</strong><br>${T(CENTER_DESCRIPTIONS[center])}<br><span>${defined ? T(BL("Bei diesem Profil definiert.", "Defined in this profile.")) : T(OPEN_CENTER_WARNINGS[center])}</span>`;
+        const profileNote = PROFILE_CENTER_NOTES[profile.id][center] || CENTER_DESCRIPTIONS[center];
+        document.getElementById("detailBox").innerHTML = `<strong>${T(CENTER_LABELS[center])}</strong><br>${T(profileNote)}<br><span>${defined ? T(BL("Bei diesem Profil definiert.", "Defined in this profile.")) : T(OPEN_CENTER_WARNINGS[center])}</span>`;
       }));
       document.querySelectorAll("[data-member]").forEach(node => node.addEventListener("change", event => {
         pentaOn[event.target.dataset.member] = event.target.checked;
