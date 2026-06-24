@@ -2,13 +2,36 @@
 
 Eine lokale Single-File-App, die fuer Personen, Teams und die Marke Paradise Ventures taeglich beantwortet: Wann ist heute der beste Moment fuer was - und warum?
 
-## Nutzung
+## App oeffnen
 
-1. `index.html` im Browser oeffnen.
-2. Profil, Datum oder Sprache umschalten.
-3. Bodygraph-Tore oder Zentren anklicken, um die Erklaerung im Kontext zu sehen.
+Nach dem Merge in `main` wird die App automatisch ueber GitHub Pages veroeffentlicht:
+
+https://amosstrategy.github.io/trade-Strat-1/
+
+Du brauchst dann nichts zu installieren und keinen Code zu oeffnen. Einfach den Link im Browser aufrufen.
+
+## App bedienen
+
+1. Profil auswaehlen: Daniel, Patrick oder Paradise Ventures.
+2. Mit `Heute`, `Zurueck` und `Weiter` durch die Tage gehen.
+3. Mit `EN` / `DE` die Sprache wechseln.
+4. Im Bodygraph ein Tor oder Zentrum anklicken, um die Erklaerung zu sehen.
+5. Im Penta-Bereich Team-Mitglieder an- oder abwaehlen.
+
+## Falls der Live-Link noch nicht aktiv ist
+
+Der Link funktioniert erst, nachdem der Pull Request gemerged wurde und GitHub Pages einmal durchgelaufen ist. Bis dahin gibt es zwei einfache Alternativen:
+
+1. In GitHub die Datei `index.html` herunterladen.
+2. Die heruntergeladene Datei doppelklicken.
+
+Die App oeffnet sich dann lokal im Browser.
 
 Die App laeuft komplett offline: kein Server, kein Backend, keine Datenbank, keine externen Libraries und kein Build-Step.
+
+## Deployment
+
+Die Datei `.github/workflows/pages.yml` veroeffentlicht die App automatisch auf GitHub Pages, sobald Aenderungen auf `main` landen. Die Website besteht nur aus der Datei `index.html`.
 
 ## Enthaltene Bereiche
 
