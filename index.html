@@ -627,10 +627,29 @@
     ));
 
     const HD_WHEEL = [41,19,13,49,30,55,37,63,22,36,25,17,21,51,42,3,27,24,2,23,8,20,16,35,45,12,15,52,39,53,62,56,31,33,7,4,29,59,40,64,47,6,46,18,48,57,32,50,28,44,1,43,14,34,9,5,26,11,10,58,38,54,61,60];
-    const MAN = HD_WHEEL.flatMap((gate, idx) => [1,2,3].map(line => {
-      const index = idx * 3 + line - 1;
-      return { gate, line, start: +(index * 1.875).toFixed(3), end: +((index + 1) * 1.875).toFixed(3) };
-    }));
+    const MANDALA_LEVELS = { gates: 64, lines: 6, colors: 6, tones: 6, bases: 5 };
+    const MANDALA_SEGMENTS = MANDALA_LEVELS.gates * MANDALA_LEVELS.lines * MANDALA_LEVELS.colors * MANDALA_LEVELS.tones * MANDALA_LEVELS.bases;
+    const MANDALA_STEP = 360 / MANDALA_SEGMENTS;
+    const MAN = HD_WHEEL.flatMap((gate, gateIndex) =>
+      Array.from({ length: MANDALA_LEVELS.lines }, (_, lineIndex) =>
+        Array.from({ length: MANDALA_LEVELS.colors }, (_, colorIndex) =>
+          Array.from({ length: MANDALA_LEVELS.tones }, (_, toneIndex) =>
+            Array.from({ length: MANDALA_LEVELS.bases }, (_, baseIndex) => {
+              const index = (((gateIndex * MANDALA_LEVELS.lines + lineIndex) * MANDALA_LEVELS.colors + colorIndex) * MANDALA_LEVELS.tones + toneIndex) * MANDALA_LEVELS.bases + baseIndex;
+              return {
+                gate,
+                line: lineIndex + 1,
+                color: colorIndex + 1,
+                tone: toneIndex + 1,
+                base: baseIndex + 1,
+                start: +(index * MANDALA_STEP).toFixed(6),
+                end: +((index + 1) * MANDALA_STEP).toFixed(6)
+              };
+            })
+          ).flat()
+        ).flat()
+      ).flat()
+    );
 
     const PLANETS = [
       { id: "sun", name: BL("Sonne", "Sun"), offset: 280.61, speed: .985647 },
@@ -645,15 +664,19 @@
     ];
 
     const daysSinceEpoch = date => Math.floor((Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) - Date.UTC(2025, 0, 1)) / 86400000);
-    const mandalaAt = longitude => MAN[Math.floor(norm(longitude) / 1.875) % MAN.length];
+    const mandalaAt = longitude => MAN[Math.floor(norm(longitude) / MANDALA_STEP) % MAN.length];
     const transitsFor = date => {
       const days = daysSinceEpoch(date);
       return PLANETS.map(planet => {
         const longitude = norm(planet.offset + planet.speed * days);
         const segment = mandalaAt(longitude);
-        return { ...planet, longitude, gate: segment.gate, line: segment.line, center: gateCenter(segment.gate) };
+        return { ...planet, longitude, ...segment, center: gateCenter(segment.gate) };
       });
     };
+    const transitAddress = transit => T(BL(
+      `Tor ${transit.gate}.${transit.line} | Farbe ${transit.color} | Ton ${transit.tone} | Basis ${transit.base}`,
+      `Gate ${transit.gate}.${transit.line} | Color ${transit.color} | Tone ${transit.tone} | Base ${transit.base}`
+    ));
 
     const CENTER_GATES = {
       Head: [64,61,63],
@@ -850,7 +873,7 @@
         <section class="panel">
           <h2>${T(BL("Transite", "Transits"))}</h2>
           <div class="planet-grid">
-            ${model.transits.map(t => `<div class="planet"><b>${T(t.name)}</b><span>Tor ${t.gate}.${t.line}<br>${T(GATE_INFO[t.gate].name)}</span></div>`).join("")}
+            ${model.transits.map(t => `<div class="planet"><b>${T(t.name)}</b><span>${transitAddress(t)}<br>${T(GATE_INFO[t.gate].name)}</span></div>`).join("")}
           </div>
           <h2 style="margin-top:18px">${T(BL("Aktive Kanaele", "Active channels"))}</h2>
           ${model.activatedChannels.length ? model.activatedChannels.slice(0, 6).map(c => `<div class="small-card"><strong>${c.a}-${c.b}</strong><br>${T(GATE_INFO[c.a].name)} + ${T(GATE_INFO[c.b].name)}</div>`).join("") : `<div class="small-card">${T(BL("Heute wird kein persoenlicher Kanal voll aktiviert. Das spricht fuer Beobachten statt Forcieren.", "No personal channel is fully activated today. This supports observing rather than forcing."))}</div>`}

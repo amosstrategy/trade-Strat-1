@@ -13,7 +13,7 @@ Die App laeuft komplett offline: kein Server, kein Backend, keine Datenbank, kei
 ## Enthaltene Bereiche
 
 - lineare Transit-Berechnung fuer Sonne, Erde, Mond, Merkur, Venus, Mars, Jupiter, Saturn und Chiron
-- 192-Segment-Mandala auf Gate-/Line-Ebene
+- vollstaendiges 69.120-Segment-Mandala auf Gate-, Line-, Color-, Tone- und Base-Ebene
 - 6 Scores: Energie, Intuition, Ausdruck, Klarheit, Flow und Ernaehrung
 - programmatisch gezeichneter SVG-Bodygraph mit interaktiven Gates und Zentren
 - DE/EN-Umschaltung ueber Bilingual-Textbausteine
