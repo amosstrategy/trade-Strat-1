@@ -1,0 +1,28 @@
+{
+  "name": "daily-energy-map-widget",
+  "version": "1.0.0",
+  "description": "Eine lokale Single-File-App, die fuer Personen, Teams und die Marke Paradise Ventures taeglich beantwortet: Wann ist heute der beste Moment fuer was - und warum?",
+  "type": "module",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "check": "vite build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/amosstrategy/trade-Strat-1.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/amosstrategy/trade-Strat-1/issues"
+  },
+  "homepage": "https://github.com/amosstrategy/trade-Strat-1#readme",
+  "dependencies": {
+    "@fusionstrings/swisseph-wasm": "^0.1.5",
+    "vite": "^8.1.0"
+  }
+}
