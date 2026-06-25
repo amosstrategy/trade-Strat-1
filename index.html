@@ -304,6 +304,12 @@
       margin-top: 24px;
     }
 
+    .toolbar button.active {
+      border-color: var(--accent);
+      background: rgba(132, 220, 198, .14);
+      color: var(--accent);
+    }
+
     .score-card {
       padding: 26px;
       display: grid;
@@ -560,12 +566,14 @@
 <body>
   <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
   <script src="hd-engine.js"></script>
+  <script src="hd-logic.js"></script>
   <main class="app" id="app"></main>
 
   <script>
     const BL = (de, en) => ({ de, en });
     let lang = "de";
     let activeTab = "daily";
+    let showTransits = true;
     let selectedDateISO = "";
     let activeProfile = "daniel";
     const pentaOn = { daniel: true, patrick: true, paradise: true };
@@ -573,7 +581,8 @@
       profiles: "hd-custom-profiles-v1",
       meta: "hd-profile-meta-v1",
       transits: "hd-transit-cache-v2",
-      overrides: "hd-profile-overrides-v1"
+      overrides: "hd-profile-overrides-v1",
+      profileDb: "hd-profile-db-v2"
     };
 
     const T = value => typeof value === "string" ? value : (value[lang] || value.de);
@@ -615,10 +624,10 @@
       catch { return fallback; }
     };
     const saveJSON = (key, value) => localStorage.setItem(key, JSON.stringify(value));
-    const loadProfileMeta = () => loadJSON(STORAGE_KEYS.meta, {});
-    const saveProfileMeta = meta => saveJSON(STORAGE_KEYS.meta, meta);
-    const loadCustomProfiles = () => loadJSON(STORAGE_KEYS.profiles, {});
-    const saveCustomProfiles = profiles => saveJSON(STORAGE_KEYS.profiles, profiles);
+    const ProfileStore = HDLogic.createProfileStore({ loadJSON, saveJSON });
+    const ChartPipeline = HDLogic.createChartPipeline({
+      calculateChart: (date, time, tz, channels) => HDEngine.calculateChart(date, time, tz, channels)
+    });
     const parseGateList = text => [...new Set(
       String(text || "").split(/[,\s;]+/).map(v => Number(v.trim())).filter(g => g >= 1 && g <= 64)
     )].sort((a, b) => a - b);
@@ -660,31 +669,16 @@
       daniel: {
         id: "daniel",
         name: "Daniel",
-        subtitle: BL("Projector 4/1 | Milz-Autoritaet", "Projector 4/1 | Splenic authority"),
-        authority: BL("Milz-Impuls", "Splenic impulse"),
-        strategy: BL("Auf Einladung warten", "Wait for invitation"),
-        definedCenters: ["G", "Spleen"],
-        definedGates: [1, 2, 4, 5, 7, 9, 10, 11, 12, 13, 14, 15, 16, 17, 19, 25, 29, 38, 44, 45, 46, 50, 55, 57],
         tone: BL("Konstant wird es, wenn du auf echte Einladung wartest und dem ersten leisen Milz-Impuls vertraust.", "Consistency appears when you wait for a real invitation and trust the first quiet splenic signal.")
       },
       patrick: {
         id: "patrick",
         name: "Patrick",
-        subtitle: BL("Manifestor 1/3 | Emotionale Autoritaet", "Manifestor 1/3 | Emotional authority"),
-        authority: BL("Emotionale Klarheit", "Emotional clarity"),
-        strategy: BL("Informieren, bevor du handelst", "Inform before you act"),
-        definedCenters: ["Head", "Ajna", "Throat", "Solar"],
-        definedGates: [4, 8, 9, 10, 11, 12, 15, 22, 23, 28, 43, 49, 50, 51, 61, 63],
         tone: BL("Klarheit entsteht ueber eine ganze emotionale Welle — nicht durch sofortiges Tempo.", "Clarity arrives through a full emotional wave — not through immediate speed.")
       },
       paradise: {
         id: "paradise",
         name: "Paradise Ventures",
-        subtitle: BL("Manifesting Generator 5/1 | Emotionale Autoritaet", "Manifesting Generator 5/1 | Emotional authority"),
-        authority: BL("Emotionale Klarheit", "Emotional clarity"),
-        strategy: BL("Sakral pruefen, reagieren, dann informieren", "Check sacral, respond, then inform"),
-        definedCenters: ["Head", "Ajna", "Throat", "Ego", "Spleen", "Solar", "Sacral"],
-        definedGates: [10, 11, 12, 15, 19, 21, 22, 24, 26, 27, 28, 33, 45, 46, 50, 51, 54, 60, 61, 62],
         tone: BL("Die Marke wirkt stark, wenn Sakral-Energie, emotionale Klarheit und klare Sprache zusammenkommen.", "The brand is strongest when sacral energy, emotional clarity, and clear language align.")
       }
     };
@@ -904,14 +898,8 @@
       );
     }
 
-    const getAllProfiles = () => {
-      const merged = { ...PROFILES, ...loadCustomProfiles() };
-      const overrides = loadJSON(STORAGE_KEYS.overrides, {});
-      Object.entries(overrides).forEach(([id, data]) => {
-        if (merged[id]) merged[id] = { ...merged[id], ...data, id };
-      });
-      return merged;
-    };
+    const getAllProfiles = () => ProfileStore.getAllDisplay(PROFILES);
+    const getProfileRecord = id => ProfileStore.getRecord(id, PROFILES);
     const deriveDefinedCenters = gates => {
       const set = new Set(gates);
       const centers = new Set();
@@ -994,10 +982,37 @@
       Reflector: BL("Reflector", "Reflector")
     };
 
+    const PROFILE_LINE_NAMES = {
+      1: BL("Investigator", "Investigator"),
+      2: BL("Hermit", "Hermit"),
+      3: BL("Martyr", "Martyr"),
+      4: BL("Opportunist", "Opportunist"),
+      5: BL("Heretic", "Heretic"),
+      6: BL("Role Model", "Role Model")
+    };
+
+    function profileLineLabel(line) {
+      return PROFILE_LINE_NAMES[line] || BL(`Linie ${line}`, `Line ${line}`);
+    }
+
+    function profileSubtitleFromResult(result) {
+      const type = TYPE_LABELS[result.type] || BL(result.type, result.type);
+      const pLine = result.personalityLine || result.personality?.sun?.line;
+      const dLine = result.designLine || result.design?.sun?.line;
+      const profileKey = result.profile || `${pLine}/${dLine}`;
+      const names = pLine && dLine
+        ? `${T(profileLineLabel(pLine))} / ${T(profileLineLabel(dLine))}`
+        : "";
+      const core = `${T(type)} ${profileKey}`;
+      return BL(
+        names ? `${core} · ${names}` : core,
+        names ? `${core} · ${names}` : core
+      );
+    }
+
     function chartPayloadFromResult(result) {
       const authority = AUTHORITY_LABELS[result.authority] || BL(result.authority, result.authority);
       const strategy = STRATEGY_LABELS[result.strategy] || BL(result.strategy, result.strategy);
-      const type = TYPE_LABELS[result.type] || BL(result.type, result.type);
       return {
         personalityGates: result.personalityGates,
         designGates: result.designGates,
@@ -1005,40 +1020,31 @@
         definedCenters: result.definedCenters,
         personality: result.personality,
         design: result.design,
-        subtitle: BL(`${T(type)} ${result.profile}`, `${T(type)} ${result.profile}`),
+        subtitle: profileSubtitleFromResult(result),
         authority,
         strategy,
+        profileKey: result.profile,
+        personalityLine: result.personalityLine || result.personality?.sun?.line,
+        designLine: result.designLine || result.design?.sun?.line,
+        solarArcDegrees: result.solarArcDegrees,
+        engineVersion: result.engineVersion ?? HDEngine.CHART_ENGINE_VERSION,
         chartComputed: true
       };
     }
 
+    function chartErrorMessage(result) {
+      if (!result?.error) return null;
+      const map = {
+        no_astronomy: BL("Astronomy Engine nicht geladen.", "Astronomy engine not loaded."),
+        missing_birth: BL("Geburtsdatum und -zeit fehlen.", "Birth date and time missing."),
+        design_arc_invalid: BL(`Design-Bogen ungueltig (${result.solarArcDegrees?.toFixed(1)}° statt 88°). Bitte Seite neu laden.`, `Invalid design arc (${result.solarArcDegrees?.toFixed(1)}° not 88°). Please reload.`)
+      };
+      return map[result.error] || BL("Berechnung fehlgeschlagen.", "Calculation failed.");
+    }
+
     function calculateProfileChart(meta) {
-      if (!window.HDEngine?.hasAstronomy()) return null;
-      return HDEngine.calculateChart(meta.birthDate, meta.birthTime, meta.tzOffsetMinutes, CHANNELS, gateCenter);
-    }
-
-    function applyChartToProfile(id, meta) {
-      const result = calculateProfileChart(meta);
-      if (!result || result.error) return result;
-      const payload = chartPayloadFromResult(result);
-      if (PROFILES[id]) {
-        const overrides = loadJSON(STORAGE_KEYS.overrides, {});
-        overrides[id] = { ...getAllProfiles()[id], ...payload, id };
-        saveJSON(STORAGE_KEYS.overrides, overrides);
-      } else {
-        const custom = loadCustomProfiles();
-        custom[id] = { ...custom[id], ...payload, id };
-        saveCustomProfiles(custom);
-      }
-      return result;
-    }
-
-    function ensureProfilesCalculated() {
-      const metaAll = loadProfileMeta();
-      Object.keys(metaAll).forEach(id => {
-        const meta = metaAll[id];
-        if (meta.birthDate && meta.birthTime && !getAllProfiles()[id]?.chartComputed) applyChartToProfile(id, meta);
-      });
+      if (!window.HDEngine?.hasAstronomy()) return { error: "no_astronomy" };
+      return ChartPipeline.compute(meta, CHANNELS);
     }
 
     const DREAM_CARDS = [
@@ -1109,7 +1115,7 @@
     const computeTransits = date => {
       if (window.HDEngine?.hasAstronomy()) {
         const labels = Object.fromEntries(Object.keys(PLANET_LABELS).map(id => [id, T(PLANET_LABELS[id])]));
-        return HDEngine.transitsForDate(date, labels, gateCenter) || [];
+        return HDEngine.transitsForDate(date, labels) || [];
       }
       const days = daysSinceEpoch(date);
       return PLANETS.map(planet => {
@@ -1571,63 +1577,20 @@
 
   let chartSvgTemplate = null;
 
-  function buildHydrationCSS(profile, model) {
-    const personality = new Set(profile.personalityGates || profile.definedGates);
-    const design = new Set(profile.designGates || []);
-    const p = new Set([...personality, ...design]);
-    const d = new Set(model.transitGates);
-    const both = new Set([...p].filter(n => d.has(n)));
-    const designOnly = new Set([...d].filter(n => !p.has(n)));
-    const personalityOnly = new Set([...p].filter(n => !d.has(n)));
-    const activeGates = new Set([...p, ...d]);
-    const dOnlyChan = [], pOnlyChan = [], bothChan = [];
-    for (const [x, y] of BODYGRAPH_CHANNELS) {
-      const dDef = d.has(x) && d.has(y);
-      const pDef = p.has(x) && p.has(y);
-      if (dDef && pDef) bothChan.push([x, y]);
-      else if (dDef) dOnlyChan.push([x, y]);
-      else if (pDef) pOnlyChan.push([x, y]);
-    }
-    const rules = [];
-    rules.push(":root{--profile:#a89488;--gate:#9aa3b0;--gate-stroke:#d4b06a;--gate-text:#c5cdd8;--center:#8b95a3;--center-stroke:#6fcf97;--center-defined:#d7a4ff;--d:#5bdcb8;--p:#d7a4ff}");
-    rules.push(".go{stroke:var(--gate-stroke);stroke-width:1.4}");
-    rules.push("text{fill:var(--gate-text)}");
-    const gateAB = set => [...set].flatMap(n => [`#Gate${n}-a`, `#Gate${n}-b`]);
-    const intAB = (arr, s) => arr.map(([x, y]) => `#Integration${x}-${y}-${s}`);
-    const emitIntZ = arr => {
-      arr.forEach(([x, y]) => {
-        if (x === 20 && y === 57) return;
-        rules.push(`#Integration${x}-${y}-a,#Integration${x}-${y}-b,#Integration${x}-${y}-outline{display:block;}`);
-      });
-    };
-    const dSel = [...gateAB(designOnly), ...intAB(dOnlyChan, "a"), ...intAB(dOnlyChan, "b")];
-    if (dSel.length) rules.push(`${dSel.join(",")}{fill:var(--d)}`);
-    emitIntZ(dOnlyChan);
-    const pSel = [...gateAB(personalityOnly), ...intAB(pOnlyChan, "a"), ...intAB(pOnlyChan, "b")];
-    if (pSel.length) rules.push(`${pSel.join(",")}{fill:var(--p)}`);
-    emitIntZ(pOnlyChan);
-    const bothA = [[...both].map(n => `#Gate${n}-a`), ...intAB(bothChan, "a")].flat();
-    const bothB = [[...both].map(n => `#Gate${n}-b`), ...intAB(bothChan, "b")].flat();
-    if (bothA.length) rules.push(`${bothA.join(",")}{fill:var(--d)}`);
-    if (bothB.length) rules.push(`${bothB.join(",")}{fill:var(--p)}`);
-    emitIntZ(bothChan);
-    if (activeGates.size) {
-      rules.push([...activeGates].map(n => `#GateTextBg${n}`).join(",") + "{fill:#1a2230;stroke:#fff;stroke-width:1.2}");
-      rules.push([...activeGates].map(n => `#GateText${n}`).join(",") + "{fill:#fff;font-weight:800}");
-    }
-    const centers = profile.definedCenters.map(c => `[id="${CENTER_SVG_ID[c]}"]>path:first-of-type`);
-    if (centers.length) rules.push(`${centers.join(",")}{fill:var(--center-defined)}`);
-    return rules.join("");
-  }
-
-  function hydrateBodygraph(svgRoot, profile, model) {
+  function hydrateBodygraph(svgRoot, day) {
     let style = svgRoot.querySelector("style#hd-hydration");
     if (!style) {
       style = document.createElementNS("http://www.w3.org/2000/svg", "style");
       style.id = "hd-hydration";
       svgRoot.appendChild(style);
     }
-    style.textContent = buildHydrationCSS(profile, model);
+    style.textContent = HDLogic.buildHydrationCSS(
+      day.chart,
+      day.transit,
+      day.showTransits,
+      BODYGRAPH_CHANNELS,
+      CENTER_SVG_ID
+    );
   }
 
   function ensureChartTemplate() {
@@ -1635,9 +1598,13 @@
     return chartSvgTemplate;
   }
 
-  function mountBodygraph(profile, model) {
+  function mountBodygraph(day) {
     const host = document.getElementById("bodygraphHost");
     if (!host) return;
+    if (!day.profile.chartComputed) {
+      host.innerHTML = `<div class="small-card warning">${T(BL("Bodygraph wird angezeigt, sobald Geburtsdaten gespeichert sind.", "Bodygraph appears once birth data is saved."))}</div>`;
+      return;
+    }
     try {
       host.innerHTML = ensureChartTemplate();
       const svg = host.querySelector("svg");
@@ -1646,9 +1613,9 @@
         svg.setAttribute("viewBox", "-48 -32 948 1374");
         svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
         svg.setAttribute("role", "img");
-        svg.setAttribute("aria-label", "Bodygraph");
-        hydrateBodygraph(svg, profile, model);
-        bindBodygraphEvents(profile, model, host);
+        svg.setAttribute("aria-label", day.showTransits ? "Bodygraph with transits" : "Bodygraph");
+        hydrateBodygraph(svg, day);
+        bindBodygraphEvents(day, host);
       }
     } catch {
       host.innerHTML = `<div class="small-card">${T(BL("Bodygraph konnte nicht geladen werden.", "Bodygraph could not be loaded."))}</div>`;
@@ -1674,11 +1641,21 @@
     return null;
   }
 
-  function bindBodygraphEvents(profile, model, host) {
+  function centerNoteForProfile(profile, center) {
+    const defined = profile.definedCenters.includes(center);
+    if (profile.chartComputed) {
+      return defined ? CENTER_DESCRIPTIONS[center] : OPEN_CENTER_WARNINGS[center];
+    }
+    return CENTER_DESCRIPTIONS[center];
+  }
+
+  function bindBodygraphEvents(day, host) {
+    const profile = day.profile;
+    const model = day.display;
     host.querySelectorAll("[id^='Gate']").forEach(node => {
       node.addEventListener("click", event => {
         const gate = gateFromEventTarget(event.target);
-        if (gate) document.getElementById("detailBox").innerHTML = detailForGate(profile, model, gate);
+        if (gate) document.getElementById("detailBox").innerHTML = detailForGate(profile, day, gate);
       });
     });
     Object.values(CENTER_SVG_ID).forEach(svgId => {
@@ -1687,36 +1664,30 @@
       centerNode.addEventListener("click", () => {
         const center = Object.entries(CENTER_SVG_ID).find(([, id]) => id === svgId)[0];
         const defined = profile.definedCenters.includes(center);
-        const profileNote = PROFILE_CENTER_NOTES[profile.id][center] || CENTER_DESCRIPTIONS[center];
-        document.getElementById("detailBox").innerHTML = `<strong>${T(CENTER_LABELS[center])}</strong><br>${T(profileNote)}<br><span>${defined ? T(BL("Bei diesem Profil definiert.", "Defined in this profile.")) : T(OPEN_CENTER_WARNINGS[center])}</span>`;
+        const profileNote = centerNoteForProfile(profile, center);
+        document.getElementById("detailBox").innerHTML = `<strong>${T(CENTER_LABELS[center])}</strong><br>${T(profileNote)}<br><span>${defined ? T(BL("In deinem Chart definiert.", "Defined in your chart.")) : T(BL("In deinem Chart offen.", "Open in your chart."))}</span>`;
       });
     });
   }
 
-    function scoreFor(profile, date) {
-      const transits = transitsFor(date);
-      const transitGates = new Set(transits.map(t => t.gate));
+    function computeTransitScores(profile, transit) {
+      const transitGates = transit.gateSet;
       const personal = new Set(profile.definedGates);
       const values = Object.fromEntries(Object.keys(DIMENSIONS).map(dim => [dim, 4.2]));
-      const activatedChannels = [];
+      const activatedChannels = transit.activatedChannels;
 
-      transits.forEach(t => {
+      transit.transits.forEach(t => {
         const dim = GATE_INFO[t.gate].dimension;
         values[dim] += personal.has(t.gate) ? 2.1 : 1.05;
         if (!profile.definedCenters.includes(t.center)) values.clarity -= .15;
       });
 
-      CHANNELS.forEach(channel => {
-        const personalA = personal.has(channel.a), personalB = personal.has(channel.b);
-        const transitA = transitGates.has(channel.a), transitB = transitGates.has(channel.b);
-        const completedByTransit = (personalA && transitB) || (personalB && transitA);
-        const nativeChannel = personalA && personalB;
-        if (completedByTransit || nativeChannel) {
+      activatedChannels.forEach(channel => {
+        if (channel.completedByTransit || channel.nativeChannel) {
           const dimA = GATE_INFO[channel.a].dimension;
           const dimB = GATE_INFO[channel.b].dimension;
-          values[dimA] += completedByTransit ? 1.4 : .45;
-          values[dimB] += completedByTransit ? .9 : .35;
-          activatedChannels.push({ ...channel, completedByTransit, nativeChannel });
+          values[dimA] += channel.completedByTransit ? 1.4 : .45;
+          values[dimB] += channel.completedByTransit ? .9 : .35;
         }
       });
 
@@ -1730,7 +1701,34 @@
       const weight = Object.values(DIMENSIONS).reduce((sum, dim) => sum + dim.weight, 0);
       const overall = +(weighted / weight).toFixed(1);
       const abundance = (values.energy >= 7.2 && values.flow >= 6.2) || [14, 45, 26, 44, 21].some(g => transitGates.has(g) && personal.has(g));
-      return { transits, transitGates, values, overall, activatedChannels, abundance };
+      return { values, overall, abundance };
+    }
+
+    function computeChartScores(profile, chart) {
+      const values = Object.fromEntries(Object.keys(DIMENSIONS).map(dim => [dim, 5.0]));
+      chart.allGates.forEach(gate => {
+        values[GATE_INFO[gate].dimension] += 0.28;
+      });
+      chart.nativeChannels.forEach(ch => {
+        values[GATE_INFO[ch.a].dimension] += 0.55;
+        values[GATE_INFO[ch.b].dimension] += 0.4;
+      });
+      Object.keys(values).forEach(dim => values[dim] = +clamp(values[dim]).toFixed(1));
+      const weighted = Object.entries(values).reduce((sum, [dim, value]) => sum + value * DIMENSIONS[dim].weight, 0);
+      const weight = Object.values(DIMENSIONS).reduce((sum, dim) => sum + dim.weight, 0);
+      const overall = +(weighted / weight).toFixed(1);
+      const abundance = [14, 45, 26, 44, 21].some(g => chart.gateSet.has(g));
+      return { values, overall, abundance };
+    }
+
+    function buildModel(profile, date, withTransits) {
+      const transits = transitsFor(date);
+      const day = HDLogic.buildDayModel(profile, transits, CHANNELS, withTransits, {
+        full: computeTransitScores,
+        chart: computeChartScores
+      });
+      day.profile = profile;
+      return day;
     }
 
     const ringColor = score => score >= 7 ? "var(--good)" : score >= 5 ? "var(--warn)" : "var(--low)";
@@ -2088,7 +2086,54 @@
       return T(map[impact] || BL("Transit", "Transit"));
     }
 
-    function renderDailyReadingCards(profile, model) {
+    function renderChartReadingCards(profile, chart) {
+      const cards = [
+        readingCard(
+          "theme", "◆",
+          BL("DEIN DESIGN", "YOUR DESIGN"),
+          `${chart.gateCount} ${T(BL("Tore", "gates"))} · ${chart.centerCount} ${T(BL("Zentren", "centers"))} · ${chart.channelCount} ${T(BL("Kanaele", "channels"))}`,
+          BL(
+            `${T(profile.subtitle)}. Autoritaet: ${T(profile.authority)}. Strategie: ${T(profile.strategy)}.`,
+            `${T(profile.subtitle)}. Authority: ${T(profile.authority)}. Strategy: ${T(profile.strategy)}.`
+          ),
+          BL(
+            "Was gehoert fest zu dir — unabhaengig vom heutigen Transit-Wetter?",
+            "What is permanently yours — independent of today's transit weather?"
+          )
+        ),
+        readingCard(
+          "practical", "◎",
+          BL("DEFINIERTE ZENTREN", "DEFINED CENTERS"),
+          profile.definedCenters.map(c => T(CENTER_LABELS[c])).join(" · "),
+          BL(
+            `Deine festen Zentren: ${profile.definedCenters.map(c => CENTER_LABELS[c].de).join(", ")}. Dort hast du konstante Energie.`,
+            `Your fixed centers: ${profile.definedCenters.map(c => CENTER_LABELS[c].en).join(", ")}. That's where your energy is constant.`
+          ),
+          BL(
+            "Wo lebst du heute aus deinem festen Design — nicht aus dem Feld?",
+            "Where are you living from your fixed design today — not from the field?"
+          )
+        )
+      ];
+      chart.nativeChannels.slice(0, 3).forEach(ch => {
+        cards.push(readingCard(
+          "channel", "⟷",
+          BL(`KANAL ${ch.a}-${ch.b}`, `CHANNEL ${ch.a}-${ch.b}`),
+          `${T(CENTER_LABELS[ch.from])} ↔ ${T(CENTER_LABELS[ch.to])}`,
+          channelInfluenceText(profile, ch),
+          channelReadingQuestion(profile, ch)
+        ));
+      });
+      return `<div class="reading-cards">${cards.join("")}</div>`;
+    }
+
+    function renderDailyReadingCards(profile, day) {
+      const model = day.display;
+      if (!profile.chartComputed) {
+        return `<div class="small-card warning">${T(BL("Tages-Lesung und Bodygraph brauchen ein gespeichertes Chart. Bitte unter Eingabe Geburtsdaten eingeben und «Berechnen & Speichern» klicken.", "Daily reading and bodygraph need a saved chart. Please enter birth data under Input and click «Calculate & save»."))}</div>`;
+      }
+      if (model.mode === "chartOnly") return renderChartReadingCards(profile, day.chart);
+
       let sun = model.transits.find(t => t.id === "sun");
       let earth = model.transits.find(t => t.id === "earth");
       let moon = model.transits.find(t => t.id === "moon");
@@ -2210,11 +2255,32 @@
       return `<div id="bodygraphHost" class="bodygraph-host"></div>`;
     }
 
-    function detailForGate(profile, model, gate) {
+    function detailForGate(profile, day, gate) {
+      const model = day.display;
+      const chart = day.chart;
       const info = GATE_INFO[gate];
       const transit = model.transits.filter(t => t.gate === gate).map(t => T(t.name)).join(", ");
-      const personal = profile.definedGates.includes(gate);
-      const status = personal && transit ? BL("im Chart und heute im Transit aktiv", "active in chart and today's transit") : personal ? BL("im Chart definiert (Persoenlichkeit)", "defined in chart (personality)") : transit ? BL(`heute durch ${transit} aktiviert (Transit)`, `activated today by ${transit} (transit)`) : BL("nicht aktiv", "not active");
+      const inChart = chart.gateSet.has(gate);
+      const inPersonality = chart.personalityGates.includes(gate);
+      const inDesign = chart.designGates.includes(gate);
+      let status;
+      if (model.mode === "chartOnly") {
+        status = inPersonality && inDesign
+          ? BL("Persoenlichkeit + Design (beide Haelften)", "Personality + design (both halves)")
+          : inDesign
+            ? BL("Design-Tor im Chart", "Design gate in chart")
+            : inPersonality || inChart
+              ? BL("Persoenlichkeits-Tor im Chart", "Personality gate in chart")
+              : BL("nicht im Chart", "not in chart");
+      } else {
+        status = inChart && transit
+          ? BL("im Chart und heute im Transit aktiv", "active in chart and today's transit")
+          : inChart
+            ? BL("im Chart definiert", "defined in chart")
+            : transit
+              ? BL(`heute durch ${transit} aktiviert (Transit)`, `activated today by ${transit} (transit)`)
+              : BL("nicht aktiv", "not active");
+      }
       return `<strong>Tor ${gate}: ${T(info.name)}</strong><br>${T(status)}.<br>${T(info.description)}<br><span>${T(CENTER_LABELS[info.center])} | ${T(DIMENSIONS[info.dimension].label)}</span>`;
     }
 
@@ -2244,9 +2310,13 @@
         </div>`;
     }
 
-    function renderProfilePanel(profile, model, date) {
+    function renderProfilePanel(profile, day, date) {
+      const model = day.display;
       const openCenters = Object.keys(CENTER_LABELS).filter(center => !profile.definedCenters.includes(center));
       const allProfiles = getAllProfiles();
+      const readingTitle = model.mode === "chartOnly"
+        ? BL("Chart-Lesung", "Chart reading")
+        : BL("Tages-Lesung", "Daily reading");
       return `
         <section class="panel">
           <h2>${T(BL("Profil", "Profile"))}</h2>
@@ -2255,7 +2325,7 @@
               <div class="field">
                 <label for="profileSelect">${T(BL("Person / Marke", "Person / brand"))}</label>
                 <select id="profileSelect" class="profile-select" aria-label="Profile">
-                  ${Object.values(allProfiles).map(p => `<option value="${p.id}" ${p.id === profile.id ? "selected" : ""}>${p.name}</option>`).join("")}
+                  ${Object.values(allProfiles).map(p => `<option value="${p.id}" ${p.id === profile.id ? "selected" : ""}>${p.name}${p.chartComputed ? " ✓" : ""}</option>`).join("")}
                 </select>
               </div>
               <div class="field">
@@ -2265,16 +2335,17 @@
             </div>
             <div class="small-card" style="margin-top:4px">
               <strong>${profile.name}</strong> · <span style="color:var(--accent)">${formatDateLong(date)}</span><br>
-              ${T(profile.subtitle)}<br><br>
-              <span>${T(BL("Autoritaet", "Authority"))}: ${T(profile.authority)}</span><br>
-              <span>${T(BL("Strategie", "Strategy"))}: ${T(profile.strategy)}</span>
+              ${profile.chartComputed ? T(profile.subtitle) : T(BL("Chart noch nicht berechnet — Geburtsdaten unter Eingabe speichern.", "Chart not calculated yet — save birth data under Input."))}<br><br>
+              <span>${T(BL("Autoritaet", "Authority"))}: ${profile.chartComputed ? T(profile.authority) : "—"}</span><br>
+              <span>${T(BL("Strategie", "Strategy"))}: ${profile.chartComputed ? T(profile.strategy) : "—"}</span>
             </div>
+            ${!profile.chartComputed ? `<div class="small-card warning" style="margin-top:10px">${profile.chartStale ? T(BL("Dein gespeichertes Chart ist veraltet (alte Berechnung oder Platzhalter-Daten). Bitte unter Eingabe erneut «Berechnen & Speichern» — pruefe die Vorschau (Typ, Profil, Sonnen-Linien).", "Your saved chart is outdated (old calculation or placeholder data). Under Input, click «Calculate & save» again — check the preview (type, profile, sun lines).")) : T(BL("Kein gespeichertes Chart. Bitte Geburtsdaten unter Eingabe eingeben und speichern.", "No saved chart. Please enter birth data under Input and save."))}</div>` : ""}
             <div class="tag-row">
-              ${profile.definedCenters.map(center => `<span class="tag"><strong>${T(CENTER_LABELS[center])}</strong></span>`).join("")}
+              ${profile.definedCenters.length ? profile.definedCenters.map(center => `<span class="tag"><strong>${T(CENTER_LABELS[center])}</strong></span>`).join("") : `<span class="tag" style="opacity:.6">${T(BL("Noch keine definierten Zentren", "No defined centers yet"))}</span>`}
             </div>
           </div>
-          <h2>${T(BL("Tages-Lesung", "Daily reading"))}</h2>
-          ${renderDailyReadingCards(profile, model)}
+          <h2>${T(readingTitle)}</h2>
+          ${renderDailyReadingCards(profile, day)}
           <h2>${T(BL("Offene Zentren", "Open centers"))}</h2>
           ${openCenters.slice(0, 5).map(center => `<div class="small-card warning"><strong>${T(CENTER_LABELS[center])}</strong><br>${T(OPEN_CENTER_WARNINGS[center])}</div>`).join("")}
           <h2>${T(BL("Traum-Notiz", "Dream note"))}</h2>
@@ -2354,8 +2425,8 @@
     function renderInputTab() {
       const profiles = getAllProfiles();
       const profile = profiles[activeProfile] || PROFILES.daniel;
-      const metaAll = loadProfileMeta();
-      const meta = metaAll[activeProfile] || {};
+      const record = getProfileRecord(activeProfile);
+      const meta = record.birth || {};
       const isCustom = !PROFILES[activeProfile];
       const computed = profile.chartComputed;
       const tzVal = meta.tzOffsetMinutes ?? defaultTzOffset();
@@ -2368,16 +2439,12 @@
       return `
         <section class="panel">
           <h2>${T(BL("Eingabe & Geburtsdaten", "Input & birth data"))}</h2>
-          <p style="color:var(--muted);line-height:1.5;margin-bottom:16px">${T(BL("Persoenliche Daten eingeben — Berechnung laeuft online (Astronomy Engine). Design-Moment (Sonne −88°), Typ, Profil, Autoritaet und Tore werden automatisch ermittelt.", "Enter personal data — calculation runs online (Astronomy Engine). Design moment (Sun −88°), type, profile, authority, and gates are computed automatically."))}</p>
+          <p style="color:var(--muted);line-height:1.5;margin-bottom:16px">${T(BL("Daten werden nur bei «Berechnen & Speichern» in der Profil-Datenbank gespeichert — nie automatisch beim Laden.", "Data is only saved to the profile database when you click «Calculate & save» — never automatically on load."))}</p>
+          <p style="color:var(--muted);line-height:1.5;margin-bottom:16px">${T(BL(`Aktives Profil: ${profile.name} — auf der Daily Map oben wechseln.`, `Active profile: ${profile.name} — switch on the Daily Map above.`))}</p>
           ${!window.HDEngine?.hasAstronomy() ? `<div class="small-card warning">${T(BL("Berechnungs-Engine wird geladen… Internetverbindung noetig.", "Calculation engine loading… internet connection required."))}</div>` : ""}
+          ${profile.chartStale ? `<div class="small-card warning">${T(BL("Gespeichertes Chart ist veraltet. Bitte «Vorschau» pruefen und «Berechnen & Speichern» klicken.", "Saved chart is outdated. Check «Preview» and click «Calculate & save»."))}</div>` : ""}
           <form id="profileForm">
             <div class="form-grid">
-              <div class="field">
-                <label for="inputProfileSelect">${T(BL("Profil", "Profile"))}</label>
-                <select id="inputProfileSelect" class="profile-select">
-                  ${Object.values(profiles).map(p => `<option value="${p.id}" ${p.id === activeProfile ? "selected" : ""}>${p.name}${p.chartComputed ? " ✓" : ""}</option>`).join("")}
-                </select>
-              </div>
               <div class="field">
                 <label for="inputName">${T(BL("Name", "Name"))} *</label>
                 <input id="inputName" name="name" type="text" value="${profile.name}" required>
@@ -2389,10 +2456,12 @@
               <div class="field">
                 <label for="inputBirthTime">${T(BL("Geburtszeit", "Birth time"))} *</label>
                 <input id="inputBirthTime" name="birthTime" type="time" value="${meta.birthTime || ""}" required>
+                <p style="color:var(--muted);font-size:.82rem;line-height:1.45;margin:6px 0 0">${T(BL("Profil-Linie (z. B. 4/1) reagiert auf Minuten — exakte Uhrzeit laut Geburtsurkunde.", "Profile line (e.g. 4/1) shifts with minutes — use exact time from birth certificate."))}</p>
               </div>
               <div class="field">
                 <label for="inputTzOffset">${T(BL("Zeitzone (Geburtsort)", "Timezone (birth place)"))} *</label>
                 <select id="inputTzOffset" class="profile-select">${tzOptionsHtml(tzVal)}</select>
+                <p style="color:var(--muted);font-size:.82rem;line-height:1.45;margin:6px 0 0">${T(BL("Zeitzone des Geburtsorts, nicht dein aktueller Standort. Sommerzeit beachten (z. B. MESZ = UTC+02:00).", "Birth place timezone, not your current location. Account for daylight saving (e.g. CEST = UTC+02:00)."))}</p>
               </div>
               <div class="field" style="grid-column:1/-1">
                 <label for="inputBirthPlace">${T(BL("Geburtsort (optional)", "Birth place (optional)"))}</label>
@@ -2455,8 +2524,26 @@
       const profiles = getAllProfiles();
       const profile = profiles[activeProfile] || PROFILES.daniel;
       const date = currentDate();
-      const model = scoreFor(profile, date);
+      const day = buildModel(profile, date, showTransits);
+      const model = day.display;
       const scoreLabel = model.overall >= 7 ? BL("stark", "strong") : model.overall >= 5 ? BL("steuerbar", "steerable") : BL("ruhig", "quiet");
+      const scoreCaption = showTransits
+        ? T(BL("Gesamtscore", "Overall score"))
+        : T(BL("Chart-Baseline", "Chart baseline"));
+      const heroMetrics = showTransits
+        ? `<span class="metric"><strong>${model.transits.length}</strong> ${T(BL("Planeten", "planets"))}</span>
+              <span class="metric"><strong>${model.transitGates.size}</strong> ${T(BL("Transit-Gates", "transit gates"))}</span>
+              <span class="metric"><strong>${model.activatedChannels.length}</strong> ${T(BL("Kanaele", "channels"))}</span>`
+        : `<span class="metric"><strong>${day.chart.gateCount}</strong> ${T(BL("Chart-Tore", "chart gates"))}</span>
+              <span class="metric"><strong>${day.chart.centerCount}</strong> ${T(BL("Zentren", "centers"))}</span>
+              <span class="metric"><strong>${day.chart.channelCount}</strong> ${T(BL("Kanaele", "channels"))}</span>`;
+      const bodygraphChips = showTransits
+        ? `<span class="chip">${T(BL("Violett: Chart", "Purple: chart"))}</span>
+              <span class="chip">${T(BL("Tuerkis: Transit", "Teal: transit"))}</span>
+              <span class="chip">${T(BL("Beide Haelften: Chart + Transit", "Both halves: chart + transit"))}</span>`
+        : `<span class="chip">${T(BL("Violett: Persoenlichkeit", "Purple: personality"))}</span>
+              <span class="chip">${T(BL("Tuerkis: Design", "Teal: design"))}</span>
+              <span class="chip">${T(BL("Kanaele: dein festes Design", "Channels: your fixed design"))}</span>`;
       document.documentElement.lang = lang;
 
       const dailyView = `
@@ -2468,6 +2555,7 @@
               <p class="lead">${T(BL("Taegliche Karte mit Transit-Gates, definierten Zentren, Abundance-Fenster und praktischer Sprache.", "Daily map with transit gates, defined centers, abundance windows, and practical language."))}</p>
             </div>
             <div class="toolbar">
+              <button id="transitToggleBtn" type="button" class="${showTransits ? "active" : ""}" aria-pressed="${showTransits}">${showTransits ? T(BL("Transite: An", "Transits: On")) : T(BL("Transite: Aus", "Transits: Off"))}</button>
               <button id="langBtn" type="button">${lang === "de" ? "EN" : "DE"}</button>
             </div>
           </div>
@@ -2476,30 +2564,26 @@
             <div class="score-ring" style="--score:${model.overall};--ring:${ringColor(model.overall)}">
               <strong>${model.overall}</strong>
             </div>
-            <p class="date-line">${T(BL("Gesamtscore", "Overall score"))}: ${T(scoreLabel)} ${model.abundance ? "· " + T(BL("Abundance-Fenster offen", "abundance window open")) : ""}</p>
-            <div class="metric-row">
-              <span class="metric"><strong>${model.transits.length}</strong> ${T(BL("Planeten", "planets"))}</span>
-              <span class="metric"><strong>${model.transitGates.size}</strong> ${T(BL("Transit-Gates", "transit gates"))}</span>
-              <span class="metric"><strong>${model.activatedChannels.length}</strong> ${T(BL("Kanaele", "channels"))}</span>
-            </div>
+            <p class="date-line">${scoreCaption}: ${T(scoreLabel)} ${model.abundance ? "· " + T(BL("Abundance-Fenster offen", "abundance window open")) : ""}</p>
+            <div class="metric-row">${heroMetrics}</div>
           </div>
         </section>
         ${renderDateBar(date)}
         <section class="grid">
-          ${renderProfilePanel(profile, model, date)}
+          ${renderProfilePanel(profile, day, date)}
           <section class="panel bodygraph-wrap">
-            <h2>${T(BL("Live Bodygraph", "Live bodygraph"))}</h2>
+            <h2>${showTransits ? T(BL("Live Bodygraph", "Live bodygraph")) : T(BL("Dein Bodygraph", "Your bodygraph"))}</h2>
             ${renderBodygraph()}
-            <div class="chips">
-              <span class="chip">${T(BL("Violett: Chart", "Purple: chart"))}</span>
-              <span class="chip">${T(BL("Tuerkis: Transit", "Teal: transit"))}</span>
-              <span class="chip">${T(BL("Beide Haelften: Chart + Transit", "Both halves: chart + transit"))}</span>
-            </div>
+            <div class="chips">${bodygraphChips}</div>
             <div class="detail-box" id="detailBox"><strong>${T(BL("Klicke ein Tor oder Zentrum.", "Click a gate or center."))}</strong><br>${T(profile.tone)}</div>
             <h2>${T(BL("6 Dimensionen", "6 dimensions"))}</h2>
             ${renderScores(model)}
           </section>
-          <div>${renderTransitInfluencePanel(profile, model)}</div>
+          <div>${showTransits ? renderTransitInfluencePanel(profile, model) : `
+        <section class="panel">
+          <h2>${T(BL("Transit-Einfluesse", "Transit influences"))}</h2>
+          <div class="small-card" style="color:var(--muted)">${T(BL("Transite sind ausgeschaltet. Button oben rechts aktivieren.", "Transits are off. Use the button top right to enable."))}</div>
+        </section>`}</div>
         </section>`;
 
       const pentaView = `
@@ -2515,20 +2599,24 @@
         <div class="tab-panel ${activeTab === "daily" ? "" : "hidden"}">${dailyView}</div>
         <div class="tab-panel ${activeTab === "penta" ? "" : "hidden"}">${pentaView}</div>
         <div class="tab-panel ${activeTab === "input" ? "" : "hidden"}">${inputView}</div>
-        <p class="footer">${T(BL("Lokal gespeichert: Profile, Geburtsdaten und Transit-Cache im Browser.", "Stored locally: profiles, birth data, and transit cache in the browser."))}</p>
+        <p class="footer">${T(BL("Profil-Datenbank v2 (hd-profile-db-v2) · Engine v4 · Chart nur bei «Berechnen & Speichern».", "Profile database v2 (hd-profile-db-v2) · Engine v4 · Chart only on «Calculate & save»."))}</p>
       `;
 
-      bindEvents(profile, model);
-      if (activeTab === "daily") mountBodygraph(profile, model);
+      bindEvents(profile, day);
+      if (activeTab === "daily") mountBodygraph(day);
     }
 
-    function bindEvents(profile, model) {
+    function bindEvents(profile, day) {
+      const model = day.display;
       document.querySelectorAll("[data-tab]").forEach(btn => btn.addEventListener("click", () => {
         activeTab = btn.dataset.tab;
         renderApp();
       }));
       const langBtn = document.getElementById("langBtn");
       if (langBtn) langBtn.addEventListener("click", () => { lang = lang === "de" ? "en" : "de"; renderApp(); });
+
+      const transitToggleBtn = document.getElementById("transitToggleBtn");
+      if (transitToggleBtn) transitToggleBtn.addEventListener("click", () => { showTransits = !showTransits; renderApp(); });
 
       const onDateChange = value => {
         if (!value) return;
@@ -2553,9 +2641,6 @@
         renderApp();
       }));
 
-      const inputProfileSelect = document.getElementById("inputProfileSelect");
-      if (inputProfileSelect) inputProfileSelect.addEventListener("change", e => { activeProfile = e.target.value; renderApp(); });
-
       const readBirthMeta = () => ({
         birthDate: document.getElementById("inputBirthDate")?.value,
         birthTime: document.getElementById("inputBirthTime")?.value,
@@ -2577,13 +2662,18 @@
         const result = calculateProfileChart(meta);
         const box = document.getElementById("chartPreviewBox");
         if (!result || result.error) {
-          if (box) box.innerHTML = `<span style="color:var(--warn)">${T(BL("Berechnung fehlgeschlagen.", "Calculation failed."))}</span>`;
+          if (box) box.innerHTML = `<span style="color:var(--warn)">${T(chartErrorMessage(result) || BL("Berechnung fehlgeschlagen.", "Calculation failed."))}</span>`;
           return;
         }
         const payload = chartPayloadFromResult(result);
         if (box) {
           box.style.display = "block";
-          box.innerHTML = `<strong>${T(BL("Vorschau", "Preview"))}</strong><br>${T(payload.subtitle)}<br>${T(payload.authority)} · ${T(payload.strategy)}<br><span style="color:var(--muted)">${payload.definedGates.length} ${T(BL("Tore", "gates"))}: ${payload.definedGates.join(", ")}</span>`;
+          const sunP = result.personality?.sun;
+          const sunD = result.design?.sun;
+          const sunDetail = sunP && sunD
+            ? `<br><span style="color:var(--muted)">${T(BL("Sonne Persoenlichkeit", "Personality Sun"))}: G${sunP.gate}.${sunP.line} · ${T(BL("Sonne Design", "Design Sun"))}: G${sunD.gate}.${sunD.line} · ${T(BL("Sonnenbogen", "Solar arc"))}: ${(result.solarArcDegrees ?? ((sunP.longitude - sunD.longitude + 360) % 360)).toFixed(2)}° · Engine v${HDEngine.CHART_ENGINE_VERSION}</span>`
+            : "";
+          box.innerHTML = `<strong>${T(BL("Vorschau", "Preview"))}</strong><br>${T(payload.subtitle)}<br>${T(payload.authority)} · ${T(payload.strategy)}${sunDetail}<br><span style="color:var(--muted)">${payload.definedGates.length} ${T(BL("Tore", "gates"))}: ${payload.definedGates.join(", ")}</span><br><span style="color:var(--muted)">${payload.definedCenters.map(c => T(CENTER_LABELS[c])).join(" · ")}</span>`;
         }
       });
 
@@ -2596,13 +2686,9 @@
           return;
         }
         const id = activeProfile;
-        const metaAll = loadProfileMeta();
-        metaAll[id] = meta;
-        saveProfileMeta(metaAll);
         const name = document.getElementById("inputName").value.trim();
         const toneText = document.getElementById("inputTone").value.trim();
         const tone = BL(toneText, toneText);
-        let payload;
 
         if (!window.HDEngine?.hasAstronomy()) {
           alert(T(BL("Berechnung braucht Internet. Bitte Seite neu laden und erneut versuchen.", "Calculation needs internet. Please reload and try again.")));
@@ -2610,51 +2696,32 @@
         }
         const result = calculateProfileChart(meta);
         if (!result || result.error) {
-          alert(T(BL("Chart-Berechnung fehlgeschlagen. Bitte Datum, Zeit und Zeitzone pruefen.", "Chart calculation failed. Please check date, time, and timezone.")));
+          alert(T(chartErrorMessage(result) || BL("Chart-Berechnung fehlgeschlagen.", "Chart calculation failed.")));
           return;
         }
-        payload = { id, name, tone, ...chartPayloadFromResult(result) };
-
-        if (PROFILES[id]) {
-          const overrides = loadJSON(STORAGE_KEYS.overrides, {});
-          overrides[id] = payload;
-          saveJSON(STORAGE_KEYS.overrides, overrides);
-        } else {
-          const custom = loadCustomProfiles();
-          custom[id] = payload;
-          saveCustomProfiles(custom);
-        }
+        const chartPayload = chartPayloadFromResult(result);
+        ProfileStore.savePerson(id, {
+          birth: meta,
+          chart: chartPayload,
+          name,
+          tone
+        });
         activeTab = "daily";
         renderApp();
       });
 
       const resetProfileBtn = document.getElementById("resetProfileBtn");
       if (resetProfileBtn) resetProfileBtn.addEventListener("click", () => {
-        const id = activeProfile;
-        const metaAll = loadProfileMeta();
-        delete metaAll[id];
-        saveProfileMeta(metaAll);
-        const overrides = loadJSON(STORAGE_KEYS.overrides, {});
-        delete overrides[id];
-        saveJSON(STORAGE_KEYS.overrides, overrides);
+        ProfileStore.clearPerson(activeProfile, PROFILES);
         renderApp();
       });
 
       const newProfileBtn = document.getElementById("newProfileBtn");
       if (newProfileBtn) newProfileBtn.addEventListener("click", () => {
         const id = `custom-${Date.now()}`;
-        const custom = loadCustomProfiles();
-        custom[id] = {
-          id,
-          name: T(BL("Neues Profil", "New profile")),
-          subtitle: BL("", ""),
-          authority: BL("", ""),
-          strategy: BL("", ""),
-          tone: BL("", ""),
-          definedGates: [],
-          definedCenters: []
-        };
-        saveCustomProfiles(custom);
+        const name = T(BL("Neues Profil", "New profile"));
+        const tone = BL("", "");
+        ProfileStore.addCustomPerson(id, name, tone);
         activeProfile = id;
         activeTab = "input";
         renderApp();
@@ -2663,15 +2730,7 @@
       const deleteProfileBtn = document.getElementById("deleteProfileBtn");
       if (deleteProfileBtn) deleteProfileBtn.addEventListener("click", () => {
         if (PROFILES[activeProfile]) return;
-        const custom = loadCustomProfiles();
-        delete custom[activeProfile];
-        saveCustomProfiles(custom);
-        const metaAll = loadProfileMeta();
-        delete metaAll[activeProfile];
-        saveProfileMeta(metaAll);
-        const overrides = loadJSON(STORAGE_KEYS.overrides, {});
-        delete overrides[activeProfile];
-        saveJSON(STORAGE_KEYS.overrides, overrides);
+        ProfileStore.clearPerson(activeProfile, PROFILES);
         activeProfile = "daniel";
         renderApp();
       });
@@ -2690,7 +2749,7 @@
         return;
       }
       try {
-        ensureProfilesCalculated();
+        ProfileStore.migrateBirthOnly(PROFILES);
         renderApp();
       } catch (err) {
         const msg = err?.message || String(err);
