@@ -566,8 +566,7 @@
 <body>
   <script>
     if (location.protocol === "file:") {
-      document.write(`<main class="app" id="app"><section class="panel warning" style="margin:40px auto;max-width:560px;text-align:center;padding:24px"><h2>So öffnest du die App</h2><p style="margin-top:12px;color:#9aa3ad;line-height:1.55">Per Doppelklick funktioniert die Berechnung nicht (Browser blockiert WASM/Module).</p><p style="margin-top:12px"><strong>Terminal im Ordner trade-Strat-1:</strong><br><code style="display:inline-block;margin-top:8px;padding:8px 12px;background:rgba(0,0,0,.3);border-radius:8px">python -m http.server 8765</code></p><p style="margin-top:12px">Dann: <a href="http://localhost:8765">http://localhost:8765</a></p></section></main>`);
-      throw new Error("file protocol");
+      location.replace("https://amosstrategy.github.io/trade-Strat-1/");
     }
   </script>
   <script type="module" src="hd-bootstrap.mjs"></script>
