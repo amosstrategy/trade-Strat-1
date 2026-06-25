@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>HD Engine Verify</title>
+</head>
+<body>
+  <pre id="out">Loading Swiss Ephemeris…</pre>
+  <script type="module" src="hd-bootstrap.mjs"></script>
+  <script src="hd-engine.js"></script>
+  <script>
+    (async function () {
+      const out = document.getElementById("out");
+      try {
+        await new Promise((resolve, reject) => {
+          if (window.HDEphemeris?.ready) return resolve();
+          window.addEventListener("hd-ephemeris-ready", resolve, { once: true });
+          setTimeout(() => reject(new Error("ephemeris timeout")), 120000);
+        });
+        const ch = HDEngine.STANDARD_CHANNELS;
+        const r = HDEngine.calculateChart("1990-01-01", "00:01", 0, ch);
+        if (r.error) {
+          window.__VERIFY_RESULT__ = { error: r.error, detail: r };
+        } else {
+          window.__VERIFY_RESULT__ = {
+            profile: r.profile,
+            type: r.type,
+            authority: r.authority,
+            definedCenters: [...r.definedCenters].sort(),
+            gates: r.definedGates,
+            designUtc: r.designUtc,
+            personality: Object.fromEntries(
+              Object.entries(r.personality).map(([k, v]) => [k, [v.gate, v.line]])
+            ),
+            design: Object.fromEntries(
+              Object.entries(r.design).map(([k, v]) => [k, [v.gate, v.line]])
+            )
+          };
+        }
+        window.__VERIFY_DONE__ = true;
+        out.textContent = JSON.stringify(window.__VERIFY_RESULT__, null, 2);
+      } catch (err) {
+        window.__VERIFY_RESULT__ = { error: String(err) };
+        window.__VERIFY_DONE__ = true;
+        out.textContent = String(err);
+      }
+    })();
+  </script>
+</body>
+</html>

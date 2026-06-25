@@ -3,12 +3,15 @@
  * Personality @ birth UTC; Design @ exact moment when Sun was 88° earlier (solar arc).
  */
 (function (global) {
-  const CHART_ENGINE_VERSION = 4;
+  const CHART_ENGINE_VERSION = 7;
 
   /** Gate 41 anchor: 2° Aquarius = 302° ecliptic (Jovian / Rave Mandala standard). */
   const WHEEL_START = 302;
   const GATE_WIDTH = 360 / 64;
   const LINE_WIDTH = GATE_WIDTH / 6;
+  const COLOR_WIDTH = 0.15625;
+  const TONE_WIDTH = 0.026041666666667;
+  const BASE_WIDTH = 0.005208333333333;
   const DESIGN_ARC_DEG = 88;
   const SOLAR_ARC_TOLERANCE = 0.02;
 
@@ -18,6 +21,21 @@
 
   const MOTOR_CENTERS = new Set(["Root", "Sacral", "Solar", "Ego"]);
   const PLANET_IDS = ["sun", "earth", "north_node", "south_node", "moon", "mercury", "venus", "mars", "jupiter", "saturn", "uranus", "neptune", "pluto"];
+
+  /** All 36 Jovian channels — single source for center + type derivation. */
+  const STANDARD_CHANNELS = [
+    [64, 47, "Head", "Ajna"], [61, 24, "Head", "Ajna"], [63, 4, "Head", "Ajna"],
+    [17, 62, "Ajna", "Throat"], [43, 23, "Ajna", "Throat"], [11, 56, "Ajna", "Throat"],
+    [31, 7, "Throat", "G"], [8, 1, "Throat", "G"], [33, 13, "Throat", "G"], [20, 10, "Throat", "G"],
+    [10, 57, "G", "Spleen"], [10, 34, "G", "Sacral"],
+    [20, 34, "Throat", "Sacral"], [16, 48, "Throat", "Spleen"], [57, 20, "Spleen", "Throat"],
+    [12, 22, "Throat", "Solar"], [35, 36, "Throat", "Solar"], [21, 45, "Ego", "Throat"],
+    [2, 14, "G", "Sacral"], [5, 15, "Sacral", "G"], [29, 46, "Sacral", "G"], [25, 51, "G", "Ego"],
+    [34, 57, "Sacral", "Spleen"], [27, 50, "Sacral", "Spleen"], [44, 26, "Spleen", "Ego"],
+    [59, 6, "Sacral", "Solar"], [37, 40, "Solar", "Ego"], [49, 19, "Solar", "Root"], [30, 41, "Solar", "Root"], [55, 39, "Solar", "Root"],
+    [3, 60, "Sacral", "Root"], [42, 53, "Sacral", "Root"], [9, 52, "Sacral", "Root"],
+    [32, 54, "Spleen", "Root"], [28, 38, "Spleen", "Root"], [18, 58, "Spleen", "Root"]
+  ].map(([a, b, from, to]) => ({ a, b, from, to, key: `${a}-${b}` }));
 
   function norm(deg) {
     return ((deg % 360) + 360) % 360;
@@ -32,30 +50,24 @@
     return norm(personalityLon - designLon);
   }
 
-  function hasAstronomy() {
-    return typeof global.Astronomy !== "undefined";
+  function hasEphemeris() {
+    return !!(global.HDEphemeris && global.HDEphemeris.ready);
   }
 
-  function makeTime(date) {
-    return global.Astronomy.MakeTime(date);
+  /** @deprecated use hasEphemeris */
+  function hasAstronomy() {
+    return hasEphemeris();
+  }
+
+  function bodyLongitude(bodyId, date) {
+    const eph = global.HDEphemeris;
+    if (!eph?.ready) return NaN;
+    const jd = eph.utcToJulianDay(date);
+    return eph.longitudeForBody(jd, bodyId);
   }
 
   function sunLongitude(date) {
-    const time = makeTime(date);
-    return norm(global.Astronomy.SunPosition(time).elon);
-  }
-
-  function bodyLongitude(bodyName, date) {
-    const time = makeTime(date);
-    if (bodyName === "Sun") return sunLongitude(date);
-    return norm(global.Astronomy.EclipticLongitude(global.Astronomy.Body[bodyName], time));
-  }
-
-  function meanNorthNodeLongitude(date) {
-    const jd = makeTime(date).ut;
-    const d = jd - 2451545.0;
-    const omega = 125.04452 - 1934.136261 * d / 36525 + 0.0020708 * (d / 36525) ** 2 + (d / 36525) ** 3 / 450000;
-    return norm(omega);
+    return bodyLongitude("sun", date);
   }
 
   function longitudeToActivation(longitude) {
@@ -65,28 +77,25 @@
     const inGate = adjusted - bucket * GATE_WIDTH;
     const line = Math.min(6, Math.floor(inGate / LINE_WIDTH) + 1);
     const inLine = inGate - (line - 1) * LINE_WIDTH;
-    const colorWidth = LINE_WIDTH / 6;
-    const color = Math.min(6, Math.floor(inLine / colorWidth) + 1);
-    const inColor = inLine - (color - 1) * colorWidth;
-    const toneWidth = colorWidth / 6;
-    const tone = Math.min(6, Math.floor(inColor / toneWidth) + 1);
-    const baseWidth = toneWidth / 5;
-    const base = Math.min(5, Math.floor((inColor - (tone - 1) * toneWidth) / baseWidth) + 1);
+    const color = Math.min(6, Math.floor(inLine / COLOR_WIDTH) + 1);
+    const inColor = inLine - (color - 1) * COLOR_WIDTH;
+    const tone = Math.min(6, Math.floor(inColor / TONE_WIDTH) + 1);
+    const inTone = inColor - (tone - 1) * TONE_WIDTH;
+    const base = Math.min(5, Math.floor(inTone / BASE_WIDTH) + 1);
     return { gate, line, color, tone, base, longitude: norm(longitude) };
   }
 
   function activationsAt(date) {
     const sunLon = sunLongitude(date);
-    const nodeLon = meanNorthNodeLongitude(date);
+    const nodeLon = bodyLongitude("north_node", date);
     const out = {
       sun: { ...longitudeToActivation(sunLon), longitude: sunLon },
       earth: { ...longitudeToActivation(norm(sunLon + 180)), longitude: norm(sunLon + 180) },
       north_node: { ...longitudeToActivation(nodeLon), longitude: nodeLon },
       south_node: { ...longitudeToActivation(norm(nodeLon + 180)), longitude: norm(nodeLon + 180) }
     };
-    ["Moon", "Mercury", "Venus", "Mars", "Jupiter", "Saturn", "Uranus", "Neptune", "Pluto"].forEach(name => {
-      const id = name.toLowerCase();
-      const lon = bodyLongitude(name, date);
+    ["moon", "mercury", "venus", "mars", "jupiter", "saturn", "uranus", "neptune", "pluto"].forEach(id => {
+      const lon = bodyLongitude(id, date);
       out[id] = { ...longitudeToActivation(lon), longitude: lon };
     });
     return out;
@@ -96,8 +105,8 @@
     const birthMs = birthUtc.getTime();
     const birthSun = sunLongitude(birthUtc);
     const target = norm(birthSun - DESIGN_ARC_DEG);
-    let lo = birthMs - 100 * 86400000;
-    let hi = birthMs - 75 * 86400000;
+    let lo = birthMs - 95 * 86400000;
+    let hi = birthMs - 80 * 86400000;
     for (let i = 0; i < 80; i++) {
       const mid = (lo + hi) / 2;
       const midLon = sunLongitude(new Date(mid));
@@ -199,7 +208,7 @@
   }
 
   function calculateChart(birthDate, birthTime, tzOffsetMinutes, channels) {
-    if (!hasAstronomy()) return { error: "no_astronomy" };
+    if (!hasEphemeris()) return { error: "no_ephemeris" };
     if (!birthDate || !birthTime) return { error: "missing_birth" };
 
     const birthUtc = birthUtcFromLocal(birthDate, birthTime, tzOffsetMinutes);
@@ -247,7 +256,7 @@
   }
 
   function transitsForDate(date, labels) {
-    if (!hasAstronomy()) return null;
+    if (!hasEphemeris()) return null;
     const utc = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0));
     const acts = activationsAt(utc);
     return PLANET_IDS.map(id => {
@@ -270,12 +279,15 @@
     WHEEL_START,
     GATE_SEQUENCE,
     DESIGN_ARC_DEG,
+    STANDARD_CHANNELS,
+    hasEphemeris,
     hasAstronomy,
     calculateChart,
     transitsForDate,
     longitudeToActivation,
     birthUtcFromLocal,
     solarArcDegrees,
-    angularDiff
+    angularDiff,
+    definedCentersFromGates
   };
 })(typeof window !== "undefined" ? window : globalThis);

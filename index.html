@@ -564,7 +564,13 @@
   </style>
 </head>
 <body>
-  <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
+  <script>
+    if (location.protocol === "file:") {
+      document.write(`<main class="app" id="app"><section class="panel warning" style="margin:40px auto;max-width:560px;text-align:center;padding:24px"><h2>So öffnest du die App</h2><p style="margin-top:12px;color:#9aa3ad;line-height:1.55">Per Doppelklick funktioniert die Berechnung nicht (Browser blockiert WASM/Module).</p><p style="margin-top:12px"><strong>Terminal im Ordner trade-Strat-1:</strong><br><code style="display:inline-block;margin-top:8px;padding:8px 12px;background:rgba(0,0,0,.3);border-radius:8px">python -m http.server 8765</code></p><p style="margin-top:12px">Dann: <a href="http://localhost:8765">http://localhost:8765</a></p></section></main>`);
+      throw new Error("file protocol");
+    }
+  </script>
+  <script type="module" src="hd-bootstrap.mjs"></script>
   <script src="hd-engine.js"></script>
   <script src="hd-logic.js"></script>
   <main class="app" id="app"></main>
@@ -809,18 +815,7 @@
       }];
     }));
 
-    const CHANNELS = [
-      [64,47,"Head","Ajna"], [61,24,"Head","Ajna"], [63,4,"Head","Ajna"],
-      [17,62,"Ajna","Throat"], [43,23,"Ajna","Throat"], [11,56,"Ajna","Throat"],
-      [31,7,"Throat","G"], [8,1,"Throat","G"], [33,13,"Throat","G"], [20,10,"Throat","G"],
-      [20,34,"Throat","Sacral"], [16,48,"Throat","Spleen"], [57,20,"Spleen","Throat"],
-      [12,22,"Throat","Solar"], [35,36,"Throat","Solar"], [21,45,"Ego","Throat"],
-      [2,14,"G","Sacral"], [5,15,"Sacral","G"], [29,46,"Sacral","G"], [25,51,"G","Ego"],
-      [34,57,"Sacral","Spleen"], [27,50,"Sacral","Spleen"], [44,26,"Spleen","Ego"],
-      [59,6,"Sacral","Solar"], [37,40,"Solar","Ego"], [49,19,"Solar","Root"], [30,41,"Solar","Root"], [55,39,"Solar","Root"],
-      [3,60,"Sacral","Root"], [42,53,"Sacral","Root"], [9,52,"Sacral","Root"],
-      [32,54,"Spleen","Root"], [28,38,"Spleen","Root"], [18,58,"Spleen","Root"]
-    ].map(([a,b,from,to]) => ({ a, b, from, to, key: `${a}-${b}` }));
+    const CHANNELS = HDEngine.STANDARD_CHANNELS;
 
     const CHANNEL_INFLUENCE = {
       "64-47": BL("Abstrakte Bilder suchen Sinn — viele Gedanken wollen sortiert werden.", "Abstract images seek meaning — many thoughts want sorting."),
@@ -833,6 +828,8 @@
       "8-1": BL("Kreativer Beitrag sucht Ausdruck der eigenen Linie.", "Creative contribution seeks expression of your own line."),
       "33-13": BL("Erinnerung und Rueckzug wollen als Erfahrung geteilt werden.", "Memory and retreat want to be shared as experience."),
       "20-10": BL("Praesenz und Selbstbehauptung wollen durch die Kehle sichtbar werden.", "Presence and natural self want to become visible through the throat."),
+      "10-57": BL("Koerperliches Wissen und Haltung — Instinkt will sich in deiner Richtung ausdruecken.", "Body knowing and stance — instinct wants to express through your direction."),
+      "10-34": BL("Selbstbehauptung und Sakral-Kraft — dein Platz will mit koerperlicher Energie gehalten werden.", "Self-assertion and sacral power — your place wants to be held with bodily energy."),
       "20-34": BL("Praesenz und Kraft wollen sofort in Handlung oder Worte.", "Presence and power want immediate action or words."),
       "16-48": BL("Faehigkeit und Tiefe wollen als kompetente Stimme gehoert werden.", "Skill and depth want to be heard as a competent voice."),
       "57-20": BL("Instinkt und Praesenz — koerperliches Wissen will sofort geaeussert werden.", "Instinct and presence — body knowing wants immediate expression."),
@@ -900,17 +897,7 @@
 
     const getAllProfiles = () => ProfileStore.getAllDisplay(PROFILES);
     const getProfileRecord = id => ProfileStore.getRecord(id, PROFILES);
-    const deriveDefinedCenters = gates => {
-      const set = new Set(gates);
-      const centers = new Set();
-      CHANNELS.forEach(ch => {
-        if (set.has(ch.a) && set.has(ch.b)) {
-          centers.add(ch.from);
-          centers.add(ch.to);
-        }
-      });
-      return [...centers];
-    };
+    const deriveDefinedCenters = gates => HDEngine.definedCentersFromGates(gates, CHANNELS);
 
     const PENTA_CHANNELS = [
       { a: 1, b: 8, name: BL("Kreativer Beitrag", "Creative contribution"), text: BL("Die Gruppe kann eine klare Handschrift nach aussen tragen.", "The group can carry a distinct signature outward.") },
@@ -1035,7 +1022,8 @@
     function chartErrorMessage(result) {
       if (!result?.error) return null;
       const map = {
-        no_astronomy: BL("Astronomy Engine nicht geladen.", "Astronomy engine not loaded."),
+        no_astronomy: BL("Ephemeris nicht geladen.", "Ephemeris not loaded."),
+        no_ephemeris: BL("Swiss Ephemeris nicht geladen.", "Swiss Ephemeris not loaded."),
         missing_birth: BL("Geburtsdatum und -zeit fehlen.", "Birth date and time missing."),
         design_arc_invalid: BL(`Design-Bogen ungueltig (${result.solarArcDegrees?.toFixed(1)}° statt 88°). Bitte Seite neu laden.`, `Invalid design arc (${result.solarArcDegrees?.toFixed(1)}° not 88°). Please reload.`)
       };
@@ -1043,7 +1031,7 @@
     }
 
     function calculateProfileChart(meta) {
-      if (!window.HDEngine?.hasAstronomy()) return { error: "no_astronomy" };
+      if (!window.HDEngine?.hasEphemeris()) return { error: "no_ephemeris" };
       return ChartPipeline.compute(meta, CHANNELS);
     }
 
@@ -1113,7 +1101,7 @@
     const daysSinceEpoch = date => Math.floor((Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) - Date.UTC(2025, 0, 1)) / 86400000);
     const mandalaAt = longitude => MAN[Math.floor(norm(longitude) / MANDALA_STEP) % MAN.length];
     const computeTransits = date => {
-      if (window.HDEngine?.hasAstronomy()) {
+      if (window.HDEngine?.hasEphemeris()) {
         const labels = Object.fromEntries(Object.keys(PLANET_LABELS).map(id => [id, T(PLANET_LABELS[id])]));
         return HDEngine.transitsForDate(date, labels) || [];
       }
@@ -2441,7 +2429,7 @@
           <h2>${T(BL("Eingabe & Geburtsdaten", "Input & birth data"))}</h2>
           <p style="color:var(--muted);line-height:1.5;margin-bottom:16px">${T(BL("Daten werden nur bei «Berechnen & Speichern» in der Profil-Datenbank gespeichert — nie automatisch beim Laden.", "Data is only saved to the profile database when you click «Calculate & save» — never automatically on load."))}</p>
           <p style="color:var(--muted);line-height:1.5;margin-bottom:16px">${T(BL(`Aktives Profil: ${profile.name} — auf der Daily Map oben wechseln.`, `Active profile: ${profile.name} — switch on the Daily Map above.`))}</p>
-          ${!window.HDEngine?.hasAstronomy() ? `<div class="small-card warning">${T(BL("Berechnungs-Engine wird geladen… Internetverbindung noetig.", "Calculation engine loading… internet connection required."))}</div>` : ""}
+          ${!window.HDEngine?.hasEphemeris() ? `<div class="small-card warning">${T(BL("Swiss Ephemeris wird geladen…", "Loading Swiss Ephemeris…"))}</div>` : ""}
           ${profile.chartStale ? `<div class="small-card warning">${T(BL("Gespeichertes Chart ist veraltet. Bitte «Vorschau» pruefen und «Berechnen & Speichern» klicken.", "Saved chart is outdated. Check «Preview» and click «Calculate & save»."))}</div>` : ""}
           <form id="profileForm">
             <div class="form-grid">
@@ -2655,8 +2643,8 @@
           alert(T(BL("Bitte Geburtsdatum und -zeit eingeben.", "Please enter birth date and time.")));
           return;
         }
-        if (!window.HDEngine?.hasAstronomy()) {
-          alert(T(BL("Astronomy Engine nicht geladen.", "Astronomy engine not loaded.")));
+        if (!window.HDEngine?.hasEphemeris()) {
+          alert(T(BL("Swiss Ephemeris nicht geladen.", "Swiss Ephemeris not loaded.")));
           return;
         }
         const result = calculateProfileChart(meta);
@@ -2673,7 +2661,9 @@
           const sunDetail = sunP && sunD
             ? `<br><span style="color:var(--muted)">${T(BL("Sonne Persoenlichkeit", "Personality Sun"))}: G${sunP.gate}.${sunP.line} · ${T(BL("Sonne Design", "Design Sun"))}: G${sunD.gate}.${sunD.line} · ${T(BL("Sonnenbogen", "Solar arc"))}: ${(result.solarArcDegrees ?? ((sunP.longitude - sunD.longitude + 360) % 360)).toFixed(2)}° · Engine v${HDEngine.CHART_ENGINE_VERSION}</span>`
             : "";
-          box.innerHTML = `<strong>${T(BL("Vorschau", "Preview"))}</strong><br>${T(payload.subtitle)}<br>${T(payload.authority)} · ${T(payload.strategy)}${sunDetail}<br><span style="color:var(--muted)">${payload.definedGates.length} ${T(BL("Tore", "gates"))}: ${payload.definedGates.join(", ")}</span><br><span style="color:var(--muted)">${payload.definedCenters.map(c => T(CENTER_LABELS[c])).join(" · ")}</span>`;
+          const gateSet = new Set(payload.definedGates);
+          const nativeChannels = CHANNELS.filter(ch => gateSet.has(ch.a) && gateSet.has(ch.b)).map(ch => ch.key).join(", ");
+          box.innerHTML = `<strong>${T(BL("Vorschau", "Preview"))}</strong><br>${T(payload.subtitle)}<br>${T(payload.authority)} · ${T(payload.strategy)}${sunDetail}<br><span style="color:var(--muted)">${payload.definedGates.length} ${T(BL("Tore", "gates"))}: ${payload.definedGates.join(", ")}</span><br><span style="color:var(--muted)">${T(BL("Definierte Zentren", "Defined centers"))}: ${payload.definedCenters.map(c => T(CENTER_LABELS[c])).join(" · ") || "—"}</span>${nativeChannels ? `<br><span style="color:var(--muted)">${T(BL("Aktive Kanaele", "Active channels"))}: ${nativeChannels}</span>` : ""}`;
         }
       });
 
@@ -2690,8 +2680,8 @@
         const toneText = document.getElementById("inputTone").value.trim();
         const tone = BL(toneText, toneText);
 
-        if (!window.HDEngine?.hasAstronomy()) {
-          alert(T(BL("Berechnung braucht Internet. Bitte Seite neu laden und erneut versuchen.", "Calculation needs internet. Please reload and try again.")));
+        if (!window.HDEngine?.hasEphemeris()) {
+          alert(T(BL("Swiss Ephemeris nicht geladen. Bitte Seite neu laden.", "Swiss Ephemeris not loaded. Please reload the page.")));
           return;
         }
         const result = calculateProfileChart(meta);
@@ -2742,10 +2732,28 @@
       });
     }
 
+    function showEphemerisLoading(detail) {
+      const step = detail?.step ?? 0;
+      const total = detail?.total ?? 3;
+      const file = detail?.file ?? "wasm";
+      const label = step === 0
+        ? (lang === "de" ? "Starte Berechnungs-Engine…" : "Starting calculation engine…")
+        : (lang === "de" ? `Lade Ephemeris (${step}/${total})…` : `Loading ephemeris (${step}/${total})…`);
+      document.getElementById("app").innerHTML = `<section class="panel" style="margin:40px auto;max-width:520px;text-align:center"><h2>${lang === "de" ? "Lade Swiss Ephemeris…" : "Loading Swiss Ephemeris…"}</h2><p style="color:var(--muted);margin-top:12px">${label}</p><p style="color:var(--muted);font-size:.85rem;margin-top:8px">${file}</p></section>`;
+    }
+
+    function showEphemerisError(message) {
+      const fileHint = location.protocol === "file:"
+        ? (lang === "de"
+          ? "Tipp: Nicht per Doppelklick öffnen. Stattdessen http://localhost:8765 nutzen (python -m http.server 8765 im Ordner trade-Strat-1)."
+          : "Tip: Do not open via double-click. Use http://localhost:8765 instead (python -m http.server 8765 in trade-Strat-1).")
+        : "";
+      document.getElementById("app").innerHTML = `<section class="panel warning" style="margin:40px auto;max-width:560px;text-align:center"><h2>${lang === "de" ? "Ephemeris konnte nicht laden" : "Ephemeris failed to load"}</h2><p style="margin-top:12px">${message}</p>${fileHint ? `<p style="color:var(--muted);margin-top:12px;font-size:.9rem">${fileHint}</p>` : ""}<p style="color:var(--muted);margin-top:12px">${lang === "de" ? "Seite neu laden (Strg+F5)." : "Reload the page (Ctrl+F5)."}</p><button type="button" class="btn primary" style="margin-top:16px" onclick="location.reload()">${lang === "de" ? "Neu laden" : "Reload"}</button></section>`;
+    }
+
     function boot() {
-      if (!window.HDEngine?.hasAstronomy()) {
-        document.getElementById("app").innerHTML = `<section class="panel" style="margin:40px auto;max-width:520px;text-align:center"><h2>${lang === "de" ? "Lade Berechnungs-Engine…" : "Loading calculation engine…"}</h2><p style="color:var(--muted);margin-top:12px">${lang === "de" ? "Internetverbindung noetig. Seite wird automatisch fortgesetzt." : "Internet connection required. Page will continue automatically."}</p></section>`;
-        setTimeout(boot, 400);
+      if (!window.HDEngine?.hasEphemeris()) {
+        showEphemerisLoading();
         return;
       }
       try {
@@ -2758,6 +2766,9 @@
       }
     }
 
+    window.addEventListener("hd-ephemeris-progress", e => showEphemerisLoading(e.detail), { once: false });
+    window.addEventListener("hd-ephemeris-error", e => showEphemerisError(e.detail?.error || "unknown"), { once: true });
+    window.addEventListener("hd-ephemeris-ready", boot, { once: true });
     boot();
   </script>
 </body>

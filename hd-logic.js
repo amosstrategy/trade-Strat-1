@@ -2,7 +2,7 @@
  * Human Design app logic — profile database, chart pipeline, view model, bodygraph.
  */
 (function (global) {
-  const CHART_ENGINE_VERSION = 4;
+  const CHART_ENGINE_VERSION = 7;
   const PROFILE_DB_KEY = "hd-profile-db-v2";
   const LEGACY_DB_KEYS = ["hd-profile-db-v1", "hd-profile-meta-v1"];
 
