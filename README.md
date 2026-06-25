@@ -1,43 +1,68 @@
-# Daily Energy Map
+# Daily Energy Map Widget
 
-Eine lokale Single-File-App, die fuer Personen, Teams und die Marke Paradise Ventures taeglich beantwortet: Wann ist heute der beste Moment fuer was - und warum?
+Ein statisch hostbares Browser-Widget fuer Human-Design-nahe Tagesauswertungen: Live-Chart aus Geburtsdaten, taegliche Transite, Bodygraph, Score-Dimensionen und Penta-/Team-Ansicht.
 
-## App oeffnen
+## Was jetzt live berechnet wird
 
-Nach dem Merge in `main` wird die App automatisch ueber GitHub Pages veroeffentlicht:
+- Eingabe fuer Name, Geburtsdatum, exakte Uhrzeit und UTC-Offset
+- Swiss-Ephemeris-WASM-Berechnung im Browser fuer Sonne, Mond, Merkur, Venus, Mars, Jupiter und Saturn
+- Erde als exakte Opposition zur Sonne
+- Design-Zeitpunkt ueber den Moment, an dem die Sonne 88 Grad vor der Geburtsposition stand
+- Mapping auf das 69.120-Segment-Mandala: Gate, Line, Color, Tone und Base
+- definierte Gates aus Personality- und Design-Aktivierungen
+- definierte Zentren aus vollstaendigen Kanaelen
 
-https://amosstrategy.github.io/trade-Strat-1/
+Chiron bleibt sichtbar, ist aber markiert approximiert, solange keine separate Asteroiden-Ephemeris-Datei eingebunden ist.
 
-Du brauchst dann nichts zu installieren und keinen Code zu oeffnen. Einfach den Link im Browser aufrufen.
+## Wichtig zu den Beispielprofilen
+
+Daniel, Patrick und Paradise Ventures sind weiterhin enthalten, aber in der App als **Platzhalter-Daten** markiert. Sie dienen nur als Demo, bis echte Geburts-/Gruendungsdaten eingegeben oder hinterlegt werden.
 
 ## App bedienen
 
-1. Profil auswaehlen: Daniel, Patrick oder Paradise Ventures.
-2. Mit `Heute`, `Zurueck` und `Weiter` durch die Tage gehen.
-3. Mit `EN` / `DE` die Sprache wechseln.
-4. Im Bodygraph ein Tor oder Zentrum anklicken, um die Erklaerung zu sehen.
-5. Im Penta-Bereich Team-Mitglieder an- oder abwaehlen.
+1. Im Bereich **Live-Chart berechnen** Geburtsdaten eingeben.
+2. UTC-Offset exakt eintragen, z.B. `+01:00` oder `+02:00`.
+   - Der Offset muss Sommerzeit am Geburtsort bereits enthalten.
+   - Ohne Backend/Geocoding wird die Zeitzone nicht automatisch aus dem Ort berechnet.
+3. **Chart live berechnen** klicken.
+4. Danach erscheint das Live-Profil in der Profilauswahl.
+5. Mit `Heute`, `Zurueck` und `Weiter` Tagesenergien ansehen.
+6. Bodygraph-Tore oder Zentren anklicken, um Erklaerungen zu sehen.
 
-## Falls der Live-Link noch nicht aktiv ist
+## Hosting
 
-Der Link funktioniert erst, nachdem der Pull Request gemerged wurde und GitHub Pages einmal durchgelaufen ist. Bis dahin gibt es zwei einfache Alternativen:
+Nach dem Merge in `main` wird die App ueber GitHub Pages gebaut und veroeffentlicht:
 
-1. In GitHub die Datei `index.html` herunterladen.
-2. Die heruntergeladene Datei doppelklicken.
+https://amosstrategy.github.io/trade-Strat-1/
 
-Die App oeffnet sich dann lokal im Browser.
+Das Hosting ist statisch. Es braucht keinen eigenen Server und keine Datenbank.
 
-Die App laeuft komplett offline: kein Server, kein Backend, keine Datenbank, keine externen Libraries und kein Build-Step.
+Einbettung als Widget ist z.B. per iframe moeglich:
+
+```html
+<iframe
+  src="https://amosstrategy.github.io/trade-Strat-1/"
+  style="width:100%;height:900px;border:0;border-radius:20px;"
+  loading="lazy"
+></iframe>
+```
+
+## Entwicklung
+
+```bash
+npm install
+npm run dev
+npm run build
+```
+
+Der Produktionsbuild liegt danach in `dist/`.
 
 ## Deployment
 
-Die Datei `.github/workflows/pages.yml` veroeffentlicht die App automatisch auf GitHub Pages, sobald Aenderungen auf `main` landen. Die Website besteht nur aus der Datei `index.html`.
+Die Datei `.github/workflows/pages.yml` fuehrt auf `main` aus:
 
-## Enthaltene Bereiche
+1. `npm ci`
+2. `npm run build`
+3. Upload von `dist/` zu GitHub Pages
 
-- lineare Transit-Berechnung fuer Sonne, Erde, Mond, Merkur, Venus, Mars, Jupiter, Saturn und Chiron
-- vollstaendiges 69.120-Segment-Mandala auf Gate-, Line-, Color-, Tone- und Base-Ebene
-- 6 Scores: Energie, Intuition, Ausdruck, Klarheit, Flow und Ernaehrung
-- programmatisch gezeichneter SVG-Bodygraph mit interaktiven Gates und Zentren
-- DE/EN-Umschaltung ueber Bilingual-Textbausteine
-- dynamische Penta-/Team-Engine fuer Daniel, Patrick und Paradise Ventures
+Hinweis: In privaten Repositories muss GitHub Pages ggf. einmal manuell in den Repository Settings aktiviert werden.

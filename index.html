@@ -42,11 +42,14 @@
       color: inherit;
     }
 
-    button, select {
+    button, select, input {
       border: 1px solid var(--line);
       background: rgba(255,255,255,.04);
       border-radius: 999px;
       padding: .72rem 1rem;
+    }
+
+    button, select {
       cursor: pointer;
       transition: border-color .2s, background .2s, transform .2s;
     }
@@ -204,6 +207,46 @@
     .tag strong, .metric strong { color: var(--text); }
     .metric { display: inline-flex; gap: 7px; align-items: center; }
 
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .field.full { grid-column: 1 / -1; }
+    .field label {
+      color: var(--muted);
+      font-size: .82rem;
+    }
+
+    .field input {
+      width: 100%;
+      border-radius: 14px;
+    }
+
+    .status-card {
+      border-radius: 16px;
+      border: 1px solid rgba(132,220,198,.22);
+      background: rgba(132,220,198,.08);
+      color: #dceee9;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      line-height: 1.45;
+      font-size: .92rem;
+    }
+
+    .status-card.warn {
+      border-color: rgba(255,209,102,.28);
+      background: rgba(255,209,102,.08);
+      color: #f9e8b8;
+    }
+
     .reading {
       background: rgba(132,220,198,.08);
       border: 1px solid rgba(132,220,198,.2);
@@ -345,6 +388,7 @@
     @media (max-width: 620px) {
       .app { width: min(100% - 18px, 1440px); padding-top: 12px; }
       .hero-card, .panel { padding: 16px; }
+      .form-grid { grid-template-columns: 1fr; }
       .planet-grid, .penta-members { grid-template-columns: 1fr; }
       h1 { font-size: 2.55rem; }
     }
@@ -353,14 +397,34 @@
 <body>
   <main class="app" id="app"></main>
 
-  <script>
+  <script type="module">
+    import { swe_calc_ut, swe_julday } from "@fusionstrings/swisseph-wasm";
+
     const BL = (de, en) => ({ de, en });
+    const SE_PLANET = { Sun: 0, Moon: 1, Mercury: 2, Venus: 3, Mars: 4, Jupiter: 5, Saturn: 6 };
+    const SE_ASTEROID = { Chiron: 15 };
+    const SE_FLAG = { SwissEphemeris: 2, MoshierEphemeris: 4, Speed: 256 };
+    const SE_CALENDAR = { Gregorian: 1 };
     let lang = "de";
     let dayIndex = 0;
     let activeProfile = "daniel";
+    let customProfile = null;
+    let isRendering = false;
+    let renderAgain = false;
+    let ephemerisInfo = BL("Swiss Ephemeris WASM wird geladen.", "Swiss Ephemeris WASM is loading.");
+    const birthForm = {
+      name: "",
+      date: "",
+      time: "",
+      utcOffset: "+01:00",
+      birthplace: "",
+      latitude: "",
+      longitude: ""
+    };
     const pentaOn = { daniel: true, patrick: true, paradise: true };
 
     const T = value => typeof value === "string" ? value : (value[lang] || value.de);
+    const esc = value => String(value ?? "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[char]));
     const clamp = (value, min = 0, max = 10) => Math.max(min, Math.min(max, value));
     const norm = value => ((value % 360) + 360) % 360;
     const today = () => {
@@ -399,6 +463,7 @@
       daniel: {
         id: "daniel",
         name: "Daniel",
+        placeholder: true,
         subtitle: BL("Person | schneller Koerper-Kompass", "Person | fast body compass"),
         authority: BL("Sakrale Antwort", "Sacral response"),
         strategy: BL("Auf das reagieren, was wirklich da ist", "Respond to what is actually present"),
@@ -409,6 +474,7 @@
       patrick: {
         id: "patrick",
         name: "Patrick",
+        placeholder: true,
         subtitle: BL("Person | ruhige Praezision", "Person | calm precision"),
         authority: BL("Emotionale Klarheit", "Emotional clarity"),
         strategy: BL("Druck nicht sofort beantworten", "Do not answer pressure immediately"),
@@ -419,6 +485,7 @@
       paradise: {
         id: "paradise",
         name: "Paradise Ventures",
+        placeholder: true,
         subtitle: BL("Marke | Kommunikation als Entitaet", "Brand | communication as an entity"),
         authority: BL("Marken-Autoritaet: Stimmigkeit + Timing", "Brand authority: coherence + timing"),
         strategy: BL("Sichtbar werden, wenn Nutzen konkret ist", "Become visible when the value is concrete"),
@@ -652,27 +719,222 @@
     );
 
     const PLANETS = [
-      { id: "sun", name: BL("Sonne", "Sun"), offset: 280.61, speed: .985647 },
-      { id: "earth", name: BL("Erde", "Earth"), offset: 100.61, speed: .985647 },
-      { id: "moon", name: BL("Mond", "Moon"), offset: 218.32, speed: 13.176358 },
-      { id: "mercury", name: BL("Merkur", "Mercury"), offset: 252.25, speed: 4.092334 },
-      { id: "venus", name: BL("Venus", "Venus"), offset: 181.98, speed: 1.60213 },
-      { id: "mars", name: BL("Mars", "Mars"), offset: 355.44, speed: .524021 },
-      { id: "jupiter", name: BL("Jupiter", "Jupiter"), offset: 34.35, speed: .083086 },
-      { id: "saturn", name: BL("Saturn", "Saturn"), offset: 50.08, speed: .033459 },
-      { id: "chiron", name: BL("Chiron", "Chiron"), offset: 16.5, speed: .01935 }
+      { id: "sun", name: BL("Sonne", "Sun"), body: SE_PLANET.Sun },
+      { id: "earth", name: BL("Erde", "Earth"), derivedFrom: "sun", add: 180 },
+      { id: "moon", name: BL("Mond", "Moon"), body: SE_PLANET.Moon },
+      { id: "mercury", name: BL("Merkur", "Mercury"), body: SE_PLANET.Mercury },
+      { id: "venus", name: BL("Venus", "Venus"), body: SE_PLANET.Venus },
+      { id: "mars", name: BL("Mars", "Mars"), body: SE_PLANET.Mars },
+      { id: "jupiter", name: BL("Jupiter", "Jupiter"), body: SE_PLANET.Jupiter },
+      { id: "saturn", name: BL("Saturn", "Saturn"), body: SE_PLANET.Saturn },
+      { id: "chiron", name: BL("Chiron", "Chiron"), body: SE_ASTEROID.Chiron, requiresSwissFiles: true }
     ];
 
     const daysSinceEpoch = date => Math.floor((Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) - Date.UTC(2025, 0, 1)) / 86400000);
     const mandalaAt = longitude => MAN[Math.floor(norm(longitude) / MANDALA_STEP) % MAN.length];
-    const transitsFor = date => {
+    const approximateTransitsFor = date => {
       const days = daysSinceEpoch(date);
       return PLANETS.map(planet => {
-        const longitude = norm(planet.offset + planet.speed * days);
+        const fallback = {
+          sun: [280.61, .985647],
+          earth: [100.61, .985647],
+          moon: [218.32, 13.176358],
+          mercury: [252.25, 4.092334],
+          venus: [181.98, 1.60213],
+          mars: [355.44, .524021],
+          jupiter: [34.35, .083086],
+          saturn: [50.08, .033459],
+          chiron: [16.5, .01935]
+        }[planet.id];
+        const longitude = norm(fallback[0] + fallback[1] * days);
         const segment = mandalaAt(longitude);
-        return { ...planet, longitude, ...segment, center: gateCenter(segment.gate) };
+        return { ...planet, longitude, ...segment, center: gateCenter(segment.gate), source: "fallback" };
       });
     };
+
+    let swissPromise = null;
+    let swissFilesLoaded = false;
+    let swissLoadError = "";
+
+    async function getSwiss() {
+      if (!swissPromise) {
+        swissPromise = (async () => {
+          swissFilesLoaded = true;
+          swissLoadError = "";
+          ephemerisInfo = BL("Swiss Ephemeris WASM aktiv: Sonne bis Saturn werden im Browser berechnet. Chiron wird markiert approximiert, falls keine Asteroiden-Datei verfuegbar ist.", "Swiss Ephemeris WASM active: Sun through Saturn are calculated in the browser. Chiron is marked as approximated if no asteroid file is available.");
+          return {
+            dateToJulianDay(date) {
+              const hour = date.getUTCHours() + date.getUTCMinutes() / 60 + date.getUTCSeconds() / 3600 + date.getUTCMilliseconds() / 3600000;
+              return swe_julday(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate(), hour, SE_CALENDAR.Gregorian);
+            },
+            calculatePosition(jd, body, flags) {
+              const result = swe_calc_ut(jd, body, flags);
+              return {
+                longitude: result.longitude,
+                latitude: result.latitude,
+                distance: result.distance,
+                longitudeSpeed: result.speed_long,
+                latitudeSpeed: result.speed_lat,
+                distanceSpeed: result.speed_dist,
+                flags: result.rc_flags
+              };
+            }
+          };
+        })();
+      }
+      return swissPromise;
+    }
+
+    const swissFlags = () => SE_FLAG.Speed;
+    const dateToJulian = (swe, date) => swe.dateToJulianDay(date, SE_CALENDAR.Gregorian);
+
+    function approximateLongitudeFromJd(planetId, jd) {
+      const fallback = {
+        sun: [280.61, .985647],
+        earth: [100.61, .985647],
+        moon: [218.32, 13.176358],
+        mercury: [252.25, 4.092334],
+        venus: [181.98, 1.60213],
+        mars: [355.44, .524021],
+        jupiter: [34.35, .083086],
+        saturn: [50.08, .033459],
+        chiron: [16.5, .01935]
+      }[planetId];
+      const epoch = swe_julday(2025, 1, 1, 12, SE_CALENDAR.Gregorian);
+      return norm(fallback[0] + fallback[1] * (jd - epoch));
+    }
+
+    function planetPositionAt(swe, jd, planet) {
+      if (planet.derivedFrom === "sun") {
+        const sun = swe.calculatePosition(jd, SE_PLANET.Sun, swissFlags());
+        return { longitude: norm(sun.longitude + planet.add), latitude: sun.latitude, distance: sun.distance, longitudeSpeed: sun.longitudeSpeed };
+      }
+      try {
+        return swe.calculatePosition(jd, planet.body, swissFlags());
+      } catch (error) {
+        if (planet.id === "chiron") {
+          return { longitude: approximateLongitudeFromJd("chiron", jd), latitude: 0, distance: 0, longitudeSpeed: .01935, approximated: true };
+        }
+        throw error;
+      }
+    }
+
+    async function ephemerisTransitsFor(date) {
+      try {
+        const swe = await getSwiss();
+        const jd = dateToJulian(swe, new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), 12, 0, 0)));
+        return PLANETS.map(planet => {
+          const position = planetPositionAt(swe, jd, planet);
+          const segment = mandalaAt(position.longitude);
+          return { ...planet, longitude: norm(position.longitude), latitude: position.latitude, speed: position.longitudeSpeed, ...segment, center: gateCenter(segment.gate), source: position.approximated ? "chiron-fallback" : "swiss-wasm" };
+        });
+      } catch (error) {
+        ephemerisInfo = BL(`Ephemeris-Fallback aktiv: ${error.message}`, `Ephemeris fallback active: ${error.message}`);
+        return approximateTransitsFor(date);
+      }
+    }
+
+    function parseUtcOffset(value) {
+      const match = String(value || "").trim().match(/^([+-])(\d{1,2})(?::?(\d{2}))?$/);
+      if (!match) throw new Error(T(BL("UTC-Offset bitte als +01:00 oder -05:00 eingeben.", "Enter UTC offset as +01:00 or -05:00.")));
+      const sign = match[1] === "-" ? -1 : 1;
+      const hours = Number(match[2]);
+      const minutes = Number(match[3] || "0");
+      if (hours > 14 || minutes > 59) throw new Error(T(BL("UTC-Offset ist ausserhalb des gueltigen Bereichs.", "UTC offset is outside the valid range.")));
+      return sign * (hours * 60 + minutes);
+    }
+
+    function birthDateToUtc(form) {
+      if (!form.date || !form.time) throw new Error(T(BL("Geburtsdatum und exakte Uhrzeit sind erforderlich.", "Birth date and exact time are required.")));
+      const [year, month, day] = form.date.split("-").map(Number);
+      const [hour, minute] = form.time.split(":").map(Number);
+      const offsetMinutes = parseUtcOffset(form.utcOffset);
+      return new Date(Date.UTC(year, month - 1, day, hour, minute || 0) - offsetMinutes * 60000);
+    }
+
+    function activatedCentersFromGates(gates) {
+      const pool = new Set(gates);
+      const centers = new Set();
+      CHANNELS.forEach(channel => {
+        if (pool.has(channel.a) && pool.has(channel.b)) {
+          centers.add(channel.from);
+          centers.add(channel.to);
+        }
+      });
+      return Array.from(centers);
+    }
+
+    function derivedAuthority(centers) {
+      if (centers.includes("Solar")) return BL("Automatisch berechnet: emotionale Klarheit", "Auto-calculated: emotional clarity");
+      if (centers.includes("Sacral")) return BL("Automatisch berechnet: sakrale Antwort", "Auto-calculated: sacral response");
+      if (centers.includes("Spleen")) return BL("Automatisch berechnet: Milz-Intuition", "Auto-calculated: spleen intuition");
+      if (centers.includes("Ego")) return BL("Automatisch berechnet: Ego/Willenskraft pruefen", "Auto-calculated: ego/willpower check");
+      return BL("Automatisch berechnet: keine innere Autoritaet aus Zentren abgeleitet", "Auto-calculated: no inner authority derived from centers");
+    }
+
+    function derivedStrategy(centers) {
+      if (centers.includes("Sacral")) return BL("Auf echte Koerperreaktion warten", "Wait for real body response");
+      if (centers.includes("Throat")) return BL("Sichtbarkeit aus korrektem Anlass", "Visibility from the correct occasion");
+      return BL("Nicht forcieren; Kontext und Einladung pruefen", "Do not force; check context and invitation");
+    }
+
+    function longitudeGate(activation) {
+      const segment = mandalaAt(activation.longitude);
+      return { ...activation, ...segment, center: gateCenter(segment.gate) };
+    }
+
+    async function findDesignDate(swe, birthUtc, natalSunLongitude) {
+      let low = birthUtc.getTime() - 94 * 86400000;
+      let high = birthUtc.getTime() - 82 * 86400000;
+      for (let i = 0; i < 36; i++) {
+        const mid = (low + high) / 2;
+        const jd = dateToJulian(swe, new Date(mid));
+        const sun = swe.calculatePosition(jd, SE_PLANET.Sun, swissFlags());
+        const distance = norm(natalSunLongitude - sun.longitude);
+        if (distance > 88) low = mid;
+        else high = mid;
+      }
+      return new Date((low + high) / 2);
+    }
+
+    async function calculateProfileFromBirth(form) {
+      const swe = await getSwiss();
+      const birthUtc = birthDateToUtc(form);
+      const birthJd = dateToJulian(swe, birthUtc);
+      const natalSun = swe.calculatePosition(birthJd, SE_PLANET.Sun, swissFlags());
+      const designUtc = await findDesignDate(swe, birthUtc, natalSun.longitude);
+      const designJd = dateToJulian(swe, designUtc);
+      const activations = [];
+      ["personality", "design"].forEach(kind => {
+        const jd = kind === "personality" ? birthJd : designJd;
+        PLANETS.forEach(planet => {
+          try {
+            const position = planetPositionAt(swe, jd, planet);
+            activations.push(longitudeGate({ kind, planetId: planet.id, planetName: planet.name, longitude: norm(position.longitude), latitude: position.latitude, speed: position.longitudeSpeed, source: position.approximated ? "chiron-fallback" : "swiss-wasm" }));
+          } catch (error) {
+            activations.push({ kind, planetId: planet.id, planetName: planet.name, error: error.message, source: "missing" });
+          }
+        });
+      });
+      const definedGates = Array.from(new Set(activations.filter(a => a.gate).map(a => a.gate))).sort((a, b) => a - b);
+      const definedCenters = activatedCentersFromGates(definedGates);
+      const name = form.name.trim() || T(BL("Live-Profil", "Live profile"));
+      return {
+        id: "custom",
+        name,
+        placeholder: false,
+        isLive: true,
+        subtitle: BL("Live berechnet aus Geburtsdaten", "Live-calculated from birth data"),
+        authority: derivedAuthority(definedCenters),
+        strategy: derivedStrategy(definedCenters),
+        definedCenters,
+        definedGates,
+        tone: BL("Dieses Profil wurde aus den eingegebenen Geburtsdaten berechnet. Pruefe besonders Uhrzeit und UTC-Offset.", "This profile was calculated from the entered birth data. Double-check birth time and UTC offset."),
+        birthData: { birthUtc, designUtc, birthplace: form.birthplace, utcOffset: form.utcOffset },
+        activations
+      };
+    }
+
     const transitAddress = transit => T(BL(
       `Tor ${transit.gate}.${transit.line} | Farbe ${transit.color} | Ton ${transit.tone} | Basis ${transit.base}`,
       `Gate ${transit.gate}.${transit.line} | Color ${transit.color} | Tone ${transit.tone} | Base ${transit.base}`
@@ -720,8 +982,8 @@
       return coords;
     })();
 
-    function scoreFor(profile, date) {
-      const transits = transitsFor(date);
+    async function scoreFor(profile, date) {
+      const transits = await ephemerisTransitsFor(date);
       const transitGates = new Set(transits.map(t => t.gate));
       const personal = new Set(profile.definedGates);
       const values = Object.fromEntries(Object.keys(DIMENSIONS).map(dim => [dim, 4.2]));
@@ -757,7 +1019,8 @@
       const weight = Object.values(DIMENSIONS).reduce((sum, dim) => sum + dim.weight, 0);
       const overall = +(weighted / weight).toFixed(1);
       const abundance = (values.energy >= 7.2 && values.flow >= 6.2) || [14, 45, 26, 44, 21].some(g => transitGates.has(g) && personal.has(g));
-      return { transits, transitGates, values, overall, activatedChannels, abundance };
+      const source = transits.some(t => t.source === "fallback") ? "fallback" : transits.some(t => t.source === "chiron-fallback") ? "swiss-wasm + chiron-fallback" : "swiss-wasm";
+      return { transits, transitGates, values, overall, activatedChannels, abundance, source };
     }
 
     const ringColor = score => score >= 7 ? "var(--good)" : score >= 5 ? "var(--warn)" : "var(--low)";
@@ -832,6 +1095,54 @@
       return `<strong>Tor ${gate}: ${T(info.name)}</strong><br>${T(status)}.<br>${T(info.description)}<br><span>${T(CENTER_LABELS[info.center])} | ${T(DIMENSIONS[info.dimension].label)}</span>`;
     }
 
+    const allProfiles = () => customProfile ? { custom: customProfile, ...PROFILES } : PROFILES;
+    const profileLabel = profile => profile.placeholder ? `${profile.name} (${T(BL("Platzhalter", "placeholder"))})` : `${profile.name} (${T(BL("live berechnet", "live calculated"))})`;
+
+    function renderBirthForm() {
+      return `
+        <section class="panel">
+          <h2>${T(BL("Live-Chart berechnen", "Calculate live chart"))}</h2>
+          <div class="status-card ${swissFilesLoaded ? "" : "warn"}">${T(ephemerisInfo)}<br><span>${T(BL("Wichtig: Der UTC-Offset muss die Sommerzeit am Geburtsort bereits enthalten.", "Important: the UTC offset must already include daylight saving time at the birth place."))}</span></div>
+          <div class="form-grid">
+            <div class="field full">
+              <label for="birthName">${T(BL("Name / Label", "Name / label"))}</label>
+              <input id="birthName" value="${esc(birthForm.name)}" placeholder="${T(BL("z.B. Maria", "e.g. Maria"))}">
+            </div>
+            <div class="field">
+              <label for="birthDate">${T(BL("Geburtsdatum", "Birth date"))}</label>
+              <input id="birthDate" type="date" value="${esc(birthForm.date)}">
+            </div>
+            <div class="field">
+              <label for="birthTime">${T(BL("Exakte Uhrzeit", "Exact time"))}</label>
+              <input id="birthTime" type="time" value="${esc(birthForm.time)}">
+            </div>
+            <div class="field">
+              <label for="utcOffset">${T(BL("UTC-Offset", "UTC offset"))}</label>
+              <input id="utcOffset" value="${esc(birthForm.utcOffset)}" placeholder="+01:00">
+            </div>
+            <div class="field">
+              <label for="birthplace">${T(BL("Geburtsort (Notiz)", "Birth place (note)"))}</label>
+              <input id="birthplace" value="${esc(birthForm.birthplace)}" placeholder="${T(BL("Stadt, Land", "City, country"))}">
+            </div>
+          </div>
+          <button id="calculateBirth" type="button">${T(BL("Chart live berechnen", "Calculate live chart"))}</button>
+          ${customProfile ? `<div class="small-card"><strong>${T(BL("Aktuelles Live-Profil", "Current live profile"))}: ${esc(customProfile.name)}</strong><br>${T(BL("Geburtszeit UTC", "Birth time UTC"))}: ${customProfile.birthData.birthUtc.toISOString()}<br>${T(BL("Design-Zeit UTC", "Design time UTC"))}: ${customProfile.birthData.designUtc.toISOString()}<br>${T(BL("Gates", "Gates"))}: ${customProfile.definedGates.join(", ") || "-"}</div>` : ""}
+        </section>`;
+    }
+
+    function renderActivationList(profile) {
+      if (!profile.activations) return "";
+      const rows = profile.activations.map(activation => {
+        const kind = activation.kind === "design" ? T(BL("Design", "Design")) : T(BL("Persoenlichkeit", "Personality"));
+        if (activation.error) return `<div class="planet"><b>${kind} · ${T(activation.planetName)}</b><span>${esc(activation.error)}</span></div>`;
+        return `<div class="planet"><b>${kind} · ${T(activation.planetName)}</b><span>${transitAddress(activation)}<br>${activation.longitude.toFixed(4)}°</span></div>`;
+      }).join("");
+      return `
+        <h2>${T(BL("Berechnete Aktivierungen", "Calculated activations"))}</h2>
+        <div class="planet-grid">${rows}</div>
+      `;
+    }
+
     function renderProfilePanel(profile, model) {
       const openCenters = Object.keys(CENTER_LABELS).filter(center => !profile.definedCenters.includes(center));
       return `
@@ -839,10 +1150,11 @@
           <h2>${T(BL("Profil", "Profile"))}</h2>
           <div class="profile-card">
             <select id="profileSelect" aria-label="Profile">
-              ${Object.values(PROFILES).map(p => `<option value="${p.id}" ${p.id === profile.id ? "selected" : ""}>${p.name}</option>`).join("")}
+              ${Object.values(allProfiles()).map(p => `<option value="${p.id}" ${p.id === profile.id ? "selected" : ""}>${esc(profileLabel(p))}</option>`).join("")}
             </select>
             <div class="small-card">
-              <strong>${profile.name}</strong><br>
+              <strong>${esc(profile.name)}</strong><br>
+              ${profile.placeholder ? `<span class="tag"><strong>${T(BL("Platzhalter-Daten", "Placeholder data"))}</strong></span><br><br>` : `<span class="tag"><strong>${T(BL("Live berechnet", "Live calculated"))}</strong></span><br><br>`}
               ${T(profile.subtitle)}<br><br>
               <span>${T(BL("Autoritaet", "Authority"))}: ${T(profile.authority)}</span><br>
               <span>${T(BL("Strategie", "Strategy"))}: ${T(profile.strategy)}</span>
@@ -852,6 +1164,7 @@
             </div>
           </div>
           <div class="reading">${dailyReading(profile, model)}</div>
+          ${renderActivationList(profile)}
           <h2>${T(BL("Offene Zentren", "Open centers"))}</h2>
           ${openCenters.slice(0, 5).map(center => `<div class="small-card warning"><strong>${T(CENTER_LABELS[center])}</strong><br>${T(OPEN_CENTER_WARNINGS[center])}</div>`).join("")}
           <h2>${T(BL("Traum-Notiz", "Dream note"))}</h2>
@@ -908,19 +1221,30 @@
         </section>`;
     }
 
-    function renderApp() {
-      const profile = PROFILES[activeProfile];
+    function renderLoading(message) {
+      document.getElementById("app").innerHTML = `<section class="hero"><div class="hero-card"><div class="eyebrow">Daily Energy Map</div><h1>${T(BL("Berechnung laeuft", "Calculation running"))}</h1><p class="lead">${message || T(BL("Swiss Ephemeris wird initialisiert.", "Swiss Ephemeris is initializing."))}</p></div></section>`;
+    }
+
+    async function renderApp() {
+      if (isRendering) {
+        renderAgain = true;
+        return;
+      }
+      isRendering = true;
+      renderAgain = false;
+      const profile = allProfiles()[activeProfile] || customProfile || PROFILES.daniel;
       const date = currentDate();
-      const model = scoreFor(profile, date);
+      renderLoading(T(BL("Transite und Score werden berechnet.", "Calculating transits and score.")));
+      const model = await scoreFor(profile, date);
       const scoreLabel = model.overall >= 7 ? BL("stark", "strong") : model.overall >= 5 ? BL("steuerbar", "steerable") : BL("ruhig", "quiet");
       document.documentElement.lang = lang;
       document.getElementById("app").innerHTML = `
         <section class="hero">
           <div class="hero-card">
             <div>
-              <div class="eyebrow">${T(BL("Daily Energy Map", "Daily Energy Map"))}</div>
-              <h1>${T(BL("Wann ist der beste Moment fuer was?", "When is the best moment for what?"))}</h1>
-              <p class="lead">${T(BL("Eine lokale, taegliche Karte fuer Person, Marke und Team: Transit-Gates, definierte Zentren, Abundance-Fenster und praktische Sprache ohne Fachjargon.", "A local daily map for person, brand, and team: transit gates, defined centers, abundance windows, and practical language without jargon."))}</p>
+              <div class="eyebrow">${T(BL("Daily Energy Map Widget", "Daily Energy Map Widget"))}</div>
+              <h1>${T(BL("Live-Chart + Tagesenergie", "Live chart + daily energy"))}</h1>
+              <p class="lead">${T(BL("Ein statisch hostbares Widget mit Swiss-Ephemeris-Berechnung im Browser. Demo-Profile sind klar als Platzhalter markiert; echte Nutzer koennen ihre Geburtsdaten eingeben.", "A statically hostable widget with Swiss Ephemeris calculation in the browser. Demo profiles are clearly marked as placeholders; real users can enter birth data."))}</p>
             </div>
             <div class="toolbar">
               <button id="prevDay" type="button">${T(BL("Zurueck", "Previous"))}</button>
@@ -939,12 +1263,16 @@
               <span class="metric"><strong>${model.transits.length}</strong> ${T(BL("Planeten", "planets"))}</span>
               <span class="metric"><strong>${model.transitGates.size}</strong> ${T(BL("Transit-Gates", "transit gates"))}</span>
               <span class="metric"><strong>${model.activatedChannels.length}</strong> ${T(BL("Kanaele", "channels"))}</span>
+              <span class="metric"><strong>${model.source}</strong> ${T(BL("Ephemeris", "ephemeris"))}</span>
             </div>
           </div>
         </section>
 
         <section class="grid">
-          ${renderProfilePanel(profile, model)}
+          <div>
+            ${renderBirthForm()}
+            ${renderProfilePanel(profile, model)}
+          </div>
           <section class="panel bodygraph-wrap">
             <h2>${T(BL("Live Bodygraph", "Live bodygraph"))}</h2>
             ${renderBodygraph(profile, model)}
@@ -962,10 +1290,12 @@
             ${renderPenta(date)}
           </div>
         </section>
-        <p class="footer">${T(BL("Offline-faehig: eine HTML-Datei, keine Libraries, keine Datenbank, keine Netzwerkaufrufe.", "Offline-capable: one HTML file, no libraries, no database, no network calls."))}</p>
+        <p class="footer">${T(BL("Widget-faehig: statischer Build, keine eigene Serverlogik. Swiss Ephemeris WASM berechnet im Browser; Chiron ist markiert approximiert, falls keine Asteroiden-Ephemeris verfuegbar ist.", "Widget-ready: static build, no custom server logic. Swiss Ephemeris WASM calculates in the browser; Chiron is marked as approximated if no asteroid ephemeris is available."))}</p>
       `;
 
       bindEvents(profile, model);
+      isRendering = false;
+      if (renderAgain) renderApp();
     }
 
     function bindEvents(profile, model) {
@@ -973,6 +1303,24 @@
       document.getElementById("nextDay").addEventListener("click", () => { dayIndex += 1; renderApp(); });
       document.getElementById("todayBtn").addEventListener("click", () => { dayIndex = 0; renderApp(); });
       document.getElementById("langBtn").addEventListener("click", () => { lang = lang === "de" ? "en" : "de"; renderApp(); });
+      ["birthName", "birthDate", "birthTime", "utcOffset", "birthplace"].forEach(id => {
+        const node = document.getElementById(id);
+        if (node) node.addEventListener("input", event => {
+          const key = { birthName: "name", birthDate: "date", birthTime: "time", utcOffset: "utcOffset", birthplace: "birthplace" }[id];
+          birthForm[key] = event.target.value;
+        });
+      });
+      document.getElementById("calculateBirth").addEventListener("click", async () => {
+        try {
+          renderLoading(T(BL("Geburtschart wird mit Swiss Ephemeris berechnet.", "Birth chart is being calculated with Swiss Ephemeris.")));
+          customProfile = await calculateProfileFromBirth(birthForm);
+          activeProfile = "custom";
+          await renderApp();
+        } catch (error) {
+          ephemerisInfo = BL(`Eingabe konnte nicht berechnet werden: ${error.message}`, `Input could not be calculated: ${error.message}`);
+          await renderApp();
+        }
+      });
       document.getElementById("profileSelect").addEventListener("change", event => { activeProfile = event.target.value; renderApp(); });
       document.querySelectorAll("[data-gate]").forEach(node => node.addEventListener("click", () => {
         document.getElementById("detailBox").innerHTML = detailForGate(profile, model, Number(node.dataset.gate));
@@ -980,7 +1328,7 @@
       document.querySelectorAll("[data-center]").forEach(node => node.addEventListener("click", () => {
         const center = node.dataset.center;
         const defined = profile.definedCenters.includes(center);
-        const profileNote = PROFILE_CENTER_NOTES[profile.id][center] || CENTER_DESCRIPTIONS[center];
+        const profileNote = (PROFILE_CENTER_NOTES[profile.id] && PROFILE_CENTER_NOTES[profile.id][center]) || CENTER_DESCRIPTIONS[center];
         document.getElementById("detailBox").innerHTML = `<strong>${T(CENTER_LABELS[center])}</strong><br>${T(profileNote)}<br><span>${defined ? T(BL("Bei diesem Profil definiert.", "Defined in this profile.")) : T(OPEN_CENTER_WARNINGS[center])}</span>`;
       }));
       document.querySelectorAll("[data-member]").forEach(node => node.addEventListener("change", event => {
