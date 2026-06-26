@@ -843,9 +843,12 @@
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 14px;
-      margin-top: 16px;
-      padding-top: 16px;
-      border-top: 1px solid rgba(255,255,255,.08);
+    }
+
+    .profile-extras-panel .profile-extras {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: none;
     }
 
     .profile-extras h3 {
@@ -3430,6 +3433,12 @@
               ${profile.definedCenters.length ? profile.definedCenters.map(center => `<span class="tag"><strong>${T(CENTER_LABELS[center])}</strong></span>`).join("") : `<span class="tag" style="opacity:.6">${T(BL("Noch keine definierten Zentren", "No defined centers yet"))}</span>`}
             </div>
           </div>
+        </section>`;
+    }
+
+    function renderProfileExtras(profile, day, date) {
+      return `
+        <section class="panel profile-strip profile-extras-panel" style="margin-top:18px">
           <div class="profile-extras">
             <div>
               <h3>${T(BL("Offene Zentren", "Open centers"))}</h3>
@@ -3824,7 +3833,8 @@
             <div class="detail-box" id="detailBox"><strong>${T(BL("Klicke ein Tor oder Zentrum.", "Click a gate or center."))}</strong><br>${T(profile.tone)}</div>
           </section>
           ${renderUnifiedFocusPanel(profile, day, model)}
-        </section>`;
+        </section>
+        ${renderProfileExtras(profile, day, date)}`;
 
       const pentaView = `
         ${renderDateBar(date)}
