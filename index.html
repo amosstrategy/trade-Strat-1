@@ -783,14 +783,19 @@
 
     .day-overview-strip .focus-overview-head .acc-head {
       justify-content: center;
-      flex-wrap: nowrap;
-      gap: 8px;
+      flex-wrap: wrap;
+      gap: 6px 10px;
     }
 
     .day-overview-strip .focus-overview .acc-field {
       font-size: clamp(1.05rem, 0.9vw + 0.82rem, 1.28rem);
       font-weight: 700;
       letter-spacing: -.01em;
+    }
+
+    .day-overview-strip .focus-mantra .acc-tag {
+      font-size: clamp(.72rem, 0.45vw + 0.62rem, .84rem);
+      color: var(--accent);
     }
 
     .day-overview-strip .focus-overview .acc-icon {
@@ -3748,6 +3753,7 @@
             <span class="acc-head">
               <span class="acc-icon">✦</span>
               <span class="acc-field">${T(BL("Tages-Mantra", "Daily mantra"))}</span>
+              <span class="acc-tag">${mantra.tag}</span>
             </span>
           </div>
           <div class="focus-overview-body">
@@ -4154,13 +4160,11 @@
 
     function renderDateBar(date) {
       return `
-        <div class="date-bar compact-top">
+        <div class="date-bar">
           <div class="date-display">
             <span class="date-label">${T(BL("Ausgewaehltes Datum", "Selected date"))}</span>
-            <div class="date-line">
-              <strong>${formatDateLong(date)}</strong>
-              <span class="date-relative">${T(dateRelativeLabel(date))}</span>
-            </div>
+            <strong>${formatDateLong(date)}</strong>
+            <span class="date-relative">${T(dateRelativeLabel(date))}</span>
           </div>
           <div class="date-controls">
             <button id="prevDay" type="button" aria-label="Previous day">←</button>
