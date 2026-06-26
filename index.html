@@ -734,22 +734,20 @@
       align-items: start;
     }
 
-    .map-chart-col {
-      display: grid;
-      gap: 10px;
-      min-width: 0;
+    .day-overview-panel {
+      padding: 10px 12px;
+      margin-bottom: 10px;
     }
 
     .day-overview-strip {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 10px;
+      gap: 12px;
       align-items: stretch;
     }
 
     .day-overview-strip--single {
       grid-template-columns: 1fr;
-      max-width: 420px;
     }
 
     .day-overview-strip .focus-overview {
@@ -3695,14 +3693,17 @@
     function renderDayOverviewStrip(profile, day, model) {
       if (!profile.chartComputed) return "";
       const chart = day.chart;
+      let inner = "";
       if (showTransits && model.mode !== "chartOnly") {
         const baseline = computeChartScores(profile, chart);
         const warning = buildDailyWarning(profile, model);
         const mantra = buildDailyMantra(profile, model, baseline);
-        return `<div class="day-overview-strip">${renderDailyMantraCard(mantra, true)}${renderMindfulnessCard(warning, true)}</div>`;
+        inner = `<div class="day-overview-strip">${renderDailyMantraCard(mantra, true)}${renderMindfulnessCard(warning, true)}</div>`;
+      } else {
+        const mantra = buildChartMantra(profile, chart);
+        inner = `<div class="day-overview-strip day-overview-strip--single">${renderDailyMantraCard(mantra, true)}</div>`;
       }
-      const mantra = buildChartMantra(profile, chart);
-      return `<div class="day-overview-strip day-overview-strip--single">${renderDailyMantraCard(mantra, true)}</div>`;
+      return `<section class="panel day-overview-panel compact-top">${inner}</section>`;
     }
 
     function transitHeadline(transit) {
@@ -4542,17 +4543,15 @@
         </section>
         ${renderDateBar(date)}
         ${renderProfileStrip(profile, day, date)}
+        ${renderDayOverviewStrip(profile, day, model)}
         <section class="map-grid">
           ${renderScoreSidebar(model, baseline, showTransits, profile)}
-          <div class="map-chart-col">
-            ${renderDayOverviewStrip(profile, day, model)}
-            <section class="panel bodygraph-wrap">
-              <h2>${showTransits ? T(BL("Live Bodygraph", "Live bodygraph")) : T(BL("Dein Bodygraph", "Your bodygraph"))}</h2>
-              ${renderBodygraph()}
-              <div class="chips">${bodygraphChips}</div>
-              <div class="detail-box" id="detailBox"><strong>${T(BL("Klicke ein Tor oder Zentrum.", "Click a gate or center."))}</strong><br>${T(profile.tone)}</div>
-            </section>
-          </div>
+          <section class="panel bodygraph-wrap">
+            <h2>${showTransits ? T(BL("Live Bodygraph", "Live bodygraph")) : T(BL("Dein Bodygraph", "Your bodygraph"))}</h2>
+            ${renderBodygraph()}
+            <div class="chips">${bodygraphChips}</div>
+            <div class="detail-box" id="detailBox"><strong>${T(BL("Klicke ein Tor oder Zentrum.", "Click a gate or center."))}</strong><br>${T(profile.tone)}</div>
+          </section>
           ${renderUnifiedFocusPanel(profile, day, model)}
         </section>
         ${renderProfileExtras(profile, day, date)}`;
