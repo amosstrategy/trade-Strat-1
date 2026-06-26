@@ -776,28 +776,25 @@
     }
 
     .day-overview-strip .focus-overview-head {
-      padding: 10px 14px 8px;
+      padding: 12px 14px 10px;
       text-align: center;
       flex-shrink: 0;
     }
 
     .day-overview-strip .focus-overview-head .acc-head {
       justify-content: center;
-      flex-wrap: wrap;
-      gap: 6px 10px;
+      flex-wrap: nowrap;
+      gap: 8px;
     }
 
     .day-overview-strip .focus-overview .acc-field {
-      font-size: .95rem;
+      font-size: clamp(1.05rem, 0.9vw + 0.82rem, 1.28rem);
       font-weight: 700;
-    }
-
-    .day-overview-strip .focus-overview .acc-tag {
-      font-size: .76rem;
+      letter-spacing: -.01em;
     }
 
     .day-overview-strip .focus-overview .acc-icon {
-      font-size: 1.05rem;
+      font-size: clamp(1.1rem, 0.7vw + 0.9rem, 1.32rem);
     }
 
     .day-overview-strip .focus-overview-body {
@@ -807,6 +804,7 @@
       justify-content: center;
       padding: 8px 16px 14px;
       text-align: center;
+      border-top: none;
     }
 
     .day-overview-strip .focus-overview-body .reading-card-body {
@@ -3750,7 +3748,6 @@
             <span class="acc-head">
               <span class="acc-icon">✦</span>
               <span class="acc-field">${T(BL("Tages-Mantra", "Daily mantra"))}</span>
-              <span class="acc-tag">${mantra.tag}</span>
             </span>
           </div>
           <div class="focus-overview-body">
@@ -3767,7 +3764,6 @@
             <span class="acc-head">
               <span class="acc-icon">⚠</span>
               <span class="acc-field">${T(BL("Achtsamkeit heute", "Mindfulness today"))}</span>
-              <span class="acc-tag">${warning.pressured.length ? warning.pressured.map(c => T(CENTER_LABELS[c])).join(" · ") : T(BL("Allgemein", "General"))}</span>
             </span>
           </div>
           <div class="focus-overview-body">
