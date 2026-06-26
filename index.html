@@ -386,7 +386,7 @@
 
     .hero {
       display: grid;
-      grid-template-columns: 1.2fr .8fr;
+      grid-template-columns: 1fr;
       gap: 22px;
       align-items: stretch;
       margin-bottom: 22px;
@@ -573,6 +573,182 @@
       border-radius: inherit;
     }
 
+    .map-grid {
+      display: grid;
+      grid-template-columns: minmax(220px, .62fr) minmax(340px, 1.05fr) minmax(360px, 1.15fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .score-sidebar {
+      display: grid;
+      gap: 14px;
+      position: sticky;
+      top: 12px;
+    }
+
+    .score-sidebar .score-ring {
+      width: 150px;
+      height: 150px;
+    }
+
+    .score-sidebar .score-ring strong {
+      font-size: 2.8rem;
+    }
+
+    .score-caption {
+      text-align: center;
+      color: var(--muted);
+      font-size: .88rem;
+      line-height: 1.45;
+      margin: 0;
+    }
+
+    .dimension-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .dimension-select {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      grid-template-rows: auto auto;
+      gap: 4px 10px;
+      align-items: center;
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      cursor: pointer;
+      text-align: left;
+      font: inherit;
+      transition: border-color .15s, background .15s;
+    }
+
+    .dimension-select:hover {
+      border-color: rgba(132,220,198,.35);
+      background: rgba(132,220,198,.06);
+    }
+
+    .dimension-select.active {
+      border-color: var(--accent);
+      background: rgba(132,220,198,.12);
+      box-shadow: 0 0 0 1px rgba(132,220,198,.18);
+    }
+
+    .dimension-select .dim-icon { font-size: 1.05rem; grid-row: span 2; }
+    .dimension-select .dim-label { font-size: .88rem; font-weight: 600; color: var(--text); }
+    .dimension-select .dim-score { font-size: .88rem; font-weight: 700; color: var(--accent); }
+    .dimension-select .dim-dev {
+      grid-column: 2 / 4;
+      font-size: .75rem;
+      color: var(--muted);
+    }
+
+    .dimension-select .dim-dev.up { color: var(--good); }
+    .dimension-select .dim-dev.down { color: var(--low); }
+
+    .dimension-select .bar {
+      grid-column: 1 / -1;
+      height: 6px;
+      margin-top: 2px;
+    }
+
+    .dim-filter-hint {
+      font-size: .78rem;
+      color: var(--muted);
+      line-height: 1.4;
+      margin: 0;
+      text-align: center;
+    }
+
+    .focus-panel .focus-intro {
+      color: var(--muted);
+      line-height: 1.5;
+      margin: 0 0 14px;
+      font-size: .9rem;
+    }
+
+    .focus-global-warn {
+      margin-bottom: 14px;
+    }
+
+    .focus-section-label {
+      font-size: .68rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 700;
+      margin: 0 0 8px 2px;
+    }
+
+    .focus-tageskern {
+      margin-bottom: 12px;
+    }
+
+    .focus-dimension .acc-score {
+      font-size: .82rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-left: auto;
+    }
+
+    .focus-dimension .acc-dev {
+      font-size: .72rem;
+      color: var(--muted);
+      margin-left: 6px;
+    }
+
+    .focus-dimension .acc-dev.up { color: var(--good); }
+    .focus-dimension .acc-dev.down { color: var(--low); }
+
+    .focus-empty {
+      color: var(--muted);
+      font-size: .88rem;
+      line-height: 1.45;
+      padding: 8px 4px 4px;
+    }
+
+    .btn-text {
+      border: none;
+      background: none;
+      color: var(--accent);
+      font: inherit;
+      font-size: .82rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0;
+      margin-bottom: 12px;
+    }
+
+    .btn-text:hover { text-decoration: underline; }
+
+    .profile-strip .profile-card { margin-bottom: 0; }
+
+    .profile-extras {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255,255,255,.08);
+    }
+
+    .profile-extras h3 {
+      font-size: .72rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin: 0 0 10px;
+      font-weight: 700;
+    }
+
+    @media (max-width: 720px) {
+      .profile-extras { grid-template-columns: 1fr; }
+    }
+
     .bodygraph-wrap {
       display: grid;
       gap: 14px;
@@ -746,8 +922,9 @@
     }
 
     @media (max-width: 1120px) {
-      .hero, .grid { grid-template-columns: 1fr; }
-      .score-card { order: -1; }
+      .hero, .grid, .map-grid { grid-template-columns: 1fr; }
+      .score-sidebar { position: static; }
+      .score-sidebar .score-ring { width: 170px; height: 170px; }
     }
 
     @media (max-width: 620px) {
@@ -775,6 +952,7 @@
     let lang = "de";
     let activeTab = "daily";
     let showTransits = true;
+    let selectedDimension = null;
     let selectedDateISO = "";
     let activeProfile = "daniel";
     const pentaOn = { daniel: true, patrick: true, paradise: true };
@@ -2242,8 +2420,9 @@
         </details>`;
     }
 
-    function groupTransitsByDimension(profile, model) {
+    function collectTransitEntries(profile, model, excludeIds = null) {
       const buckets = Object.fromEntries(DIMENSION_ORDER.map(k => [k, []]));
+      const skip = excludeIds || new Set();
 
       const sorted = [...model.transits].sort((a, b) => {
         const ai = TRANSIT_PRIORITY.indexOf(a.id);
@@ -2252,6 +2431,7 @@
       });
 
       sorted.forEach(t => {
+        if (skip.has(t.id)) return;
         const dimKey = GATE_INFO[t.gate].dimension;
         if (!buckets[dimKey]) buckets[dimKey] = [];
         const impactKey = transitImpact(profile, t, model);
@@ -2296,6 +2476,11 @@
         });
       });
 
+      return buckets;
+    }
+
+    function groupTransitsByDimension(profile, model, excludeIds = null) {
+      const buckets = collectTransitEntries(profile, model, excludeIds);
       return DIMENSION_ORDER.filter(k => buckets[k]?.length).map(k => dimensionGroup(k, buckets[k]));
     }
 
@@ -2654,46 +2839,18 @@
       return `<div class="reading-cards">${cards.join("")}</div>`;
     }
 
-    function renderDailyReadingCards(profile, day) {
-      const model = day.display;
-      if (!profile.chartComputed) {
-        return `<div class="small-card warning">${T(BL("Tages-Lesung und Bodygraph brauchen ein gespeichertes Chart. Bitte unter Eingabe Geburtsdaten eingeben und «Berechnen & Speichern» klicken.", "Daily reading and bodygraph need a saved chart. Please enter birth data under Input and click «Calculate & save»."))}</div>`;
-      }
-      if (model.mode === "chartOnly") return renderChartReadingCards(profile, day.chart);
-
+    function resolveLuminaries(model) {
       let sun = model.transits.find(t => t.id === "sun");
       let earth = model.transits.find(t => t.id === "earth");
       let moon = model.transits.find(t => t.id === "moon");
-      if (!sun) return `<div class="small-card warning">${T(BL("Tages-Lesung braucht Internet fuer korrekte Sonnen-Transite.", "Daily reading needs internet for correct Sun transits."))}</div>`;
-      if (!earth && sun.longitude != null) {
+      if (!earth && sun?.longitude != null) {
         const seg = HDEngine?.longitudeToActivation?.(norm(sun.longitude + 180)) || mandalaAt(norm((sun.longitude || 0) + 180));
         earth = { id: "earth", gate: seg.gate, line: seg.line, center: gateCenter(seg.gate) };
       }
-      if (!moon) return `<div class="small-card warning">${T(BL("Mond-Transit nicht verfuegbar — Seite neu laden.", "Moon transit unavailable — reload the page."))}</div>`;
+      return { sun, earth, moon };
+    }
 
-      const sunCenter = gateCenter(sun.gate);
-      const earthCenter = gateCenter(earth.gate);
-      const moonCenter = gateCenter(moon.gate);
-
-      const sunDim = DIMENSIONS[GATE_INFO[sun.gate].dimension].label;
-      const earthDim = DIMENSIONS[GATE_INFO[earth.gate].dimension].label;
-      const moonDim = DIMENSIONS[GATE_INFO[moon.gate].dimension].label;
-
-      const sunBody = BL(
-        `Kollektiv-Thema: ${GATE_NAMES[sun.gate].de}. ${GATE_INFO[sun.gate].theme.de} — nicht automatisch deins.`,
-        `Collective theme: ${GATE_NAMES[sun.gate].en}. ${GATE_INFO[sun.gate].theme.en} — not automatically yours.`
-      );
-
-      const themeBody = BL(
-        `${GATE_INFO[sun.gate].description.de}`,
-        `${GATE_INFO[sun.gate].description.en}`
-      );
-
-      const practicalBody = BL(
-        `Erdung: ${GATE_NAMES[earth.gate].de}. ${centerStatusLabel(profile, earthCenter).de} — klein anfangen, nicht overcommiten.`,
-        `Grounding: ${GATE_NAMES[earth.gate].en}. ${centerStatusLabel(profile, earthCenter).en} — start small, don't overcommit.`
-      );
-
+    function buildDailyWarning(profile, model) {
       const openCenters = Object.keys(CENTER_LABELS).filter(c => !profile.definedCenters.includes(c));
       const pressured = openCenters.filter(c => model.transits.some(t => t.center === c));
       const warningParts = [];
@@ -2718,64 +2875,239 @@
       if (!warningParts.length) {
         warningParts.push(BL("Kein starker Konditionierungsdruck — guter Tag fuer bewusste kleine Schritte.", "No strong conditioning pressure — a good day for conscious small steps."));
       }
-      const warningBody = BL(
-        warningParts.map(p => p.de).join(" "),
-        warningParts.map(p => p.en).join(" ")
-      );
+      return {
+        pressured,
+        body: BL(warningParts.map(p => p.de).join(" "), warningParts.map(p => p.en).join(" ")),
+        question: warningReadingQuestion(profile, pressured, model)
+      };
+    }
 
-      const moonBody = BL(
-        `${GATE_NAMES[moon.gate].de} — ${MOON_NOTES[moon.gate % MOON_NOTES.length].de} Wechselt ca. alle 13h.`,
-        `${GATE_NAMES[moon.gate].en} — ${MOON_NOTES[moon.gate % MOON_NOTES.length].en} Shifts about every 13h.`
-      );
+    function scoreDeviation(current, baseline) {
+      const d = +(current - baseline).toFixed(1);
+      if (Math.abs(d) < 0.05) return null;
+      const sign = d > 0 ? "+" : "";
+      return {
+        value: d,
+        cls: d > 0 ? "up" : "down",
+        label: BL(`${sign}${d} vs. Chart`, `${sign}${d} vs. chart`)
+      };
+    }
 
-      const cards = [
-        accordionCard(
-          "theme", "☀", sunDim,
-          `G${sun.gate}.${sun.line} · ${impactLabel(profile, sun, model)}`,
+    function renderLuminariesForDim(profile, model, dimKey, luminaries) {
+      const { sun, earth, moon } = luminaries;
+      const parts = [];
+
+      if (sun && GATE_INFO[sun.gate].dimension === dimKey) {
+        const sunBody = BL(
+          `Kollektiv-Thema: ${GATE_NAMES[sun.gate].de}. ${GATE_INFO[sun.gate].theme.de} — ${GATE_INFO[sun.gate].description.de}`,
+          `Collective theme: ${GATE_NAMES[sun.gate].en}. ${GATE_INFO[sun.gate].theme.en} — ${GATE_INFO[sun.gate].description.en}`
+        );
+        parts.push(influenceAccordion(
+          "theme",
+          GATE_INFO[sun.gate].theme,
           sunBody,
-          sunReadingQuestion(profile, sun, model)
-        ),
-        accordionCard(
-          "theme", "◎", sunDim,
-          T(GATE_NAMES[sun.gate]),
-          themeBody,
-          themeReadingQuestion(profile, sun, model)
-        ),
-        accordionCard(
-          "practical", "⚡", earthDim,
-          `G${earth.gate}.${earth.line} · ${impactLabel(profile, earth, model)}`,
-          practicalBody,
-          earthReadingQuestion(profile, earth, model)
-        ),
-        accordionCard(
-          "warning", "⚠",
-          BL("Falle", "Trap"),
-          pressured.length ? pressured.map(c => T(CENTER_LABELS[c])).join(" · ") : T(BL("Allgemein", "General")),
-          warningBody,
-          warningReadingQuestion(profile, pressured, model)
-        ),
-        accordionCard(
-          "moon", "☽", moonDim,
-          `G${moon.gate}.${moon.line} · ${impactLabel(profile, moon, model)}`,
-          moonBody,
-          moonReadingQuestion(profile, moon, model)
-        )
-      ];
-
-      const transitChannels = model.activatedChannels.filter(c => c.completedByTransit).slice(0, 2);
-      transitChannels.forEach(ch => {
-        const centerA = ch.from;
-        const centerB = ch.to;
-        cards.push(readingCard(
-          "channel", "⟷",
-          BL(`KANAL ${ch.a}-${ch.b}`, `CHANNEL ${ch.a}-${ch.b}`),
-          `${T(CENTER_LABELS[centerA])} ↔ ${T(CENTER_LABELS[centerB])}`,
-          channelInfluenceText(profile, ch),
-          channelReadingQuestion(profile, ch)
+          sunReadingQuestion(profile, sun, model),
+          transitAstroLine(sun)
         ));
+      }
+
+      if (earth && GATE_INFO[earth.gate].dimension === dimKey) {
+        const earthCenter = gateCenter(earth.gate);
+        const practicalBody = BL(
+          `Erdung: ${GATE_NAMES[earth.gate].de}. ${centerStatusLabel(profile, earthCenter).de} — klein anfangen, nicht overcommiten.`,
+          `Grounding: ${GATE_NAMES[earth.gate].en}. ${centerStatusLabel(profile, earthCenter).en} — start small, don't overcommit.`
+        );
+        parts.push(influenceAccordion(
+          "practical",
+          BL("Erdung", "Grounding"),
+          practicalBody,
+          earthReadingQuestion(profile, earth, model),
+          transitAstroLine(earth)
+        ));
+      }
+
+      if (moon && GATE_INFO[moon.gate].dimension === dimKey) {
+        const moonBody = BL(
+          `${GATE_NAMES[moon.gate].de} — ${MOON_NOTES[moon.gate % MOON_NOTES.length].de} Wechselt ca. alle 13h.`,
+          `${GATE_NAMES[moon.gate].en} — ${MOON_NOTES[moon.gate % MOON_NOTES.length].en} Shifts about every 13h.`
+        );
+        parts.push(influenceAccordion(
+          "moon",
+          BL("Koerper & Stimmung", "Body & mood"),
+          moonBody,
+          moonReadingQuestion(profile, moon, model),
+          transitAstroLine(moon)
+        ));
+      }
+
+      if (!parts.length) return "";
+      return `<div class="focus-tageskern"><div class="focus-section-label">${T(BL("Tageskern", "Day core"))}</div>${parts.join("")}</div>`;
+    }
+
+    function dimensionFocusGroup(dimKey, entries, model, baseline, tageskern, openDefault) {
+      const dim = DIMENSIONS[dimKey];
+      const value = model.values[dimKey];
+      const dev = baseline ? scoreDeviation(value, baseline.values[dimKey]) : null;
+      const byImpact = {};
+      entries.forEach(e => {
+        if (!byImpact[e.impactKey]) byImpact[e.impactKey] = [];
+        byImpact[e.impactKey].push(e);
+      });
+      const subgroups = IMPACT_ORDER
+        .filter(k => byImpact[k]?.length)
+        .map(k => impactSubgroup(k, byImpact[k]));
+      const kind = entries.length ? groupAccentKind(entries) : "transit";
+      const hasContent = tageskern || subgroups.length;
+      const devHtml = dev ? `<span class="acc-dev ${dev.cls}">${T(dev.label)}</span>` : "";
+      const bodyParts = [];
+      if (tageskern) bodyParts.push(tageskern);
+      if (subgroups.length) {
+        bodyParts.push(`<div class="focus-section-label" style="margin-top:${tageskern ? "4px" : "0"}">${T(BL("Einfluesse", "Influences"))}</div>${subgroups.join("")}`);
+      }
+      if (!hasContent) {
+        bodyParts.push(`<p class="focus-empty">${T(BL("Keine starken Tages- oder Transit-Einfluesse in diesem Bereich.", "No strong day or transit influences in this field."))}</p>`);
+      }
+      return `
+        <details class="reading-card reading-accordion reading-group focus-dimension ${kind}" ${openDefault ? "open" : ""} data-focus-dim="${dimKey}">
+          <summary>
+            <span class="acc-head">
+              <span class="acc-icon">${dim.icon}</span>
+              <span class="acc-field">${T(dim.label)}</span>
+              <span class="acc-score">${value}/10</span>
+              ${devHtml}
+            </span>
+            <span class="acc-chevron">▼</span>
+          </summary>
+          <div class="reading-group-body">${bodyParts.join("")}</div>
+        </details>`;
+    }
+
+    function renderScoreSidebar(model, baseline, showTransitsFlag) {
+      const scoreLabel = model.overall >= 7 ? BL("stark", "strong") : model.overall >= 5 ? BL("steuerbar", "steerable") : BL("ruhig", "quiet");
+      const scoreCaption = showTransitsFlag
+        ? T(BL("Gesamtscore", "Overall score"))
+        : T(BL("Chart-Baseline", "Chart baseline"));
+      return `
+        <section class="panel score-sidebar">
+          <div class="score-ring" style="--score:${model.overall};--ring:${ringColor(model.overall)}">
+            <strong>${model.overall}</strong>
+          </div>
+          <p class="score-caption">${scoreCaption}: ${T(scoreLabel)}${model.abundance ? " · " + T(BL("Abundance offen", "Abundance open")) : ""}</p>
+          <div class="dimension-list">
+            ${DIMENSION_ORDER.map(dim => {
+              const value = model.values[dim];
+              const dev = showTransitsFlag && baseline ? scoreDeviation(value, baseline.values[dim]) : null;
+              return `
+                <button type="button" class="dimension-select ${selectedDimension === dim ? "active" : ""}" data-dimension="${dim}" aria-pressed="${selectedDimension === dim}">
+                  <span class="dim-icon">${DIMENSIONS[dim].icon}</span>
+                  <span class="dim-label">${T(DIMENSIONS[dim].label)}</span>
+                  <span class="dim-score">${value}/10</span>
+                  ${dev ? `<span class="dim-dev ${dev.cls}">${T(dev.label)}</span>` : ""}
+                  <div class="bar" style="--value:${value};--ring:${ringColor(value)}"><i></i></div>
+                </button>`;
+            }).join("")}
+          </div>
+          ${selectedDimension ? `<p class="dim-filter-hint">${T(BL("Gefiltert — erneut klicken fuer alle Bereiche.", "Filtered — click again for all fields."))}</p>` : `<p class="dim-filter-hint">${T(BL("Bereich anklicken fuer Fokus rechts.", "Click a field to focus the panel on the right."))}</p>`}
+        </section>`;
+    }
+
+    function renderChartFocusPanel(profile, day, model) {
+      const chart = day.chart;
+      const baseline = computeChartScores(profile, chart);
+      const buckets = Object.fromEntries(DIMENSION_ORDER.map(k => [k, []]));
+      chart.nativeChannels.forEach(ch => {
+        const dimKey = GATE_INFO[ch.a].dimension;
+        buckets[dimKey].push({
+          impactKey: "channelNative",
+          kind: "channel",
+          html: influenceAccordion(
+            "channel",
+            BL("Dein Kanal", "Your channel"),
+            channelInfluenceText(profile, ch),
+            channelReadingQuestion(profile, ch),
+            channelAstroLine(ch)
+          )
+        });
+      });
+      const dims = selectedDimension ? [selectedDimension] : DIMENSION_ORDER;
+      const groups = dims.map((dimKey, idx) => {
+        const entries = buckets[dimKey] || [];
+        const designIntro = !selectedDimension && dimKey === "energy" ? `
+          <div class="focus-tageskern">
+            <div class="focus-section-label">${T(BL("Chart-Baseline", "Chart baseline"))}</div>
+            ${influenceAccordion(
+              "theme",
+              BL("Dein Design", "Your design"),
+              BL(
+                `${T(profile.subtitle)}. ${T(profile.authority)} · ${T(profile.strategy)}.`,
+                `${T(profile.subtitle)}. ${T(profile.authority)} · ${T(profile.strategy)}.`
+              ),
+              BL("Was gehoert fest zu dir?", "What is permanently yours?"),
+              `${chart.gateCount} ${T(BL("Tore", "gates"))} · ${chart.centerCount} ${T(BL("Zentren", "centers"))}`
+            )}
+          </div>` : "";
+        return dimensionFocusGroup(dimKey, entries, model, baseline, designIntro, selectedDimension ? true : idx < 2);
+      });
+      return `
+        <section class="panel focus-panel">
+          <h2>${T(BL("Chart-Fokus", "Chart focus"))}</h2>
+          <p class="focus-intro">${T(BL("Transite aus — Scores und Lesung zeigen deine Chart-Baseline. Bereich links waehlen.", "Transits off — scores and reading show your chart baseline. Select a field on the left."))}</p>
+          ${selectedDimension ? `<button type="button" class="btn-text" id="clearDimFilter">${T(BL("← Alle Bereiche", "← All fields"))}</button>` : ""}
+          <div class="reading-cards">${groups.join("")}</div>
+        </section>`;
+    }
+
+    function renderUnifiedFocusPanel(profile, day, model) {
+      if (!profile.chartComputed) {
+        return `<section class="panel focus-panel"><h2>${T(BL("Tages-Fokus", "Day focus"))}</h2><div class="small-card warning">${T(BL("Tages-Lesung braucht ein gespeichertes Chart.", "Daily reading needs a saved chart."))}</div></section>`;
+      }
+      if (model.mode === "chartOnly") return renderChartFocusPanel(profile, day, model);
+      if (!showTransits) return renderChartFocusPanel(profile, day, model);
+
+      const baseline = computeChartScores(profile, day.chart);
+      const luminaries = resolveLuminaries(model);
+      const { sun, moon } = luminaries;
+      if (!sun) {
+        return `<section class="panel focus-panel"><h2>${T(BL("Tages-Fokus", "Day focus"))}</h2><div class="small-card warning">${T(BL("Sonnen-Transit nicht verfuegbar.", "Sun transit unavailable."))}</div></section>`;
+      }
+      if (!moon) {
+        return `<section class="panel focus-panel"><h2>${T(BL("Tages-Fokus", "Day focus"))}</h2><div class="small-card warning">${T(BL("Mond-Transit nicht verfuegbar — Seite neu laden.", "Moon transit unavailable — reload."))}</div></section>`;
+      }
+
+      const warning = buildDailyWarning(profile, model);
+      const buckets = collectTransitEntries(profile, model, new Set(["sun", "earth", "moon"]));
+      const dims = selectedDimension ? [selectedDimension] : DIMENSION_ORDER;
+      const groups = dims.map((dimKey, idx) => {
+        const tageskern = renderLuminariesForDim(profile, model, dimKey, luminaries);
+        const entries = buckets[dimKey] || [];
+        const openDefault = selectedDimension ? true : idx < 2;
+        return dimensionFocusGroup(dimKey, entries, model, baseline, tageskern, openDefault);
       });
 
-      return `<div class="reading-cards">${cards.join("")}</div>`;
+      const globalWarn = `
+        <details class="reading-card reading-accordion focus-global-warn warning">
+          <summary>
+            <span class="acc-head">
+              <span class="acc-icon">⚠</span>
+              <span class="acc-field">${T(BL("Achtsamkeit heute", "Mindfulness today"))}</span>
+              <span class="acc-tag">${warning.pressured.length ? warning.pressured.map(c => T(CENTER_LABELS[c])).join(" · ") : T(BL("Allgemein", "General"))}</span>
+            </span>
+            <span class="acc-chevron">▼</span>
+          </summary>
+          <div class="reading-accordion-body">
+            <div class="reading-card-body">${T(warning.body)}</div>
+            <div class="reading-card-q">${T(warning.question)}</div>
+          </div>
+        </details>`;
+
+      return `
+        <section class="panel focus-panel">
+          <h2>${T(BL("Tages-Fokus", "Day focus"))}</h2>
+          <p class="focus-intro">${T(BL("Score, Tageskern und Transite pro Bereich — ohne Doppelungen. Sonne, Erde und Mond nur im Tageskern.", "Score, day core and transits per field — no duplicates. Sun, Earth and Moon only in day core."))}</p>
+          ${selectedDimension ? `<button type="button" class="btn-text" id="clearDimFilter">${T(BL("← Alle Bereiche", "← All fields"))}</button>` : ""}
+          ${globalWarn}
+          <div class="reading-cards">${groups.join("")}</div>
+        </section>`;
     }
 
     function renderBodygraph() {
@@ -2837,16 +3169,11 @@
         </div>`;
     }
 
-    function renderProfilePanel(profile, day, date) {
-      const model = day.display;
+    function renderProfileStrip(profile, day, date) {
       const openCenters = Object.keys(CENTER_LABELS).filter(center => !profile.definedCenters.includes(center));
       const allProfiles = getAllProfiles();
-      const readingTitle = model.mode === "chartOnly"
-        ? BL("Chart-Lesung", "Chart reading")
-        : BL("Tages-Lesung", "Daily reading");
       return `
-        <section class="panel">
-          <h2>${T(BL("Profil", "Profile"))}</h2>
+        <section class="panel profile-strip" style="margin-bottom:18px">
           <div class="profile-card">
             <div class="form-grid">
               <div class="field">
@@ -2862,8 +3189,8 @@
             </div>
             <div class="small-card" style="margin-top:4px">
               <strong>${profile.name}</strong> · <span style="color:var(--accent)">${formatDateLong(date)}</span><br>
-              ${profile.chartComputed ? T(profile.subtitle) : T(BL("Chart noch nicht berechnet — Geburtsdaten unter Eingabe speichern.", "Chart not calculated yet — save birth data under Input."))}<br><br>
-              <span>${T(BL("Autoritaet", "Authority"))}: ${profile.chartComputed ? T(profile.authority) : "—"}</span><br>
+              ${profile.chartComputed ? T(profile.subtitle) : T(BL("Chart noch nicht berechnet — Geburtsdaten unter Eingabe speichern.", "Chart not calculated yet — save birth data under Input."))}<br>
+              <span>${T(BL("Autoritaet", "Authority"))}: ${profile.chartComputed ? T(profile.authority) : "—"}</span> ·
               <span>${T(BL("Strategie", "Strategy"))}: ${profile.chartComputed ? T(profile.strategy) : "—"}</span>
             </div>
             ${!profile.chartComputed ? `<div class="small-card warning" style="margin-top:10px">${profile.chartStale ? T(BL("Dein gespeichertes Chart ist veraltet (alte Berechnung oder Platzhalter-Daten). Bitte unter Eingabe erneut «Berechnen & Speichern» — pruefe die Vorschau (Typ, Profil, Sonnen-Linien).", "Your saved chart is outdated (old calculation or placeholder data). Under Input, click «Calculate & save» again — check the preview (type, profile, sun lines).")) : T(BL("Kein gespeichertes Chart. Bitte Geburtsdaten unter Eingabe eingeben und speichern.", "No saved chart. Please enter birth data under Input and save."))}</div>` : ""}
@@ -2871,12 +3198,18 @@
               ${profile.definedCenters.length ? profile.definedCenters.map(center => `<span class="tag"><strong>${T(CENTER_LABELS[center])}</strong></span>`).join("") : `<span class="tag" style="opacity:.6">${T(BL("Noch keine definierten Zentren", "No defined centers yet"))}</span>`}
             </div>
           </div>
-          <h2>${T(readingTitle)}</h2>
-          ${renderDailyReadingCards(profile, day)}
-          <h2>${T(BL("Offene Zentren", "Open centers"))}</h2>
-          ${openCenters.slice(0, 5).map(center => `<div class="small-card warning"><strong>${T(CENTER_LABELS[center])}</strong><br>${T(OPEN_CENTER_WARNINGS[center])}</div>`).join("")}
-          <h2>${T(BL("Traum-Notiz", "Dream note"))}</h2>
-          <div class="small-card">${T(DREAM_CARDS[(daysSinceEpoch(date) + profile.definedGates.length) % DREAM_CARDS.length])}</div>
+          <div class="profile-extras">
+            <div>
+              <h3>${T(BL("Offene Zentren", "Open centers"))}</h3>
+              ${openCenters.length
+                ? openCenters.slice(0, 5).map(center => `<div class="small-card warning" style="margin-bottom:8px"><strong>${T(CENTER_LABELS[center])}</strong><br>${T(OPEN_CENTER_WARNINGS[center])}</div>`).join("")
+                : `<div class="small-card">${T(BL("Alle Zentren definiert.", "All centers defined."))}</div>`}
+            </div>
+            <div>
+              <h3>${T(BL("Traum-Notiz", "Dream note"))}</h3>
+              <div class="small-card">${T(DREAM_CARDS[(daysSinceEpoch(date) + profile.definedGates.length) % DREAM_CARDS.length])}</div>
+            </div>
+          </div>
         </section>`;
     }
 
@@ -3071,17 +3404,7 @@
       const date = currentDate();
       const day = buildModel(profile, date, showTransits);
       const model = day.display;
-      const scoreLabel = model.overall >= 7 ? BL("stark", "strong") : model.overall >= 5 ? BL("steuerbar", "steerable") : BL("ruhig", "quiet");
-      const scoreCaption = showTransits
-        ? T(BL("Gesamtscore", "Overall score"))
-        : T(BL("Chart-Baseline", "Chart baseline"));
-      const heroMetrics = showTransits
-        ? `<span class="metric"><strong>${model.transits.length}</strong> ${T(BL("Planeten", "planets"))}</span>
-              <span class="metric"><strong>${model.transitGates.size}</strong> ${T(BL("Transit-Gates", "transit gates"))}</span>
-              <span class="metric"><strong>${model.activatedChannels.length}</strong> ${T(BL("Kanaele", "channels"))}</span>`
-        : `<span class="metric"><strong>${day.chart.gateCount}</strong> ${T(BL("Chart-Tore", "chart gates"))}</span>
-              <span class="metric"><strong>${day.chart.centerCount}</strong> ${T(BL("Zentren", "centers"))}</span>
-              <span class="metric"><strong>${day.chart.channelCount}</strong> ${T(BL("Kanaele", "channels"))}</span>`;
+      const baseline = profile.chartComputed ? computeChartScores(profile, day.chart) : null;
       const bodygraphChips = showTransits
         ? `<span class="chip">${T(BL("Violett: Chart", "Purple: chart"))}</span>
               <span class="chip">${T(BL("Tuerkis: Transit", "Teal: transit"))}</span>
@@ -3093,42 +3416,29 @@
 
       const dailyView = `
         <section class="hero">
-          <div class="hero-card">
+          <div class="hero-card" style="min-height:auto">
             <div>
               <div class="eyebrow">${T(BL("Daily Energy Map", "Daily Energy Map"))}</div>
               <h1>${T(BL("Wann ist der beste Moment fuer was?", "When is the best moment for what?"))}</h1>
-              <p class="lead">${T(BL("Taegliche Karte mit Transit-Gates, definierten Zentren, Abundance-Fenster und praktischer Sprache.", "Daily map with transit gates, defined centers, abundance windows, and practical language."))}</p>
+              <p class="lead">${T(BL("Score links, Chart Mitte, Tages-Fokus rechts — Bereich anklicken fuer Filter.", "Score left, chart center, day focus right — click a field to filter."))}</p>
             </div>
             <div class="toolbar">
               <button id="transitToggleBtn" type="button" class="${showTransits ? "active" : ""}" aria-pressed="${showTransits}">${showTransits ? T(BL("Transite: An", "Transits: On")) : T(BL("Transite: Aus", "Transits: Off"))}</button>
               <button id="langBtn" type="button">${lang === "de" ? "EN" : "DE"}</button>
             </div>
           </div>
-          <div class="hero-card score-card">
-            <p class="date-line" style="font-size:1.05rem;color:var(--text)"><strong>${formatDateLong(date)}</strong></p>
-            <div class="score-ring" style="--score:${model.overall};--ring:${ringColor(model.overall)}">
-              <strong>${model.overall}</strong>
-            </div>
-            <p class="date-line">${scoreCaption}: ${T(scoreLabel)} ${model.abundance ? "· " + T(BL("Abundance-Fenster offen", "abundance window open")) : ""}</p>
-            <div class="metric-row">${heroMetrics}</div>
-          </div>
         </section>
         ${renderDateBar(date)}
-        <section class="grid">
-          ${renderProfilePanel(profile, day, date)}
+        ${renderProfileStrip(profile, day, date)}
+        <section class="map-grid">
+          ${renderScoreSidebar(model, baseline, showTransits)}
           <section class="panel bodygraph-wrap">
             <h2>${showTransits ? T(BL("Live Bodygraph", "Live bodygraph")) : T(BL("Dein Bodygraph", "Your bodygraph"))}</h2>
             ${renderBodygraph()}
             <div class="chips">${bodygraphChips}</div>
             <div class="detail-box" id="detailBox"><strong>${T(BL("Klicke ein Tor oder Zentrum.", "Click a gate or center."))}</strong><br>${T(profile.tone)}</div>
-            <h2>${T(BL("6 Dimensionen", "6 dimensions"))}</h2>
-            ${renderScores(model)}
           </section>
-          <div>${showTransits ? renderTransitInfluencePanel(profile, model) : `
-        <section class="panel">
-          <h2>${T(BL("Transit-Einfluesse", "Transit influences"))}</h2>
-          <div class="small-card" style="color:var(--muted)">${T(BL("Transite sind ausgeschaltet. Button oben rechts aktivieren.", "Transits are off. Use the button top right to enable."))}</div>
-        </section>`}</div>
+          ${renderUnifiedFocusPanel(profile, day, model)}
         </section>`;
 
       const pentaView = `
@@ -3162,6 +3472,16 @@
 
       const transitToggleBtn = document.getElementById("transitToggleBtn");
       if (transitToggleBtn) transitToggleBtn.addEventListener("click", () => { showTransits = !showTransits; renderApp(); });
+
+      document.querySelectorAll(".dimension-select").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const dim = btn.dataset.dimension;
+          selectedDimension = selectedDimension === dim ? null : dim;
+          renderApp();
+        });
+      });
+      const clearDimFilter = document.getElementById("clearDimFilter");
+      if (clearDimFilter) clearDimFilter.addEventListener("click", () => { selectedDimension = null; renderApp(); });
 
       const onDateChange = value => {
         if (!value) return;
