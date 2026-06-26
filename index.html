@@ -2452,8 +2452,8 @@
           </summary>
           <div class="reading-accordion-body">
             <div class="reading-card-body">${T(body)}</div>
-            <div class="reading-card-q">${T(question)}</div>
-            <div class="acc-astro">${astroLine}</div>
+            ${question ? `<div class="reading-card-q">${T(question)}</div>` : ""}
+            ${astroLine ? (astroLine.startsWith("<") ? astroLine : `<div class="acc-astro">${astroLine}</div>`) : ""}
           </div>
         </details>`;
     }
@@ -2537,7 +2537,7 @@
         `${items.length} Transit${items.length === 1 ? "" : "e"} schliessen heute Kanaele zu deinen offenen Zentren (${centerLabels}). Fuehlt sich fest und verdaemlich zuverlaessig an — ist geliehene Definition, nicht dein Design. Keine grossen Entscheidungen.`,
         `${items.length} transit${items.length === 1 ? "" : "s"} complete channels to your open centers (${centerLabels}) today. Feels solid and misleadingly reliable — borrowed definition, not your design. No major decisions.`
       );
-      const question = warningReadingQuestion(profile, centers, model);
+      const question = null;
       const refs = items.map(e => {
         const t = e.transit;
         const ch = channelForTransitGate(model, t.gate);
@@ -2572,7 +2572,7 @@
           "transit-open",
           BL(`Fremdenergie · ${centerLabel}`, `Outside energy · ${centerLabel}`),
           body,
-          NOT_SELF_QUESTIONS[center],
+          null,
           `<div class="acc-astro-stack">${refs}</div>`
         );
       }).join("");
@@ -2853,13 +2853,7 @@
 
     function warningReadingQuestion(profile, pressured, model) {
       const borrowed = tempDefinedOpenCenters(profile, model);
-      if (borrowed.length) {
-        const labels = borrowed.map(c => T(CENTER_LABELS[c])).join(", ");
-        return BL(
-          `Transit definiert heute temporaer: ${labels}. Fuehlt sich das gerade absolut wahr an — obwohl es in Stunden wieder weg ist? Das ist geliehene Energie, nicht dein Design. Entscheide nicht jetzt.`,
-          `Transit temporarily defines today: ${labels}. Does it feel absolutely true right now — even though it will be gone in hours? That's borrowed energy, not your design. Don't decide now.`
-        );
-      }
+      if (borrowed.length) return null;
       if (pressured.includes("Solar") || (!profile.definedCenters.includes("Solar") && pressured.length)) {
         return NOT_SELF_QUESTIONS.Solar;
       }
@@ -3289,7 +3283,7 @@
           </summary>
           <div class="reading-accordion-body">
             <div class="reading-card-body">${T(warning.body)}</div>
-            <div class="reading-card-q">${T(warning.question)}</div>
+            ${warning.question ? `<div class="reading-card-q">${T(warning.question)}</div>` : ""}
           </div>
         </details>`;
 
