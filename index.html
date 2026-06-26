@@ -825,6 +825,35 @@
       font-size: .9rem;
     }
 
+    .focus-panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .focus-panel-head h2 {
+      margin-bottom: 0;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .focus-transit-toggle {
+      flex-shrink: 0;
+      padding: .45rem .85rem;
+      font-size: .8rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .focus-transit-toggle.active {
+      border-color: var(--accent);
+      background: rgba(132, 220, 198, .14);
+      color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(132,220,198,.25);
+    }
+
     .focus-global-warn {
       margin-bottom: 14px;
     }
@@ -3432,6 +3461,19 @@
         </section>`;
     }
 
+    function renderTransitToggleBtn() {
+      return `<button id="transitToggleBtn" type="button" class="focus-transit-toggle ${showTransits ? "active" : ""}" aria-pressed="${showTransits}">${showTransits ? T(BL("Transite: An", "Transits: On")) : T(BL("Transite: Aus", "Transits: Off"))}</button>`;
+    }
+
+    function renderFocusPanelHead(title, intro = null) {
+      return `
+        <div class="focus-panel-head">
+          <h2>${T(title)}</h2>
+          ${renderTransitToggleBtn()}
+        </div>
+        ${intro ? `<p class="focus-intro">${T(intro)}</p>` : ""}`;
+    }
+
     function renderChartFocusPanel(profile, day, model) {
       const chart = day.chart;
       const baseline = computeChartScores(profile, chart);
@@ -3466,8 +3508,10 @@
       });
       return `
         <section class="panel focus-panel">
-          <h2>${T(BL("Chart-Fokus", "Chart focus"))}</h2>
-          <p class="focus-intro">${T(BL("Transite aus — Scores und Lesung zeigen deine Chart-Baseline. Bereich links waehlen.", "Transits off — scores and reading show your chart baseline. Select a field on the left."))}</p>
+          ${renderFocusPanelHead(
+            BL("Chart-Fokus", "Chart focus"),
+            BL("Transite aus — Scores und Lesung zeigen deine Chart-Baseline. Bereich links waehlen.", "Transits off — scores and reading show your chart baseline. Select a field on the left.")
+          )}
           ${selectedDimension ? `<button type="button" class="btn-text" id="clearDimFilter">${T(BL("← Alle Bereiche", "← All fields"))}</button>` : ""}
           <div class="reading-cards">${groups.join("")}</div>
         </section>`;
@@ -3475,7 +3519,7 @@
 
     function renderUnifiedFocusPanel(profile, day, model) {
       if (!profile.chartComputed) {
-        return `<section class="panel focus-panel"><h2>${T(BL("Tages-Fokus", "Day focus"))}</h2><div class="small-card warning">${T(BL("Tages-Lesung braucht ein gespeichertes Chart.", "Daily reading needs a saved chart."))}</div></section>`;
+        return `<section class="panel focus-panel">${renderFocusPanelHead(BL("Tages-Fokus", "Day focus"))}<div class="small-card warning">${T(BL("Tages-Lesung braucht ein gespeichertes Chart.", "Daily reading needs a saved chart."))}</div></section>`;
       }
       if (model.mode === "chartOnly") return renderChartFocusPanel(profile, day, model);
       if (!showTransits) return renderChartFocusPanel(profile, day, model);
@@ -3484,10 +3528,10 @@
       const luminaries = resolveLuminaries(model);
       const { sun, moon } = luminaries;
       if (!sun) {
-        return `<section class="panel focus-panel"><h2>${T(BL("Tages-Fokus", "Day focus"))}</h2><div class="small-card warning">${T(BL("Sonnen-Transit nicht verfuegbar.", "Sun transit unavailable."))}</div></section>`;
+        return `<section class="panel focus-panel">${renderFocusPanelHead(BL("Tages-Fokus", "Day focus"))}<div class="small-card warning">${T(BL("Sonnen-Transit nicht verfuegbar.", "Sun transit unavailable."))}</div></section>`;
       }
       if (!moon) {
-        return `<section class="panel focus-panel"><h2>${T(BL("Tages-Fokus", "Day focus"))}</h2><div class="small-card warning">${T(BL("Mond-Transit nicht verfuegbar — Seite neu laden.", "Moon transit unavailable — reload."))}</div></section>`;
+        return `<section class="panel focus-panel">${renderFocusPanelHead(BL("Tages-Fokus", "Day focus"))}<div class="small-card warning">${T(BL("Mond-Transit nicht verfuegbar — Seite neu laden.", "Moon transit unavailable — reload."))}</div></section>`;
       }
 
       const warning = buildDailyWarning(profile, model);
@@ -3517,8 +3561,10 @@
 
       return `
         <section class="panel focus-panel">
-          <h2>${T(BL("Tages-Fokus", "Day focus"))}</h2>
-          <p class="focus-intro">${T(BL("Score, Tageskern und Transite pro Bereich — ohne Doppelungen. Sonne, Erde und Mond nur im Tageskern.", "Score, day core and transits per field — no duplicates. Sun, Earth and Moon only in day core."))}</p>
+          ${renderFocusPanelHead(
+            BL("Tages-Fokus", "Day focus"),
+            BL("Score, Tageskern und Transite pro Bereich — ohne Doppelungen. Sonne, Erde und Mond nur im Tageskern.", "Score, day core and transits per field — no duplicates. Sun, Earth and Moon only in day core.")
+          )}
           ${selectedDimension ? `<button type="button" class="btn-text" id="clearDimFilter">${T(BL("← Alle Bereiche", "← All fields"))}</button>` : ""}
           ${globalWarn}
           <div class="reading-cards">${groups.join("")}</div>
@@ -4042,7 +4088,6 @@
                 <p class="lead">${T(BL("Score links, Chart Mitte, Tages-Fokus rechts — Bereich anklicken fuer Filter.", "Score left, chart center, day focus right — click a field to filter."))}</p>
               </div>
               <div class="toolbar">
-                <button id="transitToggleBtn" type="button" class="${showTransits ? "active" : ""}" aria-pressed="${showTransits}">${showTransits ? T(BL("Transite: An", "Transits: On")) : T(BL("Transite: Aus", "Transits: Off"))}</button>
                 <button id="langBtn" type="button">${lang === "de" ? "EN" : "DE"}</button>
               </div>
             </div>
