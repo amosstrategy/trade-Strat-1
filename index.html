@@ -222,6 +222,77 @@
       margin-top: 10px;
       padding-top: 10px;
       border-top: 1px solid rgba(255,255,255,.08);
+      color: var(--muted);
+      font-size: .88rem;
+      line-height: 1.45;
+    }
+
+    .reading-accordion {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .reading-accordion > summary {
+      list-style: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 14px 12px 16px;
+      user-select: none;
+    }
+
+    .reading-accordion > summary::-webkit-details-marker { display: none; }
+
+    .acc-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .acc-icon {
+      font-size: 1.15rem;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .acc-field {
+      font-size: .95rem;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .acc-tag {
+      font-size: .72rem;
+      letter-spacing: .06em;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .acc-chevron {
+      color: var(--muted);
+      font-size: .65rem;
+      transition: transform .18s ease;
+      flex-shrink: 0;
+    }
+
+    .reading-accordion[open] > summary .acc-chevron { transform: rotate(180deg); }
+
+    .reading-accordion-body {
+      padding: 0 16px 14px 16px;
+      border-top: 1px solid rgba(255,255,255,.06);
+    }
+
+    .reading-accordion-body .reading-card-body {
+      margin-top: 12px;
+      font-size: .92rem;
+    }
       font-size: .92rem;
       color: var(--accent);
       font-style: italic;
@@ -664,7 +735,7 @@
     const DIMENSIONS = {
       energy: { label: BL("Energie", "Energy"), weight: 1.18 },
       intuition: { label: BL("Intuition", "Intuition"), weight: 1.08 },
-      expression: { label: BL("Ausdruck", "Expression"), weight: 1.02 },
+      expression: { label: BL("Kommunikation", "Expression"), weight: 1.02 },
       clarity: { label: BL("Klarheit", "Clarity"), weight: 1.05 },
       flow: { label: BL("Flow", "Flow"), weight: 1.02 },
       nutrition: { label: BL("Ernaehrung", "Nutrition"), weight: .82 }
@@ -1726,6 +1797,35 @@
         : BL("offen im Chart", "open in chart");
     }
 
+    function gateInfluenceShort(profile, gate, transit, model) {
+      const info = GATE_INFO[gate];
+      const center = gateCenter(gate);
+      const dim = T(DIMENSIONS[info.dimension].label);
+      const impact = transitImpact(profile, transit, model);
+      if (impact === "ownAmplification") {
+        return BL(
+          `Dein Tor ${gate} (${T(GATE_NAMES[gate])}) — ${dim} wird lauter. Vertraut, aber nicht automatisch richtig.`,
+          `Your gate ${gate} (${T(GATE_NAMES[gate])}) — ${dim} gets louder. Familiar, not automatically right.`
+        );
+      }
+      if (impact === "openConditioning") {
+        return BL(
+          `Offenes ${T(CENTER_LABELS[center])}: ${dim} aus dem Feld. Spuerbar — muss nicht deins werden.`,
+          `Open ${T(CENTER_LABELS[center])}: ${dim} from the field. Noticeable — doesn't have to become yours.`
+        );
+      }
+      if (impact === "borrowedDefinition") {
+        return BL(
+          `Kanal temporaer zu — fuehlt sich echt an, ist es nicht. Keine grossen Entscheidungen.`,
+          `Channel temporarily complete — feels real, isn't. No big decisions.`
+        );
+      }
+      return BL(
+        `Nuance in ${T(CENTER_LABELS[center])}: ${T(GATE_NAMES[gate])}. Beobachten reicht.`,
+        `Nuance in ${T(CENTER_LABELS[center])}: ${T(GATE_NAMES[gate])}. Observing is enough.`
+      );
+    }
+
     function gateInfluenceText(profile, gate, planetName) {
       const info = GATE_INFO[gate];
       const center = gateCenter(gate);
@@ -1749,14 +1849,26 @@
       );
     }
 
-    function readingCard(kind, icon, title, meta, body, question) {
+    function accordionCard(kind, icon, fieldLabel, tag, body, question) {
       return `
-        <article class="reading-card ${kind}">
-          <div class="reading-card-head">${icon} ${T(title)}</div>
-          <div class="reading-card-meta">${meta}</div>
-          <div class="reading-card-body">${T(body)}</div>
-          <div class="reading-card-q">${T(question)}</div>
-        </article>`;
+        <details class="reading-card reading-accordion ${kind}">
+          <summary>
+            <span class="acc-head">
+              <span class="acc-icon">${icon}</span>
+              <span class="acc-field">${T(fieldLabel)}</span>
+              <span class="acc-tag">${tag}</span>
+            </span>
+            <span class="acc-chevron">▼</span>
+          </summary>
+          <div class="reading-accordion-body">
+            <div class="reading-card-body">${T(body)}</div>
+            <div class="reading-card-q">${T(question)}</div>
+          </div>
+        </details>`;
+    }
+
+    function readingCard(kind, icon, title, meta, body, question) {
+      return accordionCard(kind, icon, title, meta, body, question);
     }
 
     const NOT_SELF_QUESTIONS = {
@@ -2135,19 +2247,23 @@
       const earthCenter = gateCenter(earth.gate);
       const moonCenter = gateCenter(moon.gate);
 
+      const sunDim = DIMENSIONS[GATE_INFO[sun.gate].dimension].label;
+      const earthDim = DIMENSIONS[GATE_INFO[earth.gate].dimension].label;
+      const moonDim = DIMENSIONS[GATE_INFO[moon.gate].dimension].label;
+
       const sunBody = BL(
-        `${T(PLANET_LABELS.sun)} in Tor ${sun.gate} (${T(GATE_NAMES[sun.gate])}): ${GATE_INFO[sun.gate].theme.de} Einfluss auf ${DIMENSIONS[GATE_INFO[sun.gate].dimension].label.de}.`,
-        `${T(PLANET_LABELS.sun)} in gate ${sun.gate} (${T(GATE_NAMES[sun.gate])}): ${GATE_INFO[sun.gate].theme.en} Influence on ${DIMENSIONS[GATE_INFO[sun.gate].dimension].label.en}.`
+        `Kollektiv-Thema: ${GATE_NAMES[sun.gate].de}. ${GATE_INFO[sun.gate].theme.de} — nicht automatisch deins.`,
+        `Collective theme: ${GATE_NAMES[sun.gate].en}. ${GATE_INFO[sun.gate].theme.en} — not automatically yours.`
       );
 
       const themeBody = BL(
-        `Tages-Thema: ${GATE_NAMES[sun.gate].de} — ${GATE_INFO[sun.gate].description.de}`,
-        `Daily theme: ${GATE_NAMES[sun.gate].en} — ${GATE_INFO[sun.gate].description.en}`
+        `${GATE_INFO[sun.gate].description.de}`,
+        `${GATE_INFO[sun.gate].description.en}`
       );
 
       const practicalBody = BL(
-        `Erdung durch ${GATE_NAMES[earth.gate].de}: ${GATE_INFO[earth.gate].description.de} Praktisch im ${CENTER_LABELS[earthCenter].de} (${centerStatusLabel(profile, earthCenter).de}).`,
-        `Grounding through ${GATE_NAMES[earth.gate].en}: ${GATE_INFO[earth.gate].description.en} Practical in the ${CENTER_LABELS[earthCenter].en} (${centerStatusLabel(profile, earthCenter).en}).`
+        `Erdung: ${GATE_NAMES[earth.gate].de}. ${centerStatusLabel(profile, earthCenter).de} — klein anfangen, nicht overcommiten.`,
+        `Grounding: ${GATE_NAMES[earth.gate].en}. ${centerStatusLabel(profile, earthCenter).en} — start small, don't overcommit.`
       );
 
       const openCenters = Object.keys(CENTER_LABELS).filter(c => !profile.definedCenters.includes(c));
@@ -2175,48 +2291,44 @@
         warningParts.push(BL("Kein starker Konditionierungsdruck — guter Tag fuer bewusste kleine Schritte.", "No strong conditioning pressure — a good day for conscious small steps."));
       }
       const warningBody = BL(
-        warningParts.map(p => p.de).join(" | "),
-        warningParts.map(p => p.en).join(" | ")
+        warningParts.map(p => p.de).join(" "),
+        warningParts.map(p => p.en).join(" ")
       );
 
       const moonBody = BL(
-        `Mond-Qualitaet heute: ${GATE_NAMES[moon.gate].de} — ${MOON_NOTES[moon.gate % MOON_NOTES.length].de} Der Mond wechselt etwa alle 13 Stunden.`,
-        `Moon quality today: ${GATE_NAMES[moon.gate].en} — ${MOON_NOTES[moon.gate % MOON_NOTES.length].en} The moon shifts about every 13 hours.`
+        `${GATE_NAMES[moon.gate].de} — ${MOON_NOTES[moon.gate % MOON_NOTES.length].de} Wechselt ca. alle 13h.`,
+        `${GATE_NAMES[moon.gate].en} — ${MOON_NOTES[moon.gate % MOON_NOTES.length].en} Shifts about every 13h.`
       );
 
       const cards = [
-        readingCard(
-          "theme", "☀",
-          BL(`SONNE — G${sun.gate}`, `SUN — G${sun.gate}`),
-          `${T(PLANET_LABELS.sun)} · Tor ${sun.gate}.${sun.line} · ${T(CENTER_LABELS[sunCenter])} · ${impactLabel(profile, sun, model)}`,
+        accordionCard(
+          "theme", "☀", sunDim,
+          `G${sun.gate}.${sun.line} · ${impactLabel(profile, sun, model)}`,
           sunBody,
           sunReadingQuestion(profile, sun, model)
         ),
-        readingCard(
-          "theme", "◎",
-          BL(`THEMA — G${sun.gate}`, `THEME — G${sun.gate}`),
-          `${T(GATE_NAMES[sun.gate])} · ${T(DIMENSIONS[GATE_INFO[sun.gate].dimension].label)} · ${impactLabel(profile, sun, model)}`,
+        accordionCard(
+          "theme", "◎", sunDim,
+          T(GATE_NAMES[sun.gate]),
           themeBody,
           themeReadingQuestion(profile, sun, model)
         ),
-        readingCard(
-          "practical", "⚡",
-          BL(`PRAKTISCH — Erde G${earth.gate}`, `PRACTICAL — Earth G${earth.gate}`),
-          `${T(PLANET_LABELS.earth)} · Tor ${earth.gate}.${earth.line} · ${T(CENTER_LABELS[earthCenter])} · ${impactLabel(profile, earth, model)}`,
+        accordionCard(
+          "practical", "⚡", earthDim,
+          `G${earth.gate}.${earth.line} · ${impactLabel(profile, earth, model)}`,
           practicalBody,
           earthReadingQuestion(profile, earth, model)
         ),
-        readingCard(
+        accordionCard(
           "warning", "⚠",
-          BL("ACHTUNG", "ATTENTION"),
+          BL("Falle", "Trap"),
           pressured.length ? pressured.map(c => T(CENTER_LABELS[c])).join(" · ") : T(BL("Allgemein", "General")),
           warningBody,
           warningReadingQuestion(profile, pressured, model)
         ),
-        readingCard(
-          "moon", "☽",
-          BL(`MOND — G${moon.gate}`, `MOON — G${moon.gate}`),
-          `${T(PLANET_LABELS.moon)} · Tor ${moon.gate}.${moon.line} · ${T(CENTER_LABELS[moonCenter])} · ${impactLabel(profile, moon, model)}`,
+        accordionCard(
+          "moon", "☽", moonDim,
+          `G${moon.gate}.${moon.line} · ${impactLabel(profile, moon, model)}`,
           moonBody,
           moonReadingQuestion(profile, moon, model)
         )
@@ -2365,33 +2477,37 @@
       });
 
       const transitCards = sorted.map(t => {
-        const planetLabel = PLANET_LABELS[t.id] || BL(t.id, t.id);
         const center = t.center || gateCenter(t.gate);
-        return readingCard(
+        const dim = DIMENSIONS[GATE_INFO[t.gate].dimension].label;
+        const tag = `G${t.gate}.${t.line} · ${impactLabel(profile, t, model)}`;
+        return accordionCard(
           transitCardKind(profile, t, model),
           PLANET_ICONS[t.id] || "●",
-          BL(`${T(planetLabel)} — G${t.gate}`, `${T(planetLabel)} — G${t.gate}`),
-          `${T(GATE_NAMES[t.gate])} · ${T(CENTER_LABELS[center])} · ${impactLabel(profile, t, model)} · Tor ${t.gate}.${t.line}`,
-          gateInfluenceText(profile, t.gate, planetLabel),
+          dim,
+          tag,
+          gateInfluenceShort(profile, t.gate, t, model),
           transitReadingQuestion(profile, t, model)
         );
       });
 
       const channelCards = model.activatedChannels.map(ch => {
-        const title = ch.completedByTransit
-          ? BL(`KANAL ${ch.a}-${ch.b} (Transit)`, `CHANNEL ${ch.a}-${ch.b} (transit)`)
-          : BL(`KANAL ${ch.a}-${ch.b} (Chart)`, `CHANNEL ${ch.a}-${ch.b} (chart)`);
+        const dimA = DIMENSIONS[GATE_INFO[ch.a].dimension].label;
+        const dimB = DIMENSIONS[GATE_INFO[ch.b].dimension].label;
+        const field = dimA.de === dimB.de ? dimA : BL(`${dimA.de} / ${dimB.de}`, `${dimA.en} / ${dimB.en}`);
+        const tag = ch.completedByTransit
+          ? BL(`Kanal ${ch.a}-${ch.b} · Transit`, `Channel ${ch.a}-${ch.b} · transit`)
+          : BL(`Kanal ${ch.a}-${ch.b} · Chart`, `Channel ${ch.a}-${ch.b} · chart`);
         const body = ch.completedByTransit
           ? channelInfluenceText(profile, ch)
           : BL(
-              `Nativer Kanal: ${CHANNEL_INFLUENCE[ch.key]?.de || `${GATE_INFO[ch.a].name.de} + ${GATE_INFO[ch.b].name.de}`}. Heute durch Transit sichtbarer.`,
-              `Native channel: ${CHANNEL_INFLUENCE[ch.key]?.en || `${GATE_INFO[ch.a].name.en} + ${GATE_INFO[ch.b].name.en}`}. More visible through transit today.`
+              `Dein Kanal — heute nur sichtbarer. Nicht mehr „echt“ als sonst.`,
+              `Your channel — just more visible today. Not more "real" than usual.`
             );
-        return readingCard(
+        return accordionCard(
           "channel",
           "⟷",
-          title,
-          `${T(CENTER_LABELS[ch.from])} ↔ ${T(CENTER_LABELS[ch.to])}`,
+          field,
+          T(tag),
           body,
           channelReadingQuestion(profile, ch)
         );
@@ -2400,7 +2516,7 @@
       return `
         <section class="panel">
           <h2>${T(BL("Transit-Einfluesse", "Transit influences"))}</h2>
-          <p style="color:var(--muted);line-height:1.5;margin-bottom:14px">${T(BL("Kernfrage: Ist das gerade deine Energie — oder Fremdenergie aus dem Feld? Geliehene Definition (Transit schliesst Kanal) fuehlt sich echt an, ist aber temporaer. Entscheide ueber deine Autoritaet, nicht ueber Transit-Wetter.", "Core question: is this your energy right now — or outside energy from the field? Borrowed definition (transit completes channel) feels real but is temporary. Decide through your authority, not transit weather."))}</p>
+          <p style="color:var(--muted);line-height:1.5;margin-bottom:14px;font-size:.9rem">${T(BL("Symbol + Feld in der Zeile. Ausklappen fuer Details. Nicht alles ist deine Energie.", "Symbol + field on the line. Expand for details. Not everything is your energy."))}</p>
           <div class="reading-cards">${transitCards.join("")}</div>
           <h2 style="margin-top:18px">${T(BL("Aktive Kanaele", "Active channels"))}</h2>
           ${channelCards.length
