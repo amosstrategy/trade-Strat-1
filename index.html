@@ -830,9 +830,13 @@
       border-top: 1px solid rgba(255,255,255,.08);
     }
 
-    .admin-danger {
-      border-color: rgba(255,120,120,.28);
-      background: rgba(255,120,120,.06);
+    .acc-astro-stack {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255,255,255,.08);
+      font-size: .78rem;
+      color: var(--muted);
+      line-height: 1.65;
     }
 
     .profile-extras {
@@ -1052,7 +1056,7 @@
   </script>
   <script type="module" src="hd-bootstrap.mjs"></script>
   <script src="hd-engine.js"></script>
-  <script src="hd-logic.js"></script>
+  <script src="hd-logic.js?v=8"></script>
   <main class="app" id="app"></main>
 
   <script>
@@ -1115,6 +1119,10 @@
     const pentaOn = loadJSON(STORAGE_KEYS.penta, { daniel: true, patrick: true, paradise: true });
     const savePentaOn = () => saveJSON(STORAGE_KEYS.penta, pentaOn);
     const ProfileStore = HDLogic.createProfileStore({ loadJSON, saveJSON });
+    const listProfileRecords = defaults => {
+      if (typeof ProfileStore.listRecords === "function") return ProfileStore.listRecords(defaults);
+      return Object.keys(ProfileStore.getAllDisplay(defaults)).map(id => ProfileStore.getRecord(id, defaults));
+    };
     const ChartPipeline = HDLogic.createChartPipeline({
       calculateChart: (date, time, tz, channels) => HDEngine.calculateChart(date, time, tz, channels)
     });
@@ -2485,9 +2493,106 @@
       return `⟷ ${T(BL(`Kanal ${ch.a}–${ch.b}`, `Channel ${ch.a}–${ch.b}`))} · G${ch.a} + G${ch.b}`;
     }
 
-    function impactSubgroup(impactKey, items) {
+    function channelForTransitGate(model, gate) {
+      return model.activatedChannels.find(ch =>
+        ch.completedByTransit && (ch.a === gate || ch.b === gate)
+      );
+    }
+
+    function renderTransitEntryCard(entry, profile, model) {
+      const t = entry.transit;
+      return influenceAccordion(
+        entry.kind,
+        entry.headline || GATE_INFO[t.gate].theme,
+        gateInfluenceShort(profile, t.gate, t, model),
+        transitReadingQuestion(profile, t, model),
+        transitAstroLine(t)
+      );
+    }
+
+    function renderChannelEntryCard(entry, profile) {
+      const ch = entry.channel;
+      const body = entry.impactKey === "channelTransit"
+        ? channelInfluenceText(profile, ch)
+        : BL(
+            `Dein Kanal — heute nur lauter. Nicht echter als sonst.`,
+            `Your channel — louder today. Not more real than usual.`
+          );
+      return influenceAccordion(
+        entry.kind,
+        entry.headline,
+        body,
+        channelReadingQuestion(profile, ch),
+        channelAstroLine(ch)
+      );
+    }
+
+    function renderCollapsedBorrowedDefinition(items, profile, model) {
+      const centers = [...new Set(items.map(e => e.transit.center || gateCenter(e.transit.gate)))];
+      const centerLabels = centers.map(c => T(CENTER_LABELS[c])).join(", ");
+      const body = BL(
+        `${items.length} Transit${items.length === 1 ? "" : "e"} schliessen heute Kanaele zu deinen offenen Zentren (${centerLabels}). Fuehlt sich fest und verdaemlich zuverlaessig an — ist geliehene Definition, nicht dein Design. Keine grossen Entscheidungen.`,
+        `${items.length} transit${items.length === 1 ? "" : "s"} complete channels to your open centers (${centerLabels}) today. Feels solid and misleadingly reliable — borrowed definition, not your design. No major decisions.`
+      );
+      const question = warningReadingQuestion(profile, centers, model);
+      const refs = items.map(e => {
+        const t = e.transit;
+        const ch = channelForTransitGate(model, t.gate);
+        const chLabel = ch ? ` · Kanal ${ch.a}–${ch.b}` : "";
+        return transitAstroLine(t) + chLabel;
+      }).join("<br>");
+      return influenceAccordion(
+        "transit-open",
+        BL("Geliehene Definition", "Borrowed definition"),
+        body,
+        question,
+        `<div class="acc-astro-stack">${refs}</div>`
+      );
+    }
+
+    function renderCollapsedOpenConditioning(items, profile, model) {
+      const byCenter = {};
+      items.forEach(e => {
+        const c = e.transit.center || gateCenter(e.transit.gate);
+        if (!byCenter[c]) byCenter[c] = [];
+        byCenter[c].push(e);
+      });
+      return Object.entries(byCenter).map(([center, group]) => {
+        if (group.length === 1) return renderTransitEntryCard(group[0], profile, model);
+        const centerLabel = T(CENTER_LABELS[center]);
+        const body = BL(
+          `${group.length} Transite aktivieren dein offenes ${centerLabel}. ${NOT_SELF_QUESTIONS[center].de}`,
+          `${group.length} transits activate your open ${centerLabel}. ${NOT_SELF_QUESTIONS[center].en}`
+        );
+        const refs = group.map(e => transitAstroLine(e.transit)).join("<br>");
+        return influenceAccordion(
+          "transit-open",
+          BL(`Fremdenergie · ${centerLabel}`, `Outside energy · ${centerLabel}`),
+          body,
+          NOT_SELF_QUESTIONS[center],
+          `<div class="acc-astro-stack">${refs}</div>`
+        );
+      }).join("");
+    }
+
+    function renderImpactEntries(impactKey, items, profile, model) {
+      if (!items.length) return "";
+      if (impactKey === "borrowedDefinition") {
+        return renderCollapsedBorrowedDefinition(items, profile, model);
+      }
+      if (impactKey === "openConditioning" && items.length >= 2) {
+        return renderCollapsedOpenConditioning(items, profile, model);
+      }
+      return items.map(e => e.channel
+        ? renderChannelEntryCard(e, profile)
+        : renderTransitEntryCard(e, profile, model)
+      ).join("");
+    }
+
+    function impactSubgroup(impactKey, items, profile, model) {
       const meta = IMPACT_META[impactKey] || IMPACT_META.definedNuance;
       const countLabel = String(items.length);
+      const bodyHtml = renderImpactEntries(impactKey, items, profile, model);
       return `
         <details class="reading-card reading-accordion reading-subgroup ${meta.kind}">
           <summary>
@@ -2498,11 +2603,11 @@
             </span>
             <span class="acc-chevron">▼</span>
           </summary>
-          <div class="reading-subgroup-body">${items.map(i => i.html).join("")}</div>
+          <div class="reading-subgroup-body">${bodyHtml}</div>
         </details>`;
     }
 
-    function dimensionGroup(dimKey, entries) {
+    function dimensionGroup(dimKey, entries, profile, model) {
       const dim = DIMENSIONS[dimKey];
       const byImpact = {};
       entries.forEach(e => {
@@ -2511,7 +2616,7 @@
       });
       const subgroups = IMPACT_ORDER
         .filter(k => byImpact[k]?.length)
-        .map(k => impactSubgroup(k, byImpact[k]));
+        .map(k => impactSubgroup(k, byImpact[k], profile, model));
       const kind = groupAccentKind(entries);
       const countLabel = T(BL(
         `${entries.length} ${entries.length === 1 ? "Eintrag" : "Eintraege"}`,
@@ -2546,44 +2651,23 @@
         const dimKey = GATE_INFO[t.gate].dimension;
         if (!buckets[dimKey]) buckets[dimKey] = [];
         const impactKey = transitImpact(profile, t, model);
-        const kind = transitCardKind(profile, t, model);
-        const headline = GATE_INFO[t.gate].theme;
         buckets[dimKey].push({
           impactKey,
-          kind,
-          html: influenceAccordion(
-            kind,
-            headline,
-            gateInfluenceShort(profile, t.gate, t, model),
-            transitReadingQuestion(profile, t, model),
-            transitAstroLine(t)
-          )
+          kind: transitCardKind(profile, t, model),
+          transit: t,
+          headline: GATE_INFO[t.gate].theme
         });
       });
 
       model.activatedChannels.forEach(ch => {
+        if (ch.completedByTransit) return;
         const dimKey = GATE_INFO[ch.a].dimension;
         if (!buckets[dimKey]) buckets[dimKey] = [];
-        const impactKey = ch.completedByTransit ? "channelTransit" : "channelNative";
-        const body = ch.completedByTransit
-          ? channelInfluenceText(profile, ch)
-          : BL(
-              `Dein Kanal — heute nur lauter. Nicht echter als sonst.`,
-              `Your channel — louder today. Not more real than usual.`
-            );
-        const headline = ch.completedByTransit
-          ? BL("Fuehlt sich fest an — ist es nicht", "Feels solid — it isn't")
-          : BL("Bekanntes Muster", "Known pattern");
         buckets[dimKey].push({
-          impactKey,
+          impactKey: "channelNative",
           kind: "channel",
-          html: influenceAccordion(
-            "channel",
-            headline,
-            body,
-            channelReadingQuestion(profile, ch),
-            channelAstroLine(ch)
-          )
+          channel: ch,
+          headline: BL("Bekanntes Muster", "Known pattern")
         });
       });
 
@@ -2592,7 +2676,7 @@
 
     function groupTransitsByDimension(profile, model, excludeIds = null) {
       const buckets = collectTransitEntries(profile, model, excludeIds);
-      return DIMENSION_ORDER.filter(k => buckets[k]?.length).map(k => dimensionGroup(k, buckets[k]));
+      return DIMENSION_ORDER.filter(k => buckets[k]?.length).map(k => dimensionGroup(k, buckets[k], profile, model));
     }
 
     const NOT_SELF_QUESTIONS = {
@@ -3055,7 +3139,7 @@
       return `<div class="focus-tageskern"><div class="focus-section-label">${T(BL("Tageskern", "Day core"))}</div>${parts.join("")}</div>`;
     }
 
-    function dimensionFocusGroup(dimKey, entries, model, baseline, tageskern, openDefault) {
+    function dimensionFocusGroup(dimKey, entries, profile, model, baseline, tageskern, openDefault) {
       const dim = DIMENSIONS[dimKey];
       const value = model.values[dimKey];
       const dev = baseline ? scoreDeviation(value, baseline.values[dimKey]) : null;
@@ -3066,7 +3150,7 @@
       });
       const subgroups = IMPACT_ORDER
         .filter(k => byImpact[k]?.length)
-        .map(k => impactSubgroup(k, byImpact[k]));
+        .map(k => impactSubgroup(k, byImpact[k], profile, model));
       const kind = entries.length ? groupAccentKind(entries) : "transit";
       const hasContent = tageskern || subgroups.length;
       const devHtml = dev ? `<span class="acc-dev ${dev.cls}">${T(dev.label)}</span>` : "";
@@ -3131,13 +3215,8 @@
         buckets[dimKey].push({
           impactKey: "channelNative",
           kind: "channel",
-          html: influenceAccordion(
-            "channel",
-            BL("Dein Kanal", "Your channel"),
-            channelInfluenceText(profile, ch),
-            channelReadingQuestion(profile, ch),
-            channelAstroLine(ch)
-          )
+          channel: ch,
+          headline: BL("Dein Kanal", "Your channel")
         });
       });
       const dims = selectedDimension ? [selectedDimension] : DIMENSION_ORDER;
@@ -3157,7 +3236,7 @@
               `${chart.gateCount} ${T(BL("Tore", "gates"))} · ${chart.centerCount} ${T(BL("Zentren", "centers"))}`
             )}
           </div>` : "";
-        return dimensionFocusGroup(dimKey, entries, model, baseline, designIntro, selectedDimension ? true : idx < 2);
+        return dimensionFocusGroup(dimKey, entries, profile, model, baseline, designIntro, selectedDimension ? true : idx < 2);
       });
       return `
         <section class="panel focus-panel">
@@ -3192,7 +3271,7 @@
         const tageskern = renderLuminariesForDim(profile, model, dimKey, luminaries);
         const entries = buckets[dimKey] || [];
         const openDefault = selectedDimension ? true : idx < 2;
-        return dimensionFocusGroup(dimKey, entries, model, baseline, tageskern, openDefault);
+        return dimensionFocusGroup(dimKey, entries, profile, model, baseline, tageskern, openDefault);
       });
 
       const globalWarn = `
@@ -3281,8 +3360,49 @@
         </div>`;
     }
 
+    function renderOpenCentersBlock(profile, day) {
+      const model = day.display;
+      const openCenters = Object.keys(CENTER_LABELS).filter(c => !profile.definedCenters.includes(c));
+      if (!openCenters.length) {
+        return `<div class="small-card">${T(BL("Alle Zentren definiert.", "All centers defined."))}</div>`;
+      }
+
+      const centerOfTransit = t => t.center || gateCenter(t.gate);
+      const borrowed = showTransits && model.mode !== "chartOnly" ? tempDefinedOpenCenters(profile, model) : [];
+      const pressured = showTransits && model.mode !== "chartOnly"
+        ? openCenters.filter(c => model.transits.some(t => centerOfTransit(t) === c && !["sun", "earth", "moon"].includes(t.id)))
+        : [];
+      const activeToday = [...new Set([...borrowed, ...pressured])];
+
+      const renderCenterCard = (center, active) => {
+        const transitsOnCenter = showTransits && model.mode !== "chartOnly"
+          ? model.transits.filter(t => centerOfTransit(t) === center && !["sun", "earth", "moon"].includes(t.id))
+          : [];
+        const footer = transitsOnCenter.length
+          ? `<div class="acc-astro-stack" style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.08)">${transitsOnCenter.map(t => {
+              const ch = channelForTransitGate(model, t.gate);
+              const chLabel = ch ? ` · Kanal ${ch.a}–${ch.b}` : "";
+              return transitAstroLine(t) + chLabel;
+            }).join("<br>")}</div>`
+          : "";
+        return `<div class="small-card ${active ? "warning" : ""}" style="margin-bottom:8px;${active ? "" : "opacity:.72"}"><strong>${T(CENTER_LABELS[center])}</strong>${active ? ` <span style="font-size:.72rem;color:var(--warn)">· ${T(BL("heute aktiv", "active today"))}</span>` : ""}<br><span style="font-size:.88rem;line-height:1.45">${T(OPEN_CENTER_WARNINGS[center])}</span>${footer}</div>`;
+      };
+
+      if (activeToday.length) {
+        const inactive = openCenters.filter(c => !activeToday.includes(c));
+        return `
+          ${activeToday.map(c => renderCenterCard(c, true)).join("")}
+          ${inactive.length ? `
+            <details class="reading-card reading-accordion" style="margin-top:4px">
+              <summary style="padding:10px 12px;font-size:.82rem;color:var(--muted)">${T(BL(`${inactive.length} weitere offene Zentren`, `${inactive.length} more open centers`))}</summary>
+              <div style="padding:4px 4px 8px">${inactive.map(c => renderCenterCard(c, false)).join("")}</div>
+            </details>` : ""}`;
+      }
+
+      return openCenters.map(c => renderCenterCard(c, false)).join("");
+    }
+
     function renderProfileStrip(profile, day, date) {
-      const openCenters = Object.keys(CENTER_LABELS).filter(center => !profile.definedCenters.includes(center));
       const allProfiles = getAllProfiles();
       return `
         <section class="panel profile-strip" style="margin-bottom:18px">
@@ -3313,9 +3433,7 @@
           <div class="profile-extras">
             <div>
               <h3>${T(BL("Offene Zentren", "Open centers"))}</h3>
-              ${openCenters.length
-                ? openCenters.slice(0, 5).map(center => `<div class="small-card warning" style="margin-bottom:8px"><strong>${T(CENTER_LABELS[center])}</strong><br>${T(OPEN_CENTER_WARNINGS[center])}</div>`).join("")
-                : `<div class="small-card">${T(BL("Alle Zentren definiert.", "All centers defined."))}</div>`}
+              ${renderOpenCentersBlock(profile, day)}
             </div>
             <div>
               <h3>${T(BL("Traum-Notiz", "Dream note"))}</h3>
@@ -3422,7 +3540,7 @@
     }
 
     function renderAdminTab() {
-      const records = ProfileStore.listRecords(PROFILES);
+      const records = listProfileRecords(PROFILES);
       const cache = loadTransitCache();
       const cacheDates = Object.keys(cache).sort((a, b) => b.localeCompare(a));
       const withChart = records.filter(r => ProfileStore.chartIsValid(r)).length;
@@ -3715,7 +3833,7 @@
         </section>`;
 
       const inputView = renderInputTab();
-      const adminView = renderAdminTab();
+      const adminView = activeTab === "admin" ? renderAdminTab() : "";
 
       document.getElementById("app").innerHTML = `
         ${renderTabs()}
@@ -3836,7 +3954,12 @@
           const id = form.dataset.adminSave;
           const name = form.querySelector('[name="name"]').value.trim();
           const toneText = form.querySelector('[name="tone"]').value.trim();
-          ProfileStore.updateMeta(id, { name, tone: BL(toneText, toneText) });
+          ProfileStore.updateMeta?.(id, { name, tone: BL(toneText, toneText) }) || ProfileStore.savePerson(id, {
+            birth: ProfileStore.getRecord(id, PROFILES).birth,
+            chart: ProfileStore.getRecord(id, PROFILES).chart,
+            name,
+            tone: BL(toneText, toneText)
+          });
           adminEditingId = null;
           renderApp();
         });
@@ -3858,7 +3981,8 @@
 
         const adminExportDb = document.getElementById("adminExportDb");
         if (adminExportDb) adminExportDb.addEventListener("click", () => {
-          const blob = new Blob([JSON.stringify(ProfileStore.getDbSnapshot(), null, 2)], { type: "application/json" });
+          const snapshot = ProfileStore.getDbSnapshot?.() || loadJSON(STORAGE_KEYS.profileDb, {});
+          const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: "application/json" });
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a");
           a.href = url;
@@ -3876,7 +4000,7 @@
           try {
             const text = await file.text();
             const data = JSON.parse(text);
-            if (!ProfileStore.importDb(data)) throw new Error("invalid");
+            if (!(ProfileStore.importDb?.(data) ?? (saveJSON(STORAGE_KEYS.profileDb, data), true))) throw new Error("invalid");
             if (!confirm(T(BL("Import erfolgreich. Seite neu laden?", "Import successful. Reload view?")))) return;
             adminEditingId = null;
             renderApp();
@@ -3889,7 +4013,7 @@
         const adminResetAll = document.getElementById("adminResetAll");
         if (adminResetAll) adminResetAll.addEventListener("click", () => {
           if (!confirm(T(BL("Wirklich ALLE App-Daten in diesem Browser loeschen?", "Really delete ALL app data in this browser?")))) return;
-          Object.keys(ProfileStore.getDbSnapshot()).forEach(id => ProfileStore.clearPerson(id, PROFILES));
+          Object.keys(ProfileStore.getDbSnapshot?.() || loadJSON(STORAGE_KEYS.profileDb, {})).forEach(id => ProfileStore.clearPerson(id, PROFILES));
           localStorage.removeItem(STORAGE_KEYS.transits);
           localStorage.removeItem(STORAGE_KEYS.penta);
           Object.keys(pentaOn).forEach(k => delete pentaOn[k]);
