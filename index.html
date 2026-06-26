@@ -2471,7 +2471,7 @@
           </summary>
           <div class="reading-accordion-body">
             <div class="reading-card-body">${T(body)}</div>
-            <div class="reading-card-q">${T(question)}</div>
+            ${question ? `<div class="reading-card-q">${T(question)}</div>` : ""}
           </div>
         </details>`;
     }
@@ -2506,7 +2506,7 @@
       const t = entry.transit;
       return influenceAccordion(
         entry.kind,
-        entry.headline || GATE_INFO[t.gate].theme,
+        entry.headline || transitHeadline(t),
         gateInfluenceShort(profile, t.gate, t, model),
         transitReadingQuestion(profile, t, model),
         transitAstroLine(t)
@@ -2658,7 +2658,7 @@
           impactKey,
           kind: transitCardKind(profile, t, model),
           transit: t,
-          headline: GATE_INFO[t.gate].theme
+          headline: transitHeadline(t)
         });
       });
 
@@ -3085,49 +3085,93 @@
       };
     }
 
+    function transitHeadline(transit) {
+      return BL(
+        `${T(GATE_NAMES[transit.gate])} · G${transit.gate}.${transit.line}`,
+        `${T(GATE_NAMES[transit.gate])} · G${transit.gate}.${transit.line}`
+      );
+    }
+
+    function luminaryInfluenceText(profile, transit, model, role) {
+      const gateName = T(GATE_NAMES[transit.gate]);
+      const center = gateCenter(transit.gate);
+      const centerLabel = T(CENTER_LABELS[center]);
+      const impactText = T(impactLabel(profile, transit, model));
+      if (role === "sun") {
+        return BL(
+          `Kollektiv: ${gateName} (${centerLabel}). ${impactText} — Tages-Wetter, nicht automatisch deins.`,
+          `Collective: ${gateName} (${centerLabel}). ${impactText} — day weather, not automatically yours.`
+        );
+      }
+      if (role === "earth") {
+        return BL(
+          `Erdung: ${gateName} (${centerLabel}, ${T(centerStatusLabel(profile, center))}). Klein anfangen, nicht overcommiten.`,
+          `Grounding: ${gateName} (${centerLabel}, ${T(centerStatusLabel(profile, center))}). Start small, don't overcommit.`
+        );
+      }
+      return BL(
+        `${gateName} — ${MOON_NOTES[transit.gate % MOON_NOTES.length].de} Wechselt ca. alle 13h.`,
+        `${gateName} — ${MOON_NOTES[transit.gate % MOON_NOTES.length].en} Shifts about every 13h.`
+      );
+    }
+
+    function luminaryQuestion(profile, transit, model, role) {
+      const impact = transitImpact(profile, transit, model);
+      const center = gateCenter(transit.gate);
+      if (role === "sun") {
+        if (impact === "borrowedDefinition") return null;
+        if (impact === "openConditioning") return NOT_SELF_QUESTIONS[center];
+        if (impact === "ownAmplification") {
+          return BL(
+            "Verstaerkt das dein Chart — oder nur das Kollektiv-Feld?",
+            "Does this amplify your chart — or only the collective field?"
+          );
+        }
+        return null;
+      }
+      if (role === "earth") {
+        if (impact === "openConditioning" || impact === "borrowedDefinition") {
+          return BL(
+            `Landest du bei deiner Autoritaet (${T(profile.authority)}) — oder holst du Stabilitaet von aussen?`,
+            `Are you landing in your authority (${T(profile.authority)}) — or getting stability from outside?`
+          );
+        }
+        return null;
+      }
+      if (impact === "openConditioning") return NOT_SELF_QUESTIONS[center];
+      return null;
+    }
+
     function renderLuminariesForDim(profile, model, dimKey, luminaries) {
       const { sun, earth, moon } = luminaries;
       const parts = [];
 
       if (sun && GATE_INFO[sun.gate].dimension === dimKey) {
-        const sunBody = BL(
-          `Kollektiv-Thema: ${GATE_NAMES[sun.gate].de}. ${GATE_INFO[sun.gate].theme.de} — ${GATE_INFO[sun.gate].description.de}`,
-          `Collective theme: ${GATE_NAMES[sun.gate].en}. ${GATE_INFO[sun.gate].theme.en} — ${GATE_INFO[sun.gate].description.en}`
-        );
         parts.push(influenceAccordion(
           "theme",
-          GATE_INFO[sun.gate].theme,
-          sunBody,
-          sunReadingQuestion(profile, sun, model),
+          BL("Kollektiv · Sonne", "Collective · Sun"),
+          luminaryInfluenceText(profile, sun, model, "sun"),
+          luminaryQuestion(profile, sun, model, "sun"),
           transitAstroLine(sun)
         ));
       }
 
       if (earth && GATE_INFO[earth.gate].dimension === dimKey) {
-        const earthCenter = gateCenter(earth.gate);
-        const practicalBody = BL(
-          `Erdung: ${GATE_NAMES[earth.gate].de}. ${centerStatusLabel(profile, earthCenter).de} — klein anfangen, nicht overcommiten.`,
-          `Grounding: ${GATE_NAMES[earth.gate].en}. ${centerStatusLabel(profile, earthCenter).en} — start small, don't overcommit.`
-        );
         parts.push(influenceAccordion(
           "practical",
-          BL("Erdung", "Grounding"),
-          practicalBody,
-          earthReadingQuestion(profile, earth, model),
+          BL("Erdung · Erde", "Grounding · Earth"),
+          luminaryInfluenceText(profile, earth, model, "earth"),
+          luminaryQuestion(profile, earth, model, "earth"),
           transitAstroLine(earth)
         ));
       }
 
       if (moon && GATE_INFO[moon.gate].dimension === dimKey) {
-        const moonBody = BL(
-          `${GATE_NAMES[moon.gate].de} — ${MOON_NOTES[moon.gate % MOON_NOTES.length].de} Wechselt ca. alle 13h.`,
-          `${GATE_NAMES[moon.gate].en} — ${MOON_NOTES[moon.gate % MOON_NOTES.length].en} Shifts about every 13h.`
-        );
         parts.push(influenceAccordion(
           "moon",
-          BL("Koerper & Stimmung", "Body & mood"),
-          moonBody,
-          moonReadingQuestion(profile, moon, model),
+          BL("Koerper & Stimmung · Mond", "Body & mood · Moon"),
+          luminaryInfluenceText(profile, moon, model, "moon"),
+          luminaryQuestion(profile, moon, model, "moon"),
           transitAstroLine(moon)
         ));
       }
