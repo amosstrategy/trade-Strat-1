@@ -727,6 +727,114 @@
 
     .profile-strip .profile-card { margin-bottom: 0; }
 
+    .admin-table-wrap {
+      overflow-x: auto;
+      margin-top: 12px;
+    }
+
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .88rem;
+    }
+
+    .admin-table th,
+    .admin-table td {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      vertical-align: top;
+    }
+
+    .admin-table th {
+      color: var(--muted);
+      font-size: .72rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .admin-table tr:hover td {
+      background: rgba(255,255,255,.03);
+    }
+
+    .admin-badge {
+      display: inline-block;
+      border-radius: 999px;
+      padding: .2rem .55rem;
+      font-size: .72rem;
+      font-weight: 700;
+      border: 1px solid rgba(255,255,255,.1);
+    }
+
+    .admin-badge.ok { color: var(--good); border-color: rgba(113,227,155,.35); background: rgba(113,227,155,.1); }
+    .admin-badge.warn { color: var(--warn); border-color: rgba(255,159,67,.35); background: rgba(255,159,67,.1); }
+    .admin-badge.muted { color: var(--muted); }
+
+    .admin-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .admin-actions button {
+      font-size: .78rem;
+      padding: .35rem .6rem;
+      border-radius: 10px;
+    }
+
+    .admin-actions button.danger {
+      border-color: rgba(255,120,120,.35);
+      color: #ffb4b4;
+    }
+
+    .admin-edit-row td {
+      background: rgba(132,220,198,.06);
+    }
+
+    .admin-edit-form {
+      display: grid;
+      gap: 10px;
+      max-width: 520px;
+    }
+
+    .admin-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .admin-stat {
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.04);
+      border-radius: 14px;
+      padding: 10px 14px;
+      min-width: 120px;
+    }
+
+    .admin-stat strong {
+      display: block;
+      font-size: 1.35rem;
+      color: var(--accent);
+    }
+
+    .admin-stat span {
+      color: var(--muted);
+      font-size: .82rem;
+    }
+
+    .admin-section {
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,.08);
+    }
+
+    .admin-danger {
+      border-color: rgba(255,120,120,.28);
+      background: rgba(255,120,120,.06);
+    }
+
     .profile-extras {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -955,13 +1063,14 @@
     let selectedDimension = null;
     let selectedDateISO = "";
     let activeProfile = "daniel";
-    const pentaOn = { daniel: true, patrick: true, paradise: true };
+    let adminEditingId = null;
     const STORAGE_KEYS = {
       profiles: "hd-custom-profiles-v1",
       meta: "hd-profile-meta-v1",
       transits: "hd-transit-cache-v2",
       overrides: "hd-profile-overrides-v1",
-      profileDb: "hd-profile-db-v2"
+      profileDb: "hd-profile-db-v2",
+      penta: "hd-penta-members-v1"
     };
 
     const T = value => typeof value === "string" ? value : (value[lang] || value.de);
@@ -1003,6 +1112,8 @@
       catch { return fallback; }
     };
     const saveJSON = (key, value) => localStorage.setItem(key, JSON.stringify(value));
+    const pentaOn = loadJSON(STORAGE_KEYS.penta, { daniel: true, patrick: true, paradise: true });
+    const savePentaOn = () => saveJSON(STORAGE_KEYS.penta, pentaOn);
     const ProfileStore = HDLogic.createProfileStore({ loadJSON, saveJSON });
     const ChartPipeline = HDLogic.createChartPipeline({
       calculateChart: (date, time, tz, channels) => HDEngine.calculateChart(date, time, tz, channels)
@@ -3147,7 +3258,8 @@
       const tabs = [
         { id: "daily", label: BL("Daily Map", "Daily Map") },
         { id: "penta", label: BL("Penta / Team", "Penta / Team") },
-        { id: "input", label: BL("Eingabe", "Input") }
+        { id: "input", label: BL("Eingabe", "Input") },
+        { id: "admin", label: BL("Admin", "Admin") }
       ];
       return `<nav class="tabs" aria-label="Navigation">${tabs.map(tab => `<button type="button" class="tab-btn ${activeTab === tab.id ? "active" : ""}" data-tab="${tab.id}">${T(tab.label)}</button>`).join("")}</nav>`;
     }
@@ -3240,6 +3352,162 @@
           <div class="reading-cards">${groups.length
             ? groups.join("")
             : `<div class="small-card">${T(BL("Keine Transite geladen.", "No transits loaded."))}</div>`}</div>
+        </section>`;
+    }
+
+    function profileRecordStatus(record) {
+      if (ProfileStore.chartIsValid(record)) return { label: BL("Chart OK", "Chart OK"), cls: "ok" };
+      if (ProfileStore.chartIsStale(record)) return { label: BL("Veraltet", "Stale"), cls: "warn" };
+      if (record.birth?.birthDate && record.birth?.birthTime) return { label: BL("Nur Geburtsdaten", "Birth only"), cls: "muted" };
+      return { label: BL("Leer", "Empty"), cls: "muted" };
+    }
+
+    function toneToText(tone) {
+      if (!tone) return "—";
+      return typeof tone === "string" ? tone : (tone[lang] || tone.de || "—");
+    }
+
+    function renderAdminProfileRow(record) {
+      const isBuiltin = !!PROFILES[record.id];
+      const display = getAllProfiles()[record.id];
+      const status = profileRecordStatus(record);
+      const birth = record.birth || {};
+      const birthLine = birth.birthDate
+        ? `${birth.birthDate}${birth.birthTime ? " · " + birth.birthTime : ""}${birth.tzOffsetMinutes != null ? " · " + formatTzLabel(birth.tzOffsetMinutes) : ""}`
+        : "—";
+      const savedAt = record.chart?.savedAt || birth.savedAt || "—";
+      const gateCount = display?.definedGates?.length || 0;
+      const editing = adminEditingId === record.id;
+      const toneVal = toneToText(record.tone).replace(/"/g, "&quot;");
+
+      const editRow = editing ? `
+        <tr class="admin-edit-row">
+          <td colspan="7">
+            <form class="admin-edit-form" data-admin-save="${record.id}">
+              <div class="form-grid">
+                <div class="field">
+                  <label>${T(BL("Name", "Name"))}</label>
+                  <input type="text" name="name" value="${(record.name || "").replace(/"/g, "&quot;")}" required>
+                </div>
+                <div class="field" style="grid-column:1/-1">
+                  <label>${T(BL("Ton / Notiz", "Tone / note"))}</label>
+                  <textarea name="tone" rows="2">${toneVal}</textarea>
+                </div>
+              </div>
+              <div class="admin-actions">
+                <button type="submit">${T(BL("Speichern", "Save"))}</button>
+                <button type="button" data-admin-cancel-edit>${T(BL("Abbrechen", "Cancel"))}</button>
+              </div>
+            </form>
+          </td>
+        </tr>` : "";
+
+      return `
+        <tr>
+          <td><code>${record.id}</code></td>
+          <td><strong>${record.name || record.id}</strong><br><span style="color:var(--muted);font-size:.8rem">${isBuiltin ? T(BL("Standard", "Built-in")) : T(BL("Custom", "Custom"))}</span></td>
+          <td><span class="admin-badge ${status.cls}">${T(status.label)}</span></td>
+          <td style="font-size:.82rem;line-height:1.45">${birthLine}${birth.birthPlace ? `<br><span style="color:var(--muted)">${birth.birthPlace}</span>` : ""}</td>
+          <td>${gateCount ? gateCount + " " + T(BL("Tore", "gates")) : "—"}</td>
+          <td style="font-size:.78rem;color:var(--muted)">${savedAt !== "—" ? new Date(savedAt).toLocaleString(lang === "de" ? "de-DE" : "en-US") : "—"}</td>
+          <td>
+            <div class="admin-actions">
+              <button type="button" data-admin-edit="${record.id}">${T(BL("Bearbeiten", "Edit"))}</button>
+              <button type="button" data-admin-open="${record.id}">${T(BL("Eingabe", "Input"))}</button>
+              <button type="button" data-admin-clear="${record.id}">${T(BL("Daten loeschen", "Clear data"))}</button>
+              ${!isBuiltin ? `<button type="button" class="danger" data-admin-delete="${record.id}">${T(BL("Loeschen", "Delete"))}</button>` : ""}
+            </div>
+          </td>
+        </tr>${editRow}`;
+    }
+
+    function renderAdminTab() {
+      const records = ProfileStore.listRecords(PROFILES);
+      const cache = loadTransitCache();
+      const cacheDates = Object.keys(cache).sort((a, b) => b.localeCompare(a));
+      const withChart = records.filter(r => ProfileStore.chartIsValid(r)).length;
+      const profiles = getAllProfiles();
+
+      return `
+        <section class="panel" id="adminPanel">
+          <h2>${T(BL("Admin Console", "Admin console"))}</h2>
+          <p style="color:var(--muted);line-height:1.5;margin-bottom:16px">${T(BL("Lokale Eintraege in diesem Browser verwalten — Profile, Penta-Mitglieder, Transit-Cache.", "Manage local entries in this browser — profiles, Penta members, transit cache."))}</p>
+
+          <div class="admin-stats">
+            <div class="admin-stat"><strong>${records.length}</strong><span>${T(BL("Profile", "Profiles"))}</span></div>
+            <div class="admin-stat"><strong>${withChart}</strong><span>${T(BL("Mit Chart", "With chart"))}</span></div>
+            <div class="admin-stat"><strong>${cacheDates.length}</strong><span>${T(BL("Cache-Tage", "Cache days"))}</span></div>
+          </div>
+
+          <h3 style="font-size:.85rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin:0 0 8px">${T(BL("Profile", "Profiles"))}</h3>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>${T(BL("Name", "Name"))}</th>
+                  <th>${T(BL("Status", "Status"))}</th>
+                  <th>${T(BL("Geburt", "Birth"))}</th>
+                  <th>${T(BL("Chart", "Chart"))}</th>
+                  <th>${T(BL("Gespeichert", "Saved"))}</th>
+                  <th>${T(BL("Aktionen", "Actions"))}</th>
+                </tr>
+              </thead>
+              <tbody>${records.map(renderAdminProfileRow).join("")}</tbody>
+            </table>
+          </div>
+
+          <div class="admin-section">
+            <h3 style="font-size:.85rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin:0 0 8px">${T(BL("Penta-Mitglieder", "Penta members"))}</h3>
+            <div class="penta-members">
+              ${Object.values(profiles).map(p => `
+                <label class="member-toggle">
+                  <input type="checkbox" data-admin-penta="${p.id}" ${pentaOn[p.id] ? "checked" : ""}>
+                  <span>${p.name}</span>
+                </label>`).join("")}
+            </div>
+          </div>
+
+          <div class="admin-section">
+            <h3 style="font-size:.85rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin:0 0 8px">${T(BL("Transit-Cache", "Transit cache"))}</h3>
+            <div class="toolbar" style="margin-bottom:12px">
+              <button type="button" id="adminClearTransitCache">${T(BL("Gesamten Cache leeren", "Clear entire cache"))}</button>
+            </div>
+            ${cacheDates.length ? `
+              <div class="admin-table-wrap">
+                <table class="admin-table">
+                  <thead><tr><th>${T(BL("Datum", "Date"))}</th><th>${T(BL("Planeten", "Planets"))}</th><th></th></tr></thead>
+                  <tbody>
+                    ${cacheDates.map(date => {
+                      const day = cache[date];
+                      const count = Array.isArray(cache[date]) ? cache[date].length : 0;
+                      return `<tr>
+                        <td>${date}</td>
+                        <td>${count}</td>
+                        <td><button type="button" class="danger" data-admin-cache-delete="${date}">${T(BL("Loeschen", "Delete"))}</button></td>
+                      </tr>`;
+                    }).join("")}
+                  </tbody>
+                </table>
+              </div>` : `<div class="small-card">${T(BL("Kein Transit-Cache.", "No transit cache."))}</div>`}
+          </div>
+
+          <div class="admin-section">
+            <h3 style="font-size:.85rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin:0 0 8px">${T(BL("Backup", "Backup"))}</h3>
+            <div class="toolbar">
+              <button type="button" id="adminExportDb">${T(BL("Profil-DB exportieren", "Export profile DB"))}</button>
+              <button type="button" id="adminImportBtn">${T(BL("Profil-DB importieren", "Import profile DB"))}</button>
+              <input type="file" id="adminImportDb" accept="application/json,.json" hidden>
+            </div>
+          </div>
+
+          <div class="admin-section">
+            <div class="small-card admin-danger">
+              <strong>${T(BL("Gefahrenzone", "Danger zone"))}</strong>
+              <p style="color:var(--muted);line-height:1.5;margin:10px 0">${T(BL("Setzt alle Standard-Profile zurueck und entfernt Custom-Profile, Transit-Cache und Penta-Auswahl.", "Resets all built-in profiles and removes custom profiles, transit cache, and Penta selection."))}</p>
+              <button type="button" class="danger" id="adminResetAll">${T(BL("Alle App-Daten zuruecksetzen", "Reset all app data"))}</button>
+            </div>
+          </div>
         </section>`;
     }
 
@@ -3448,12 +3716,14 @@
         </section>`;
 
       const inputView = renderInputTab();
+      const adminView = renderAdminTab();
 
       document.getElementById("app").innerHTML = `
         ${renderTabs()}
         <div class="tab-panel ${activeTab === "daily" ? "" : "hidden"}">${dailyView}</div>
         <div class="tab-panel ${activeTab === "penta" ? "" : "hidden"}">${pentaView}</div>
         <div class="tab-panel ${activeTab === "input" ? "" : "hidden"}">${inputView}</div>
+        <div class="tab-panel ${activeTab === "admin" ? "" : "hidden"}">${adminView}</div>
         <p class="footer">${T(BL("Profil-Datenbank v2 (hd-profile-db-v2) · Engine v4 · Chart nur bei «Berechnen & Speichern».", "Profile database v2 (hd-profile-db-v2) · Engine v4 · Chart only on «Calculate & save»."))}</p>
       `;
 
@@ -3503,8 +3773,134 @@
 
       document.querySelectorAll("[data-member]").forEach(node => node.addEventListener("change", event => {
         pentaOn[event.target.dataset.member] = event.target.checked;
+        savePentaOn();
         renderApp();
       }));
+
+      const adminPanel = document.getElementById("adminPanel");
+      if (adminPanel) {
+        adminPanel.addEventListener("click", event => {
+          const editBtn = event.target.closest("[data-admin-edit]");
+          if (editBtn) {
+            adminEditingId = editBtn.dataset.adminEdit;
+            renderApp();
+            return;
+          }
+          const cancelBtn = event.target.closest("[data-admin-cancel-edit]");
+          if (cancelBtn) {
+            adminEditingId = null;
+            renderApp();
+            return;
+          }
+          const openBtn = event.target.closest("[data-admin-open]");
+          if (openBtn) {
+            activeProfile = openBtn.dataset.adminOpen;
+            adminEditingId = null;
+            activeTab = "input";
+            renderApp();
+            return;
+          }
+          const clearBtn = event.target.closest("[data-admin-clear]");
+          if (clearBtn) {
+            const id = clearBtn.dataset.adminClear;
+            if (!confirm(T(BL(`Geburtsdaten und Chart von «${id}» loeschen?`, `Delete birth data and chart for «${id}»?`)))) return;
+            ProfileStore.clearPerson(id, PROFILES);
+            if (activeProfile === id) adminEditingId = null;
+            renderApp();
+            return;
+          }
+          const deleteBtn = event.target.closest("[data-admin-delete]");
+          if (deleteBtn) {
+            const id = deleteBtn.dataset.adminDelete;
+            if (!confirm(T(BL(`Profil «${id}» endgueltig loeschen?`, `Permanently delete profile «${id}»?`)))) return;
+            ProfileStore.clearPerson(id, PROFILES);
+            if (activeProfile === id) activeProfile = "daniel";
+            adminEditingId = null;
+            renderApp();
+            return;
+          }
+          const cacheDelBtn = event.target.closest("[data-admin-cache-delete]");
+          if (cacheDelBtn) {
+            const date = cacheDelBtn.dataset.adminCacheDelete;
+            const cache = loadTransitCache();
+            delete cache[date];
+            saveTransitCache(cache);
+            renderApp();
+            return;
+          }
+        });
+
+        adminPanel.addEventListener("submit", event => {
+          const form = event.target.closest("[data-admin-save]");
+          if (!form) return;
+          event.preventDefault();
+          const id = form.dataset.adminSave;
+          const name = form.querySelector('[name="name"]').value.trim();
+          const toneText = form.querySelector('[name="tone"]').value.trim();
+          ProfileStore.updateMeta(id, { name, tone: BL(toneText, toneText) });
+          adminEditingId = null;
+          renderApp();
+        });
+
+        adminPanel.addEventListener("change", event => {
+          const pentaInput = event.target.closest("[data-admin-penta]");
+          if (pentaInput) {
+            pentaOn[pentaInput.dataset.adminPenta] = pentaInput.checked;
+            savePentaOn();
+          }
+        });
+
+        const adminClearTransit = document.getElementById("adminClearTransitCache");
+        if (adminClearTransit) adminClearTransit.addEventListener("click", () => {
+          if (!confirm(T(BL("Gesamten Transit-Cache loeschen?", "Delete entire transit cache?")))) return;
+          localStorage.removeItem(STORAGE_KEYS.transits);
+          renderApp();
+        });
+
+        const adminExportDb = document.getElementById("adminExportDb");
+        if (adminExportDb) adminExportDb.addEventListener("click", () => {
+          const blob = new Blob([JSON.stringify(ProfileStore.getDbSnapshot(), null, 2)], { type: "application/json" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `hd-profile-db-${isoDate(today())}.json`;
+          a.click();
+          URL.revokeObjectURL(url);
+        });
+
+        const adminImportBtn = document.getElementById("adminImportBtn");
+        const adminImportDb = document.getElementById("adminImportDb");
+        if (adminImportBtn && adminImportDb) adminImportBtn.addEventListener("click", () => adminImportDb.click());
+        if (adminImportDb) adminImportDb.addEventListener("change", async event => {
+          const file = event.target.files?.[0];
+          if (!file) return;
+          try {
+            const text = await file.text();
+            const data = JSON.parse(text);
+            if (!ProfileStore.importDb(data)) throw new Error("invalid");
+            if (!confirm(T(BL("Import erfolgreich. Seite neu laden?", "Import successful. Reload view?")))) return;
+            adminEditingId = null;
+            renderApp();
+          } catch {
+            alert(T(BL("Import fehlgeschlagen — ungueltige JSON-Datei.", "Import failed — invalid JSON file.")));
+          }
+          event.target.value = "";
+        });
+
+        const adminResetAll = document.getElementById("adminResetAll");
+        if (adminResetAll) adminResetAll.addEventListener("click", () => {
+          if (!confirm(T(BL("Wirklich ALLE App-Daten in diesem Browser loeschen?", "Really delete ALL app data in this browser?")))) return;
+          Object.keys(ProfileStore.getDbSnapshot()).forEach(id => ProfileStore.clearPerson(id, PROFILES));
+          localStorage.removeItem(STORAGE_KEYS.transits);
+          localStorage.removeItem(STORAGE_KEYS.penta);
+          Object.keys(pentaOn).forEach(k => delete pentaOn[k]);
+          Object.assign(pentaOn, { daniel: true, patrick: true, paradise: true });
+          savePentaOn();
+          activeProfile = "daniel";
+          adminEditingId = null;
+          renderApp();
+        });
+      }
 
       const readBirthMeta = () => ({
         birthDate: document.getElementById("inputBirthDate")?.value,

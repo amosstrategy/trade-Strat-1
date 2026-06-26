@@ -400,6 +400,26 @@
         saveDb(db);
         return db[id];
       },
+      listRecords(defaults) {
+        const db = migrateBirthOnly(defaults);
+        return Object.values(db).sort((a, b) => String(a.name || a.id).localeCompare(String(b.name || b.id)));
+      },
+      updateMeta(id, { name, tone }) {
+        const db = loadDb() || {};
+        if (!db[id]) return null;
+        if (name != null) db[id].name = name;
+        if (tone != null) db[id].tone = tone;
+        saveDb(db);
+        return db[id];
+      },
+      getDbSnapshot() {
+        return loadDb() || {};
+      },
+      importDb(data) {
+        if (!data || typeof data !== "object" || Array.isArray(data)) return false;
+        saveDb(data);
+        return true;
+      },
       chartIsValid,
       chartIsStale,
       birthFingerprint
