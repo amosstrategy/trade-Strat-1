@@ -3479,7 +3479,6 @@
                   <thead><tr><th>${T(BL("Datum", "Date"))}</th><th>${T(BL("Planeten", "Planets"))}</th><th></th></tr></thead>
                   <tbody>
                     ${cacheDates.map(date => {
-                      const day = cache[date];
                       const count = Array.isArray(cache[date]) ? cache[date].length : 0;
                       return `<tr>
                         <td>${date}</td>
