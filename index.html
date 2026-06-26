@@ -2321,30 +2321,32 @@
   }
 
     function computeTransitScores(profile, transit) {
-      const transitGates = transit.gateSet;
+      const chartLayer = HDLogic.buildChartLayer(profile, CHANNELS);
+      const baseline = computeChartScores(profile, chartLayer);
+      const values = { ...baseline.values };
       const personal = new Set(profile.definedGates);
-      const values = Object.fromEntries(Object.keys(DIMENSIONS).map(dim => [dim, 4.2]));
+      const transitGates = transit.gateSet;
       const activatedChannels = transit.activatedChannels;
 
       transit.transits.forEach(t => {
         const dim = GATE_INFO[t.gate].dimension;
-        values[dim] += personal.has(t.gate) ? 2.1 : 1.05;
-        if (!profile.definedCenters.includes(t.center)) values.clarity -= .15;
+        values[dim] += personal.has(t.gate) ? 0.35 : 0.5;
+        if (!profile.definedCenters.includes(t.center)) values.clarity -= 0.08;
       });
 
       activatedChannels.forEach(channel => {
-        if (channel.completedByTransit || channel.nativeChannel) {
+        if (channel.completedByTransit) {
           const dimA = GATE_INFO[channel.a].dimension;
           const dimB = GATE_INFO[channel.b].dimension;
-          values[dimA] += channel.completedByTransit ? 1.4 : .45;
-          values[dimB] += channel.completedByTransit ? .9 : .35;
+          values[dimA] += 0.45;
+          values[dimB] += 0.35;
         }
       });
 
-      if (transitGates.has(14) || transitGates.has(45) || transitGates.has(26)) values.energy += .9;
-      if (transitGates.has(57) || transitGates.has(48)) values.intuition += .9;
-      if (transitGates.has(12) || transitGates.has(23) || transitGates.has(62)) values.expression += .75;
-      if (transitGates.has(5) || transitGates.has(15) || transitGates.has(46)) values.flow += .75;
+      if (transitGates.has(14) || transitGates.has(45) || transitGates.has(26)) values.energy += 0.25;
+      if (transitGates.has(57) || transitGates.has(48)) values.intuition += 0.25;
+      if (transitGates.has(12) || transitGates.has(23) || transitGates.has(62)) values.expression += 0.2;
+      if (transitGates.has(5) || transitGates.has(15) || transitGates.has(46)) values.flow += 0.2;
 
       Object.keys(values).forEach(dim => values[dim] = +clamp(values[dim]).toFixed(1));
       const weighted = Object.entries(values).reduce((sum, [dim, value]) => sum + value * DIMENSIONS[dim].weight, 0);
@@ -3173,10 +3175,22 @@
       return `<div class="focus-tageskern"><div class="focus-section-label">${T(BL("Tageskern", "Day core"))}</div>${parts.join("")}</div>`;
     }
 
+    function dimensionHasActiveInfluences(profile, model, dimKey) {
+      if (model.mode === "chartOnly") return false;
+      const { sun, earth, moon } = resolveLuminaries(model);
+      if (sun && GATE_INFO[sun.gate].dimension === dimKey) return true;
+      if (earth && GATE_INFO[earth.gate].dimension === dimKey) return true;
+      if (moon && GATE_INFO[moon.gate].dimension === dimKey) return true;
+      const skip = new Set(["sun", "earth", "moon"]);
+      return model.transits.some(t => !skip.has(t.id) && GATE_INFO[t.gate].dimension === dimKey);
+    }
+
     function dimensionFocusGroup(dimKey, entries, profile, model, baseline, tageskern, openDefault) {
       const dim = DIMENSIONS[dimKey];
-      const value = model.values[dimKey];
-      const dev = baseline ? scoreDeviation(value, baseline.values[dimKey]) : null;
+      const hasContent = !!(tageskern || entries.length);
+      const baseValue = baseline?.values[dimKey];
+      const value = hasContent ? model.values[dimKey] : (baseValue ?? model.values[dimKey]);
+      const dev = hasContent && baseline ? scoreDeviation(model.values[dimKey], baseline.values[dimKey]) : null;
       const byImpact = {};
       entries.forEach(e => {
         if (!byImpact[e.impactKey]) byImpact[e.impactKey] = [];
@@ -3186,7 +3200,6 @@
         .filter(k => byImpact[k]?.length)
         .map(k => impactSubgroup(k, byImpact[k], profile, model));
       const kind = entries.length ? groupAccentKind(entries) : "transit";
-      const hasContent = tageskern || subgroups.length;
       const devHtml = dev ? `<span class="acc-dev ${dev.cls}">${T(dev.label)}</span>` : "";
       const bodyParts = [];
       if (tageskern) bodyParts.push(tageskern);
@@ -3194,7 +3207,10 @@
         bodyParts.push(`<div class="focus-section-label" style="margin-top:${tageskern ? "4px" : "0"}">${T(BL("Einfluesse", "Influences"))}</div>${subgroups.join("")}`);
       }
       if (!hasContent) {
-        bodyParts.push(`<p class="focus-empty">${T(BL("Keine starken Tages- oder Transit-Einfluesse in diesem Bereich.", "No strong day or transit influences in this field."))}</p>`);
+        bodyParts.push(`<p class="focus-empty">${T(BL(
+          `Ruhiger Tag — ${value}/10 ist deine Chart-Baseline. Keine Sonne, kein Mond, keine Transite in ${T(dim.label)} heute.`,
+          `Quiet day — ${value}/10 is your chart baseline. No sun, moon, or transits in ${T(dim.label)} today.`
+        ))}</p>`);
       }
       return `
         <details class="reading-card reading-accordion reading-group focus-dimension ${kind}" ${openDefault ? "open" : ""} data-focus-dim="${dimKey}">
@@ -3211,7 +3227,7 @@
         </details>`;
     }
 
-    function renderScoreSidebar(model, baseline, showTransitsFlag) {
+    function renderScoreSidebar(model, baseline, showTransitsFlag, profile) {
       const scoreLabel = model.overall >= 7 ? BL("stark", "strong") : model.overall >= 5 ? BL("steuerbar", "steerable") : BL("ruhig", "quiet");
       const scoreCaption = showTransitsFlag
         ? T(BL("Gesamtscore", "Overall score"))
@@ -3224,14 +3240,15 @@
           <p class="score-caption">${scoreCaption}: ${T(scoreLabel)}${model.abundance ? " · " + T(BL("Abundance offen", "Abundance open")) : ""}</p>
           <div class="dimension-list">
             ${DIMENSION_ORDER.map(dim => {
-              const value = model.values[dim];
-              const dev = showTransitsFlag && baseline ? scoreDeviation(value, baseline.values[dim]) : null;
+              const active = showTransitsFlag && profile ? dimensionHasActiveInfluences(profile, model, dim) : true;
+              const value = active ? model.values[dim] : (baseline?.values[dim] ?? model.values[dim]);
+              const dev = active && showTransitsFlag && baseline ? scoreDeviation(model.values[dim], baseline.values[dim]) : null;
               return `
                 <button type="button" class="dimension-select ${selectedDimension === dim ? "active" : ""}" data-dimension="${dim}" aria-pressed="${selectedDimension === dim}">
                   <span class="dim-icon">${DIMENSIONS[dim].icon}</span>
                   <span class="dim-label">${T(DIMENSIONS[dim].label)}</span>
                   <span class="dim-score">${value}/10</span>
-                  ${dev ? `<span class="dim-dev ${dev.cls}">${T(dev.label)}</span>` : ""}
+                  ${dev ? `<span class="dim-dev ${dev.cls}">${T(dev.label)}</span>` : (!active && showTransitsFlag ? `<span class="dim-dev">${T(BL("Baseline", "Baseline"))}</span>` : "")}
                   <div class="bar" style="--value:${value};--ring:${ringColor(value)}"><i></i></div>
                 </button>`;
             }).join("")}
@@ -3856,7 +3873,7 @@
         ${renderDateBar(date)}
         ${renderProfileStrip(profile, day, date)}
         <section class="map-grid">
-          ${renderScoreSidebar(model, baseline, showTransits)}
+          ${renderScoreSidebar(model, baseline, showTransits, profile)}
           <section class="panel bodygraph-wrap">
             <h2>${showTransits ? T(BL("Live Bodygraph", "Live bodygraph")) : T(BL("Dein Bodygraph", "Your bodygraph"))}</h2>
             ${renderBodygraph()}
