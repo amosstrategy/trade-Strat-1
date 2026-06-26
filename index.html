@@ -293,9 +293,35 @@
       margin-top: 12px;
       font-size: .92rem;
     }
-      font-size: .92rem;
-      color: var(--accent);
-      font-style: italic;
+
+    .reading-group > summary {
+      font-size: .98rem;
+    }
+
+    .reading-group > summary .acc-field {
+      font-size: 1rem;
+      letter-spacing: .02em;
+    }
+
+    .reading-group-body {
+      display: grid;
+      gap: 8px;
+      padding: 8px 12px 12px;
+      border-top: 1px solid rgba(255,255,255,.06);
+    }
+
+    .reading-group .reading-accordion {
+      border-left-width: 3px;
+      background: rgba(0,0,0,.14);
+    }
+
+    .reading-group .reading-accordion > summary {
+      padding: 10px 12px;
+    }
+
+    .reading-group .reading-accordion .acc-field {
+      font-size: .88rem;
+      font-weight: 500;
     }
 
     .computed-badge {
@@ -608,6 +634,68 @@
 
     .member-toggle input { accent-color: var(--accent); }
 
+    .penta-intro {
+      color: var(--muted);
+      line-height: 1.55;
+      margin-bottom: 16px;
+    }
+
+    .penta-core-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .penta-core-card {
+      border-radius: 16px;
+      padding: 14px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.035);
+    }
+
+    .penta-core-card.defined {
+      border-color: rgba(113,227,155,.35);
+      background: rgba(113,227,155,.08);
+    }
+
+    .penta-core-card.partial {
+      border-color: rgba(246,193,119,.35);
+      background: rgba(246,193,119,.08);
+    }
+
+    .penta-core-card.missing {
+      border-color: rgba(255,122,122,.28);
+      background: rgba(255,122,122,.06);
+    }
+
+    .penta-status {
+      display: inline-block;
+      font-size: .72rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      color: var(--muted);
+    }
+
+    .penta-layer-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .penta-synthesis {
+      border-color: rgba(132,220,198,.32);
+      background: rgba(132,220,198,.08);
+    }
+
+    .penta-contributors {
+      font-size: .82rem;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
     .warning {
       border-color: rgba(255,209,102,.28);
       background: rgba(255,209,102,.08);
@@ -628,7 +716,7 @@
     @media (max-width: 620px) {
       .app { width: min(100% - 18px, 1440px); padding-top: 12px; }
       .hero-card, .panel { padding: 16px; }
-      .planet-grid, .penta-members { grid-template-columns: 1fr; }
+      .planet-grid, .penta-members, .penta-core-grid, .penta-layer-grid { grid-template-columns: 1fr; }
       .form-grid { grid-template-columns: 1fr; }
       h1 { font-size: 2.55rem; }
     }
@@ -733,13 +821,15 @@
     };
 
     const DIMENSIONS = {
-      energy: { label: BL("Energie", "Energy"), weight: 1.18 },
-      intuition: { label: BL("Intuition", "Intuition"), weight: 1.08 },
-      expression: { label: BL("Kommunikation", "Expression"), weight: 1.02 },
-      clarity: { label: BL("Klarheit", "Clarity"), weight: 1.05 },
-      flow: { label: BL("Flow", "Flow"), weight: 1.02 },
-      nutrition: { label: BL("Ernaehrung", "Nutrition"), weight: .82 }
+      energy: { label: BL("Energie", "Energy"), weight: 1.18, icon: "⚡" },
+      intuition: { label: BL("Intuition", "Intuition"), weight: 1.08, icon: "◈" },
+      expression: { label: BL("Kommunikation", "Expression"), weight: 1.02, icon: "💬" },
+      clarity: { label: BL("Klarheit", "Clarity"), weight: 1.05, icon: "◎" },
+      flow: { label: BL("Flow", "Flow"), weight: 1.02, icon: "↻" },
+      nutrition: { label: BL("Ernaehrung", "Nutrition"), weight: .82, icon: "🌿" }
     };
+
+    const DIMENSION_ORDER = ["energy", "expression", "clarity", "flow", "intuition", "nutrition"];
 
     const PROFILES = {
       daniel: {
@@ -967,28 +1057,182 @@
 
     const getAllProfiles = () => ProfileStore.getAllDisplay(PROFILES);
     const getProfileRecord = id => ProfileStore.getRecord(id, PROFILES);
-    const deriveDefinedCenters = gates => HDEngine.definedCentersFromGates(gates, CHANNELS);
+    const deriveDefinedCenters = (gates, channels = CHANNELS) => HDEngine.definedCentersFromGates(gates, channels);
 
-    const PENTA_CHANNELS = [
-      { a: 1, b: 8, name: BL("Kreativer Beitrag", "Creative contribution"), text: BL("Die Gruppe kann eine klare Handschrift nach aussen tragen.", "The group can carry a distinct signature outward.") },
-      { a: 7, b: 31, name: BL("Gemeinsame Richtung", "Shared direction"), text: BL("Entscheidungen lassen sich leichter fuehren, wenn Rollen klar sind.", "Decisions are easier to lead when roles are clear.") },
-      { a: 13, b: 33, name: BL("Erinnerung und Story", "Memory and story"), text: BL("Erlebtes kann als gute Geschichte oder Lernpunkt verarbeitet werden.", "Experience can become a useful story or learning point.") },
-      { a: 2, b: 14, name: BL("Ressourcen-Kompass", "Resource compass"), text: BL("Geld, Zeit und Aufmerksamkeit finden leichter eine Richtung.", "Money, time, and attention find direction more easily.") },
-      { a: 5, b: 15, name: BL("Team-Rhythmus", "Team rhythm"), text: BL("Ein gemeinsamer Takt stabilisiert Arbeit und Kommunikation.", "A shared pace stabilizes work and communication.") },
-      { a: 29, b: 46, name: BL("Commitment im Koerper", "Embodied commitment"), text: BL("Das Team spuert schneller, wozu es wirklich Ja sagt.", "The team senses faster what it truly says yes to.") },
-      { a: 21, b: 45, name: BL("Ressourcensteuerung", "Resource stewardship"), text: BL("Verteilung und Verantwortung koennen konkret besprochen werden.", "Allocation and responsibility can be discussed concretely.") },
-      { a: 44, b: 26, name: BL("Marktinstinkt", "Market instinct"), text: BL("Muster, Positionierung und Angebot greifen besser ineinander.", "Patterns, positioning, and offer fit together better.") },
-      { a: 54, b: 32, name: BL("Ambition mit Bestand", "Durable ambition"), text: BL("Wachstum wirkt tragfaehiger, wenn es an Bewaehrtes andockt.", "Growth becomes more durable when it connects to what is proven.") }
+    const PENTA_CORE_CENTERS = ["Sacral", "G", "Throat"];
+    const PENTA_INFLUENCE_CENTERS = ["Head", "Ajna", "Ego", "Spleen", "Solar", "Root"];
+
+    const PENTA_SPINE_CHANNELS = [
+      { a: 5, b: 15, from: "Sacral", to: "G", layer: "lower", name: BL("Rhythmus", "Rhythm"), text: BL("Untere Penta: gemeinsamer Takt, Gewohnheiten und operative Stabilitaet.", "Lower Penta: shared pace, habits, and operational stability.") },
+      { a: 2, b: 14, from: "G", to: "Sacral", layer: "lower", name: BL("Ressourcen-Kompass", "Resource compass"), text: BL("Untere Penta: Richtung trifft auf materielle Kraft — Geld, Zeit und Energie finden einen Weg.", "Lower Penta: direction meets material power — money, time, and energy find a path.") },
+      { a: 29, b: 46, from: "Sacral", to: "G", layer: "lower", name: BL("Commitment", "Commitment"), text: BL("Untere Penta: koerperliches Ja und Ausdauer — das Team weiss eher, wozu es sich verpflichtet.", "Lower Penta: embodied yes and stamina — the team senses more clearly what it commits to.") },
+      { a: 7, b: 31, from: "G", to: "Throat", layer: "upper", name: BL("Fuehrung", "Leadership"), text: BL("Obere Penta: demokratische Fuehrung und sichtbare Richtung nach aussen.", "Upper Penta: democratic leadership and visible direction outward.") },
+      { a: 1, b: 8, from: "G", to: "Throat", layer: "upper", name: BL("Kreativer Beitrag", "Creative contribution"), text: BL("Obere Penta: eigene Handschrift, Vorbildwirkung und oeffentlicher Ausdruck.", "Upper Penta: distinct signature, role-model quality, and public expression.") },
+      { a: 13, b: 33, from: "G", to: "Throat", layer: "upper", name: BL("Erinnerung und Story", "Memory and story"), text: BL("Obere Penta: Zeuge, Rueckzug und geteilte Erfahrung als oeffentliche Erzaehlung.", "Upper Penta: witness, retreat, and shared experience as public narrative.") }
     ];
 
-    const TRIGGER_TEXTS = {
-      Head: BL("Mehr Fragen als Antworten: erst sammeln, dann entscheiden.", "More questions than answers: collect first, decide later."),
-      Ajna: BL("Mentale Fixierung moeglich: Annahmen sichtbar machen.", "Mental fixation possible: make assumptions visible."),
-      Solar: BL("Emotionale Ladung im Feld: Tempo rausnehmen.", "Emotional charge in the field: slow the pace."),
-      Root: BL("Druck zum Abschluss: Prioritaeten hart begrenzen.", "Pressure to finish: limit priorities firmly."),
-      Ego: BL("Beweisenergie im Raum: Versprechen klein halten.", "Proving energy in the room: keep promises small."),
-      Spleen: BL("Sicherheitsfragen werden lauter: Instinkt pruefen, nicht dramatisieren.", "Safety questions get louder: test instinct, do not dramatize.")
+    const PENTA_EXTENDED_CHANNELS = [
+      { a: 21, b: 45, name: BL("Ressourcensteuerung", "Resource stewardship"), text: BL("BG5-Erweiterung: Verteilung und Verantwortung koennen konkret besprochen werden.", "BG5 extension: allocation and responsibility can be discussed concretely.") },
+      { a: 44, b: 26, name: BL("Marktinstinkt", "Market instinct"), text: BL("BG5-Erweiterung: Muster, Positionierung und Angebot greifen besser ineinander.", "BG5 extension: patterns, positioning, and offer fit together better.") },
+      { a: 54, b: 32, name: BL("Ambition mit Bestand", "Durable ambition"), text: BL("BG5-Erweiterung: Wachstum wirkt tragfaehiger, wenn es an Bewaehrtes andockt.", "BG5 extension: growth becomes more durable when it connects to what is proven.") }
+    ];
+
+    const PENTA_CHANNELS = [...PENTA_SPINE_CHANNELS, ...PENTA_EXTENDED_CHANNELS];
+
+    const PENTA_CORE_ROLES = {
+      Sacral: BL("Fuetterung — Motor und Tragfaehigkeit", "Feeding — motor and sustainability"),
+      G: BL("Richtung — Identitaet und Kultur", "Direction — identity and culture"),
+      Throat: BL("Kommunikation — Stimme nach aussen", "Communication — outward voice")
     };
+
+    const PENTA_CORE_TEXTS = {
+      Sacral: {
+        defined: BL("Definiert im Penta: zuverlaessige Arbeitsenergie fuer die Gruppe. Der Motor laeuft strukturell mit.", "Defined in the Penta: reliable work energy for the group. The motor runs structurally."),
+        partial: BL("Teilweise: Sakral-Tore im Pool, aber kein vollstaendiger Penta-Kanal. Energie ist da — verteilt sich aber ungleich auf Einzelne.", "Partial: sacral gates in the pool, but no complete Penta channel. Energy is present — but distributed unevenly across individuals."),
+        missing: BL("Fehlt im Penta (Ra): keine eingebaute Generator-Kraft. Projekte leben von Impulsen statt von Dauerenergie — Pausen und Burnout-Zyklen wahrscheinlicher.", "Missing in the Penta (Ra): no built-in generator power. Projects run on bursts instead of sustained energy — pauses and burnout cycles more likely.")
+      },
+      G: {
+        defined: BL("Definiert im Penta: stabiler Richtungs- und Identitaetsanker fuer die Gruppe. Kultur und Platzgefuehl sind strukturell vorhanden.", "Defined in the Penta: stable direction and identity anchor for the group. Culture and sense of place are structurally present."),
+        partial: BL("Teilweise: Richtungs-Tore vorhanden, aber ohne vollstaendige Kanaele zur Kehle oder zum Sakral. Identitaet wird eher situativ als strukturell getragen.", "Partial: direction gates present, but without complete channels to throat or sacral. Identity is carried situationally rather than structurally."),
+        missing: BL("Fehlt im Penta: keine gemeinsame Richtung im Feld. Umgebung, Menschen und Projekte bestimmen staerker, wohin die Gruppe schaut.", "Missing in the Penta: no shared direction in the field. Environment, people, and projects determine more strongly where the group looks.")
+      },
+      Throat: {
+        defined: BL("Definiert im Penta: die Gruppe kann sich zuverlaessig aeussern, fuehren und manifestieren. Kommunikation ist strukturell, nicht nur individuell.", "Defined in the Penta: the group can reliably express, lead, and manifest. Communication is structural, not just individual skill."),
+        partial: BL("Teilweise: Stimm-Tore im Pool ohne obere Penta-Kanaele. Einzelne koennen gut kommunizieren — als Gruppe fehlt der gemeinsame Ausdruckskanal.", "Partial: voice gates in the pool without upper Penta channels. Individuals may communicate well — as a group, the shared expression channel is missing."),
+        missing: BL("Fehlt im Penta: Schwierigkeiten, Initiativen sichtbar zu machen oder gemeinsam zu praesentieren — unabhaengig von individuellen Kommunikationsfaehigkeiten.", "Missing in the Penta: difficulty making initiatives visible or presenting as a group — regardless of individual communication skills.")
+      }
+    };
+
+    const PENTA_INFLUENCE_TEXTS = {
+      Head: BL("Kopf-Einfluss: Inspiration und Fragen-Druck aus dem Feld. Ra: die Penta selbst hat kein Bewusstsein — aber Mitglieder bringen mentale Inspiration mit. Erst sammeln, dann entscheiden.", "Head influence: inspiration and question pressure from the field. Ra: the Penta itself has no awareness — but members bring mental inspiration. Collect first, decide later."),
+      Ajna: BL("Ajna-Einfluss: feste Meinungen und mentale Modelle faerben Diskussionen. Die Penta sieht das nicht — individuelle Ueberzeugungen koennen die Gruppe konditionieren.", "Ajna influence: fixed opinions and mental models color discussions. The Penta does not see this — individual convictions can condition the group."),
+      Ego: BL("Ego-Einfluss: Wille, Versprechen und Beweisenergie im Raum. Nicht Penta-Kern — aber spuerbar in Commitments und Ressourcen-Debatten.", "Ego influence: will, promises, and proving energy in the room. Not Penta core — but felt in commitments and resource debates."),
+      Spleen: BL("Milz-Einfluss: Instinkt, Gesundheit und Timing-Signale. Die Penta hat keine Milz — aber wer Milz-Tore bringt, gibt dem Team koerperliche Warn- und Ja-Signale.", "Spleen influence: instinct, health, and timing signals. The Penta has no spleen — but whoever brings spleen gates gives the team bodily warning and yes signals."),
+      Solar: BL("Solarplexus-Einfluss: emotionale Wellen und Stimmungsfeld. Ra: kein emotionales System in der Penta — aber definierte Solarplexus-Mitglieder faerben das ganze Feld.", "Solar Plexus influence: emotional waves and mood field. Ra: no emotional system in the Penta — but defined solar members color the entire field."),
+      Root: BL("Wurzel-Einfluss: Druck, Tempo und Abschluss-Energie. Die Penta hat keinen Root — externer und individueller Druck kann trotzdem hetzen.", "Root influence: pressure, pace, and finish energy. The Penta has no root — external and individual pressure can still create rush.")
+    };
+
+    const PENTA_STATUS_LABELS = {
+      defined: BL("Definiert", "Defined"),
+      partial: BL("Teilweise", "Partial"),
+      missing: BL("Fehlt", "Missing")
+    };
+
+    function pentaGatesInPool(pool, center) {
+      return CENTER_GATES[center].filter(gate => pool.has(gate));
+    }
+
+    function pentaChannelComplete(pool, channel) {
+      return pool.has(channel.a) && pool.has(channel.b);
+    }
+
+    function pentaContributors(members, center) {
+      return members.map(member => ({
+        name: member.name,
+        gates: (member.definedGates || []).filter(gate => CENTER_GATES[center].includes(gate))
+      })).filter(row => row.gates.length);
+    }
+
+    function pentaCoreState(pool, center, spineDefined) {
+      const gates = pentaGatesInPool(pool, center);
+      if (spineDefined.includes(center)) return "defined";
+      if (gates.length) return "partial";
+      return "missing";
+    }
+
+    function buildPentaSynthesis(lowerComplete, upperComplete, coreCenters) {
+      const lowerCount = lowerComplete.length;
+      const upperCount = upperComplete.length;
+      const sacral = coreCenters.find(row => row.center === "Sacral");
+      const throat = coreCenters.find(row => row.center === "Throat");
+      const gCenter = coreCenters.find(row => row.center === "G");
+
+      if (!lowerCount && !upperCount) {
+        return BL(
+          "Kein vollstaendiger Penta-Kanal: lose Abstimmung moeglich, weniger mechanische Gruppenkraft. Rollen und Erwartungen explizit halten.",
+          "No complete Penta channel: loose alignment possible, less mechanical group force. Keep roles and expectations explicit."
+        );
+      }
+      if (upperCount > 0 && lowerCount === 0) {
+        return BL(
+          "Ra-Regel: Obere Penta ohne untere Basis — viel Fuehrung und Sichtbarkeit, wenig operative Tragfaehigkeit. Vision wird gesendet, Follow-through fehlt strukturell.",
+          "Ra's rule: upper Penta without lower base — much leadership and visibility, little operational sustainability. Vision is broadcast, follow-through is structurally missing."
+        );
+      }
+      if (lowerCount > 0 && upperCount === 0) {
+        return BL(
+          "Untere Penta traegt — Motor und Ressourcen laufen. Oeffentliche Fuehrung und klare Gruppen-Stimme fehlen noch strukturell.",
+          "Lower Penta carries — motor and resources run. Public leadership and a clear group voice are still structurally missing."
+        );
+      }
+      if (lowerCount >= 2 && upperCount >= 2) {
+        return BL(
+          "Starke Penta-Wirbelsaeule: Untere und obere Schicht arbeiten zusammen. Energie fliesst Sakral → G → Kehle — mechanisch eine funktionale Gruppeneinheit.",
+          "Strong Penta spine: lower and upper layers work together. Energy flows Sacral → G → Throat — mechanically a functional group unit."
+        );
+      }
+      if (sacral?.state === "missing") {
+        return BL(
+          "Kanaele vorhanden, aber kein Sakral definiert: Einzelne tragen Motor-Energie — nicht die Penta selbst. Burnout-Risiko bei Generatoren im Team beachten.",
+          "Channels present but no sacral defined: individuals carry motor energy — not the Penta itself. Watch burnout risk for generators on the team."
+        );
+      }
+      if (throat?.state === "missing" && gCenter?.state !== "missing") {
+        return BL(
+          "Richtung im G-Zentrum, aber Kehle fehlt: innere Klarheit ohne zuverlaessigen Gruppen-Ausdruck. Bewusst kommunizieren, wer spricht.",
+          "Direction in the G center, but throat missing: inner clarity without reliable group expression. Consciously decide who speaks."
+        );
+      }
+      return BL(
+        "Gemischte Penta-Struktur: einzelne Kanaele tragen — Luecken gezielt mit Rollen und Ritualen fuellen, nicht mit Druck.",
+        "Mixed Penta structure: individual channels carry — fill gaps deliberately with roles and rituals, not pressure."
+      );
+    }
+
+    function analyzePenta(members) {
+      const gatePool = new Set(members.flatMap(member => member.definedGates || []));
+      const spineDefined = deriveDefinedCenters([...gatePool], PENTA_SPINE_CHANNELS);
+      const coreCenters = PENTA_CORE_CENTERS.map(center => ({
+        center,
+        gates: pentaGatesInPool(gatePool, center),
+        state: pentaCoreState(gatePool, center, spineDefined),
+        contributors: pentaContributors(members, center),
+        role: PENTA_CORE_ROLES[center],
+        text: PENTA_CORE_TEXTS[center]
+      }));
+      const lowerComplete = PENTA_SPINE_CHANNELS.filter(ch => ch.layer === "lower" && pentaChannelComplete(gatePool, ch));
+      const upperComplete = PENTA_SPINE_CHANNELS.filter(ch => ch.layer === "upper" && pentaChannelComplete(gatePool, ch));
+      const influences = PENTA_INFLUENCE_CENTERS.map(center => ({
+        center,
+        gates: pentaGatesInPool(gatePool, center),
+        contributors: pentaContributors(members, center),
+        text: PENTA_INFLUENCE_TEXTS[center]
+      }));
+      return {
+        gatePool,
+        coreCenters,
+        lowerComplete,
+        upperComplete,
+        extendedComplete: PENTA_EXTENDED_CHANNELS.filter(ch => pentaChannelComplete(gatePool, ch)),
+        influences,
+        synthesis: buildPentaSynthesis(lowerComplete, upperComplete, coreCenters)
+      };
+    }
+
+    function renderPentaChannelCard(channel, complete) {
+      return `<div class="small-card ${complete ? "" : "warning"}">
+        <strong>${channel.a}-${channel.b} | ${T(channel.name)}</strong>
+        ${complete ? "" : ` · ${T(BL("offen", "open"))}`}
+        <br>${T(channel.text)}
+      </div>`;
+    }
+
+    function renderPentaContributors(contributors) {
+      if (!contributors.length) return "";
+      return `<div class="penta-contributors">${contributors.map(row =>
+        `${row.name}: G${row.gates.join(", G")}`
+      ).join(" · ")}</div>`;
+    }
 
     const PLANET_ICONS = {
       sun: "☀", earth: "⚡", moon: "☽", north_node: "☊", south_node: "☋",
@@ -1871,6 +2115,88 @@
       return accordionCard(kind, icon, title, meta, body, question);
     }
 
+    function groupAccentKind(items) {
+      if (items.some(i => i.kind === "transit-open" || i.kind === "warning")) return "transit-open";
+      if (items.some(i => i.kind === "transit-hit" || i.kind === "channel")) return "transit-hit";
+      return "transit";
+    }
+
+    function dimensionGroup(dimKey, items) {
+      const dim = DIMENSIONS[dimKey];
+      const kind = groupAccentKind(items);
+      const countLabel = T(BL(
+        `${items.length} ${items.length === 1 ? "Eintrag" : "Eintraege"}`,
+        `${items.length} ${items.length === 1 ? "entry" : "entries"}`
+      ));
+      return `
+        <details class="reading-card reading-accordion reading-group ${kind}">
+          <summary>
+            <span class="acc-head">
+              <span class="acc-icon">${dim.icon}</span>
+              <span class="acc-field">${T(dim.label)}</span>
+              <span class="acc-tag">${countLabel}</span>
+            </span>
+            <span class="acc-chevron">▼</span>
+          </summary>
+          <div class="reading-group-body">${items.map(i => i.html).join("")}</div>
+        </details>`;
+    }
+
+    function groupTransitsByDimension(profile, model) {
+      const buckets = Object.fromEntries(DIMENSION_ORDER.map(k => [k, []]));
+
+      const sorted = [...model.transits].sort((a, b) => {
+        const ai = TRANSIT_PRIORITY.indexOf(a.id);
+        const bi = TRANSIT_PRIORITY.indexOf(b.id);
+        return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+      });
+
+      sorted.forEach(t => {
+        const dimKey = GATE_INFO[t.gate].dimension;
+        if (!buckets[dimKey]) buckets[dimKey] = [];
+        const kind = transitCardKind(profile, t, model);
+        const tag = `G${t.gate}.${t.line} · ${impactLabel(profile, t, model)}`;
+        buckets[dimKey].push({
+          kind,
+          html: accordionCard(
+            kind,
+            PLANET_ICONS[t.id] || "●",
+            PLANET_LABELS[t.id] || BL(t.id, t.id),
+            tag,
+            gateInfluenceShort(profile, t.gate, t, model),
+            transitReadingQuestion(profile, t, model)
+          )
+        });
+      });
+
+      model.activatedChannels.forEach(ch => {
+        const dimKey = GATE_INFO[ch.a].dimension;
+        if (!buckets[dimKey]) buckets[dimKey] = [];
+        const tag = ch.completedByTransit
+          ? `Kanal ${ch.a}-${ch.b} · Transit`
+          : `Kanal ${ch.a}-${ch.b} · Chart`;
+        const body = ch.completedByTransit
+          ? channelInfluenceText(profile, ch)
+          : BL(
+              `Dein Kanal — heute nur lauter. Nicht echter als sonst.`,
+              `Your channel — louder today. Not more real than usual.`
+            );
+        buckets[dimKey].push({
+          kind: "channel",
+          html: accordionCard(
+            "channel",
+            "⟷",
+            BL(`Kanal ${ch.a}-${ch.b}`, `Channel ${ch.a}-${ch.b}`),
+            tag,
+            body,
+            channelReadingQuestion(profile, ch)
+          )
+        });
+      });
+
+      return DIMENSION_ORDER.filter(k => buckets[k]?.length).map(k => dimensionGroup(k, buckets[k]));
+    }
+
     const NOT_SELF_QUESTIONS = {
       Head: BL(
         "Versuche ich gerade, Fragen zu beantworten, die gar nicht meine sind?",
@@ -2470,58 +2796,15 @@
     }
 
     function renderTransitInfluencePanel(profile, model) {
-      const sorted = [...model.transits].sort((a, b) => {
-        const ai = TRANSIT_PRIORITY.indexOf(a.id);
-        const bi = TRANSIT_PRIORITY.indexOf(b.id);
-        return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
-      });
-
-      const transitCards = sorted.map(t => {
-        const center = t.center || gateCenter(t.gate);
-        const dim = DIMENSIONS[GATE_INFO[t.gate].dimension].label;
-        const tag = `G${t.gate}.${t.line} · ${impactLabel(profile, t, model)}`;
-        return accordionCard(
-          transitCardKind(profile, t, model),
-          PLANET_ICONS[t.id] || "●",
-          dim,
-          tag,
-          gateInfluenceShort(profile, t.gate, t, model),
-          transitReadingQuestion(profile, t, model)
-        );
-      });
-
-      const channelCards = model.activatedChannels.map(ch => {
-        const dimA = DIMENSIONS[GATE_INFO[ch.a].dimension].label;
-        const dimB = DIMENSIONS[GATE_INFO[ch.b].dimension].label;
-        const field = dimA.de === dimB.de ? dimA : BL(`${dimA.de} / ${dimB.de}`, `${dimA.en} / ${dimB.en}`);
-        const tag = ch.completedByTransit
-          ? BL(`Kanal ${ch.a}-${ch.b} · Transit`, `Channel ${ch.a}-${ch.b} · transit`)
-          : BL(`Kanal ${ch.a}-${ch.b} · Chart`, `Channel ${ch.a}-${ch.b} · chart`);
-        const body = ch.completedByTransit
-          ? channelInfluenceText(profile, ch)
-          : BL(
-              `Dein Kanal — heute nur sichtbarer. Nicht mehr „echt“ als sonst.`,
-              `Your channel — just more visible today. Not more "real" than usual.`
-            );
-        return accordionCard(
-          "channel",
-          "⟷",
-          field,
-          T(tag),
-          body,
-          channelReadingQuestion(profile, ch)
-        );
-      });
+      const groups = groupTransitsByDimension(profile, model);
 
       return `
         <section class="panel">
           <h2>${T(BL("Transit-Einfluesse", "Transit influences"))}</h2>
-          <p style="color:var(--muted);line-height:1.5;margin-bottom:14px;font-size:.9rem">${T(BL("Symbol + Feld in der Zeile. Ausklappen fuer Details. Nicht alles ist deine Energie.", "Symbol + field on the line. Expand for details. Not everything is your energy."))}</p>
-          <div class="reading-cards">${transitCards.join("")}</div>
-          <h2 style="margin-top:18px">${T(BL("Aktive Kanaele", "Active channels"))}</h2>
-          ${channelCards.length
-            ? `<div class="reading-cards">${channelCards.join("")}</div>`
-            : `<div class="small-card">${T(BL("Heute wird kein persoenlicher Kanal voll aktiviert. Das spricht fuer Beobachten statt Forcieren.", "No personal channel is fully activated today. This supports observing rather than forcing."))}</div>`}
+          <p style="color:var(--muted);line-height:1.5;margin-bottom:14px;font-size:.9rem">${T(BL("Nach Bereich gruppiert. Reiter oeffnen — darin die einzelnen Planeten.", "Grouped by field. Open a tab — planets inside."))}</p>
+          <div class="reading-cards">${groups.length
+            ? groups.join("")
+            : `<div class="small-card">${T(BL("Keine Transite geladen.", "No transits loaded."))}</div>`}</div>
         </section>`;
     }
 
@@ -2598,12 +2881,18 @@
 
     function renderPentaPage(date) {
       const members = Object.values(getAllProfiles()).filter(profile => pentaOn[profile.id]);
-      const gatePool = new Set(members.flatMap(profile => profile.definedGates));
-      const completed = PENTA_CHANNELS.filter(channel => gatePool.has(channel.a) && gatePool.has(channel.b));
-      const triggerCenters = Object.keys(TRIGGER_TEXTS).filter(center => CENTER_GATES[center].some(gate => gatePool.has(gate)));
+      const penta = analyzePenta(members);
+      const gatePool = penta.gatePool;
+      const activeInfluences = penta.influences.filter(row => row.gates.length);
+      const inactiveInfluences = penta.influences.filter(row => !row.gates.length);
+
       return `
         <section class="panel">
           <h2>${T(BL("Penta / Team", "Penta / Team"))}</h2>
+          <p class="penta-intro">${T(BL(
+            "Nach Ra Uru Hu: Die Penta ist eine transpersonale Aura fuer 3–5 Personen. Mechanisch relevant sind nur Sakral, G-Zentrum und Kehle — sechs Kanaele entlang der Wirbelsaeule. Alles andere kommt von Einzelnen als Einfluss ins Feld.",
+            "Per Ra Uru Hu: the Penta is a transpersonal aura for 3–5 people. Mechanically relevant are only Sacral, G Center, and Throat — six channels along the spine. Everything else enters the field as individual influence."
+          ))}</p>
           <div class="penta-members">
             ${Object.values(getAllProfiles()).map(p => `
               <label class="member-toggle">
@@ -2613,12 +2902,63 @@
           </div>
           <div class="small-card">
             <strong>${T(BL("Gate-Pool", "Gate pool"))}</strong><br>
-            ${members.length ? Array.from(gatePool).sort((a,b) => a - b).join(", ") : T(BL("Kein Mitglied aktiv.", "No member active."))}
+            ${members.length ? [...gatePool].sort((a, b) => a - b).join(", ") : T(BL("Kein Mitglied aktiv.", "No member active."))}
           </div>
-          <h2>${T(BL("Vollstaendige Penta-Kanaele", "Complete Penta channels"))}</h2>
-          ${completed.length ? completed.map(c => `<div class="small-card"><strong>${c.a}-${c.b} | ${T(c.name)}</strong><br>${T(c.text)}</div>`).join("") : `<div class="small-card">${T(BL("Noch kein Penta-Kanal ist vollstaendig. Gut fuer lose Abstimmung, weniger fuer finale Gruppenentscheidungen.", "No Penta channel is complete yet. Good for loose alignment, less for final group decisions."))}</div>`}
-          <h2>${T(BL("Trigger ausserhalb des Kerns", "Triggers outside the core"))}</h2>
-          ${triggerCenters.map(center => `<div class="small-card warning"><strong>${T(CENTER_LABELS[center])}</strong><br>${T(TRIGGER_TEXTS[center])}</div>`).join("") || `<div class="small-card">${T(BL("Keine starken Rand-Trigger im aktuellen Team-Pool.", "No strong edge triggers in the current team pool."))}</div>`}
+
+          <h2>${T(BL("Penta-Kern — 3 Zentren (Ra)", "Penta core — 3 centers (Ra)"))}</h2>
+          <div class="penta-core-grid">
+            ${penta.coreCenters.map(row => `
+              <div class="penta-core-card ${row.state}">
+                <span class="penta-status">${T(PENTA_STATUS_LABELS[row.state])}</span>
+                <strong>${T(CENTER_LABELS[row.center])}</strong><br>
+                <span style="color:var(--muted);font-size:.88rem">${T(row.role)}</span>
+                <p style="margin:10px 0 0;line-height:1.48;color:var(--muted)">${T(row.text[row.state])}</p>
+                ${row.gates.length ? `<div class="penta-contributors">${T(BL("Tore", "Gates"))}: G${row.gates.join(", G")}</div>` : ""}
+                ${renderPentaContributors(row.contributors)}
+              </div>`).join("")}
+          </div>
+
+          <div class="small-card penta-synthesis">
+            <strong>${T(BL("Synthese", "Synthesis"))}</strong><br>
+            ${T(penta.synthesis)}
+          </div>
+
+          <h2>${T(BL("Untere Penta — Motor & Ressourcen", "Lower Penta — motor & resources"))}</h2>
+          <div class="penta-layer-grid">
+            ${PENTA_SPINE_CHANNELS.filter(ch => ch.layer === "lower").map(ch =>
+              renderPentaChannelCard(ch, pentaChannelComplete(gatePool, ch))
+            ).join("")}
+          </div>
+
+          <h2>${T(BL("Obere Penta — Fuehrung & Ausdruck", "Upper Penta — leadership & expression"))}</h2>
+          <div class="penta-layer-grid">
+            ${PENTA_SPINE_CHANNELS.filter(ch => ch.layer === "upper").map(ch =>
+              renderPentaChannelCard(ch, pentaChannelComplete(gatePool, ch))
+            ).join("")}
+          </div>
+
+          ${penta.extendedComplete.length ? `
+          <h2>${T(BL("BG5-Erweiterung", "BG5 extension"))}</h2>
+          ${penta.extendedComplete.map(ch => renderPentaChannelCard(ch, true)).join("")}
+          ` : ""}
+
+          <h2>${T(BL("Einfluesse ausserhalb des Penta-Kerns", "Influences outside the Penta core"))}</h2>
+          <p class="penta-intro">${T(BL(
+            "Ra: Die Penta selbst hat kein Ajna, keine Milz, kein Solarplexus, kein Ego, keinen Kopf, keine Wurzel. Diese Zentren wirken trotzdem — ueber die Charts der Mitglieder.",
+            "Ra: the Penta itself has no Ajna, spleen, solar plexus, ego, head, or root. These centers still act — through members' charts."
+          ))}</p>
+          ${activeInfluences.length ? activeInfluences.map(row => `
+            <div class="small-card warning">
+              <strong>${T(CENTER_LABELS[row.center])}</strong>
+              ${row.gates.length ? `<div class="penta-contributors">G${row.gates.join(", G")}</div>` : ""}
+              ${renderPentaContributors(row.contributors)}
+              <p style="margin:10px 0 0;line-height:1.48;color:var(--muted)">${T(row.text)}</p>
+            </div>`).join("") : `<div class="small-card">${T(BL("Keine Rand-Zentren im aktuellen Gate-Pool.", "No peripheral centers in the current gate pool."))}</div>`}
+          ${inactiveInfluences.length ? `
+            <div class="small-card" style="opacity:.72;margin-top:10px">
+              <strong>${T(BL("Nicht im Pool", "Not in pool"))}</strong>:
+              ${inactiveInfluences.map(row => T(CENTER_LABELS[row.center])).join(" · ")}
+            </div>` : ""}
         </section>`;
     }
 
