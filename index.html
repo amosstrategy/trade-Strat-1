@@ -324,6 +324,43 @@
       font-weight: 500;
     }
 
+    .reading-subgroup {
+      border-left-width: 3px;
+      background: rgba(0,0,0,.1);
+    }
+
+    .reading-subgroup > summary {
+      padding: 10px 12px;
+    }
+
+    .reading-subgroup > summary .acc-field {
+      font-size: .9rem;
+      font-weight: 600;
+    }
+
+    .reading-subgroup-body {
+      display: grid;
+      gap: 6px;
+      padding: 6px 8px 10px;
+      border-top: 1px solid rgba(255,255,255,.05);
+    }
+
+    .reading-subgroup .reading-accordion > summary .acc-field {
+      font-size: .86rem;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .acc-astro {
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255,255,255,.06);
+      font-size: .72rem;
+      letter-spacing: .04em;
+      color: var(--muted);
+      opacity: .85;
+    }
+
     .computed-badge {
       display: inline-block;
       margin-top: 8px;
@@ -830,6 +867,17 @@
     };
 
     const DIMENSION_ORDER = ["energy", "expression", "clarity", "flow", "intuition", "nutrition"];
+
+    const IMPACT_META = {
+      borrowedDefinition: { label: BL("Geliehene Definition", "Borrowed definition"), kind: "transit-open", icon: "⬡" },
+      openConditioning: { label: BL("Fremdenergie", "Outside energy"), kind: "transit-open", icon: "◌" },
+      definedNuance: { label: BL("Nuance", "Nuance"), kind: "transit", icon: "◦" },
+      ownAmplification: { label: BL("Deine Energie", "Your energy"), kind: "transit-hit", icon: "◆" },
+      channelTransit: { label: BL("Kanal temporaer", "Temporary channel"), kind: "channel", icon: "⟷" },
+      channelNative: { label: BL("Dein Kanal", "Your channel"), kind: "channel", icon: "⟷" }
+    };
+
+    const IMPACT_ORDER = ["borrowedDefinition", "openConditioning", "definedNuance", "ownAmplification", "channelTransit", "channelNative"];
 
     const PROFILES = {
       daniel: {
@@ -2093,6 +2141,23 @@
       );
     }
 
+    function influenceAccordion(kind, headline, body, question, astroLine) {
+      return `
+        <details class="reading-card reading-accordion ${kind}">
+          <summary>
+            <span class="acc-head">
+              <span class="acc-field">${T(headline)}</span>
+            </span>
+            <span class="acc-chevron">▼</span>
+          </summary>
+          <div class="reading-accordion-body">
+            <div class="reading-card-body">${T(body)}</div>
+            <div class="reading-card-q">${T(question)}</div>
+            <div class="acc-astro">${astroLine}</div>
+          </div>
+        </details>`;
+    }
+
     function accordionCard(kind, icon, fieldLabel, tag, body, question) {
       return `
         <details class="reading-card reading-accordion ${kind}">
@@ -2121,12 +2186,47 @@
       return "transit";
     }
 
-    function dimensionGroup(dimKey, items) {
+    function transitAstroLine(t) {
+      const planet = T(PLANET_LABELS[t.id] || BL(t.id, t.id));
+      const icon = PLANET_ICONS[t.id] || "●";
+      return `${icon} ${planet} · G${t.gate}.${t.line} · ${T(GATE_NAMES[t.gate])}`;
+    }
+
+    function channelAstroLine(ch) {
+      return `⟷ ${T(BL(`Kanal ${ch.a}–${ch.b}`, `Channel ${ch.a}–${ch.b}`))} · G${ch.a} + G${ch.b}`;
+    }
+
+    function impactSubgroup(impactKey, items) {
+      const meta = IMPACT_META[impactKey] || IMPACT_META.definedNuance;
+      const countLabel = String(items.length);
+      return `
+        <details class="reading-card reading-accordion reading-subgroup ${meta.kind}">
+          <summary>
+            <span class="acc-head">
+              <span class="acc-icon">${meta.icon}</span>
+              <span class="acc-field">${T(meta.label)}</span>
+              <span class="acc-tag">${countLabel}</span>
+            </span>
+            <span class="acc-chevron">▼</span>
+          </summary>
+          <div class="reading-subgroup-body">${items.map(i => i.html).join("")}</div>
+        </details>`;
+    }
+
+    function dimensionGroup(dimKey, entries) {
       const dim = DIMENSIONS[dimKey];
-      const kind = groupAccentKind(items);
+      const byImpact = {};
+      entries.forEach(e => {
+        if (!byImpact[e.impactKey]) byImpact[e.impactKey] = [];
+        byImpact[e.impactKey].push(e);
+      });
+      const subgroups = IMPACT_ORDER
+        .filter(k => byImpact[k]?.length)
+        .map(k => impactSubgroup(k, byImpact[k]));
+      const kind = groupAccentKind(entries);
       const countLabel = T(BL(
-        `${items.length} ${items.length === 1 ? "Eintrag" : "Eintraege"}`,
-        `${items.length} ${items.length === 1 ? "entry" : "entries"}`
+        `${entries.length} ${entries.length === 1 ? "Eintrag" : "Eintraege"}`,
+        `${entries.length} ${entries.length === 1 ? "entry" : "entries"}`
       ));
       return `
         <details class="reading-card reading-accordion reading-group ${kind}">
@@ -2138,7 +2238,7 @@
             </span>
             <span class="acc-chevron">▼</span>
           </summary>
-          <div class="reading-group-body">${items.map(i => i.html).join("")}</div>
+          <div class="reading-group-body">${subgroups.join("")}</div>
         </details>`;
     }
 
@@ -2154,17 +2254,18 @@
       sorted.forEach(t => {
         const dimKey = GATE_INFO[t.gate].dimension;
         if (!buckets[dimKey]) buckets[dimKey] = [];
+        const impactKey = transitImpact(profile, t, model);
         const kind = transitCardKind(profile, t, model);
-        const tag = `G${t.gate}.${t.line} · ${impactLabel(profile, t, model)}`;
+        const headline = GATE_INFO[t.gate].theme;
         buckets[dimKey].push({
+          impactKey,
           kind,
-          html: accordionCard(
+          html: influenceAccordion(
             kind,
-            PLANET_ICONS[t.id] || "●",
-            PLANET_LABELS[t.id] || BL(t.id, t.id),
-            tag,
+            headline,
             gateInfluenceShort(profile, t.gate, t, model),
-            transitReadingQuestion(profile, t, model)
+            transitReadingQuestion(profile, t, model),
+            transitAstroLine(t)
           )
         });
       });
@@ -2172,24 +2273,25 @@
       model.activatedChannels.forEach(ch => {
         const dimKey = GATE_INFO[ch.a].dimension;
         if (!buckets[dimKey]) buckets[dimKey] = [];
-        const tag = ch.completedByTransit
-          ? `Kanal ${ch.a}-${ch.b} · Transit`
-          : `Kanal ${ch.a}-${ch.b} · Chart`;
+        const impactKey = ch.completedByTransit ? "channelTransit" : "channelNative";
         const body = ch.completedByTransit
           ? channelInfluenceText(profile, ch)
           : BL(
               `Dein Kanal — heute nur lauter. Nicht echter als sonst.`,
               `Your channel — louder today. Not more real than usual.`
             );
+        const headline = ch.completedByTransit
+          ? BL("Fuehlt sich fest an — ist es nicht", "Feels solid — it isn't")
+          : BL("Bekanntes Muster", "Known pattern");
         buckets[dimKey].push({
+          impactKey,
           kind: "channel",
-          html: accordionCard(
+          html: influenceAccordion(
             "channel",
-            "⟷",
-            BL(`Kanal ${ch.a}-${ch.b}`, `Channel ${ch.a}-${ch.b}`),
-            tag,
+            headline,
             body,
-            channelReadingQuestion(profile, ch)
+            channelReadingQuestion(profile, ch),
+            channelAstroLine(ch)
           )
         });
       });
@@ -2801,7 +2903,7 @@
       return `
         <section class="panel">
           <h2>${T(BL("Transit-Einfluesse", "Transit influences"))}</h2>
-          <p style="color:var(--muted);line-height:1.5;margin-bottom:14px;font-size:.9rem">${T(BL("Nach Bereich gruppiert. Reiter oeffnen — darin die einzelnen Planeten.", "Grouped by field. Open a tab — planets inside."))}</p>
+          <p style="color:var(--muted);line-height:1.5;margin-bottom:14px;font-size:.9rem">${T(BL("Bereich → Einfluss → Details. Planet/Tor stehen unten — nur Referenz.", "Field → influence → details. Planet/gate at the bottom — reference only."))}</p>
           <div class="reading-cards">${groups.length
             ? groups.join("")
             : `<div class="small-card">${T(BL("Keine Transite geladen.", "No transits loaded."))}</div>`}</div>
