@@ -3057,13 +3057,6 @@
       } else {
         warningParts.push(BL("Emotionale Autoritaet: heute keine grossen Entscheidungen im Hoch oder Tief.", "Emotional authority: no major decisions in a high or low today."));
       }
-      const borrowed = tempDefinedOpenCenters(profile, model);
-      if (borrowed.length) {
-        warningParts.unshift(BL(
-          `Geliehene Definition heute: ${borrowed.map(c => CENTER_LABELS[c].de).join(", ")} — fuehlt sich temporaer zuverlaessig an, ist aber nicht dein Design.`,
-          `Borrowed definition today: ${borrowed.map(c => CENTER_LABELS[c].en).join(", ")} — feels temporarily reliable but is not your design.`
-        ));
-      }
       if (!warningParts.length) {
         warningParts.push(BL("Kein starker Konditionierungsdruck — guter Tag fuer bewusste kleine Schritte.", "No strong conditioning pressure — a good day for conscious small steps."));
       }
