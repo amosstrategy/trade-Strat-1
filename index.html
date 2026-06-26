@@ -829,6 +829,47 @@
       margin-bottom: 14px;
     }
 
+    .focus-global-warn.focus-overview {
+      margin-bottom: 16px;
+      padding: 0;
+      overflow: visible;
+      border: 1px solid rgba(255, 209, 102, .38);
+      border-left: 4px solid var(--warn);
+      background: linear-gradient(135deg, rgba(255, 209, 102, .16), rgba(255, 159, 67, .07) 55%, rgba(255, 255, 255, .04));
+      box-shadow:
+        0 0 0 1px rgba(255, 209, 102, .14),
+        0 0 22px rgba(255, 209, 102, .22),
+        0 0 44px rgba(255, 159, 67, .1);
+    }
+
+    .focus-overview-head {
+      display: flex;
+      align-items: center;
+      padding: 12px 14px 10px 16px;
+    }
+
+    .focus-overview .acc-field {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .focus-overview .acc-tag {
+      color: rgba(255, 209, 102, .85);
+    }
+
+    .focus-overview-body {
+      padding: 0 16px 14px 16px;
+      border-top: 1px solid rgba(255, 209, 102, .18);
+    }
+
+    .focus-overview-body .reading-card-body {
+      margin-top: 12px;
+      font-size: .95rem;
+      line-height: 1.55;
+      color: #f2ead8;
+    }
+
     .focus-section-label {
       font-size: .68rem;
       letter-spacing: .14em;
@@ -3460,20 +3501,19 @@
       });
 
       const globalWarn = `
-        <details class="reading-card reading-accordion focus-global-warn warning">
-          <summary>
+        <div class="reading-card focus-global-warn focus-overview warning" role="region" aria-label="${T(BL("Achtsamkeit heute", "Mindfulness today"))}">
+          <div class="focus-overview-head">
             <span class="acc-head">
               <span class="acc-icon">⚠</span>
               <span class="acc-field">${T(BL("Achtsamkeit heute", "Mindfulness today"))}</span>
               <span class="acc-tag">${warning.pressured.length ? warning.pressured.map(c => T(CENTER_LABELS[c])).join(" · ") : T(BL("Allgemein", "General"))}</span>
             </span>
-            <span class="acc-chevron">▼</span>
-          </summary>
-          <div class="reading-accordion-body">
+          </div>
+          <div class="focus-overview-body">
             <div class="reading-card-body">${T(warning.body)}</div>
             ${warning.question ? `<div class="reading-card-q">${T(warning.question)}</div>` : ""}
           </div>
-        </details>`;
+        </div>`;
 
       return `
         <section class="panel focus-panel">
