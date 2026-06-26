@@ -899,6 +899,35 @@
       color: #f2ead8;
     }
 
+    .focus-mantra.focus-overview {
+      margin-bottom: 12px;
+      border: 1px solid rgba(132, 220, 198, .4);
+      border-left: 4px solid var(--accent);
+      background: linear-gradient(135deg, rgba(132, 220, 198, .18), rgba(113, 227, 155, .08) 55%, rgba(255, 255, 255, .04));
+      box-shadow:
+        0 0 0 1px rgba(132, 220, 198, .16),
+        0 0 22px rgba(132, 220, 198, .22),
+        0 0 40px rgba(113, 227, 155, .1);
+    }
+
+    .focus-mantra .acc-field {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .focus-mantra .acc-tag {
+      color: var(--accent);
+    }
+
+    .daily-mantra-text {
+      margin-top: 12px;
+      font-size: 1.05rem;
+      line-height: 1.55;
+      font-weight: 500;
+      color: #e8faf5;
+    }
+
     .focus-section-label {
       font-size: .68rem;
       letter-spacing: .14em;
@@ -1522,6 +1551,42 @@
       clarity: BL("Entscheidungen entwirren und Timing pruefen", "untangling decisions and checking timing"),
       flow: BL("mit Richtung statt Druck bewegen", "moving with direction rather than pressure"),
       nutrition: BL("Tempo, Essen und Aufnahme feiner steuern", "tuning pace, food, and intake")
+    };
+
+    const DIMENSION_MANTRAS = {
+      expression: BL(
+        "Gut gewaehlte Worte an den Richtigen bringen heute Chancen.",
+        "Well-chosen words to the right person bring opportunities today."
+      ),
+      energy: BL(
+        "Echte Energie fliesst dort, wo du eingeladen bist und es sich im Koerper richtig anfuehlt.",
+        "Real energy flows where you are invited and it feels right in your body."
+      ),
+      clarity: BL(
+        "Eine klare Prioritaet heute oeffnet mehr Wege als zehn halbe.",
+        "One clear priority today opens more paths than ten half-finished ones."
+      ),
+      flow: BL(
+        "Im richtigen Rhythmus zu gehen bringt heute mehr als schneller zu laufen.",
+        "Moving at the right rhythm brings more today than running faster."
+      ),
+      intuition: BL(
+        "Dem ersten leisen Impuls vertrauen — er traegt oft mehr Wahrheit als laute Meinungen.",
+        "Trust the first quiet impulse — it often carries more truth than loud opinions."
+      ),
+      nutrition: BL(
+        "Was du aufnimmst — Zeit, Essen, Menschen — formt heute deine Staerke.",
+        "What you take in — time, food, people — shapes your strength today."
+      )
+    };
+
+    const MANTRA_SECOND_LINES = {
+      invitation: BL("Warte auf das echte Signal — dann ist deine Wirkung am groessten.", "Wait for the real signal — then your impact is greatest."),
+      inform: BL("Informiere klar — dann darf deine Energie wirken.", "Inform clearly — then your energy may act."),
+      respond: BL("Antworte nur, was wirklich bei dir ankommt.", "Respond only to what truly lands with you."),
+      borrowed: BL("Festgefuehltes ist nicht automatisch richtig — dein Tempo zaehlt.", "What feels solid is not automatically right — your pace matters."),
+      amplify: BL("Dein Licht darf heute heller scheinen — bleib bei dir.", "Your light may shine brighter today — stay with yourself."),
+      quiet: BL("Kleine bewusste Schritte tragen heute weiter als grosse Spruenge.", "Small conscious steps carry further today than big leaps.")
     };
 
     const dimensionForGate = gate => {
@@ -2767,13 +2832,40 @@
         </div>`;
     }
 
-    function renderCollapsedBorrowedDefinition(items, profile, model) {
-      const centers = [...new Set(items.map(e => e.transit.center || gateCenter(e.transit.gate)))];
-      const centerLabels = centers.map(c => T(CENTER_LABELS[c])).join(", ");
-      const body = BL(
-        `${items.length} Transit${items.length === 1 ? "" : "e"} ${items.length === 1 ? "schliesst" : "schliessen"} heute Kanaele zu deinem offenen Zentrum (${centerLabels}). Fuehlt sich fest und vermeintlich zuverlaessig an — nicht dein Design. Keine grossen Entscheidungen.`,
-        `${items.length} transit${items.length === 1 ? "" : "s"} complete${items.length === 1 ? "s" : ""} channels to your open center (${centerLabels}) today. Feels solid and misleadingly reliable — not your design. No major decisions.`
+    function borrowedDefinitionCenters(items) {
+      return [...new Set(items.map(e => e.transit.center || gateCenter(e.transit.gate)))];
+    }
+
+    function borrowedDefinitionFieldLabel(items) {
+      const centers = borrowedDefinitionCenters(items);
+      if (centers.length === 1) return CENTER_LABELS[centers[0]];
+      return BL(
+        centers.map(c => CENTER_LABELS[c].de).join(" · "),
+        centers.map(c => CENTER_LABELS[c].en).join(" · ")
       );
+    }
+
+    function borrowedDefinitionPlainBody(items) {
+      const centers = borrowedDefinitionCenters(items);
+      const names = centers.map(c => T(CENTER_LABELS[c]));
+      const first = centers.length === 1
+        ? BL(
+            `Heute fuehlt sich dein offenes ${names[0]} staerker und zuverlaessiger an als sonst — fast so, als waere das immer schon deins.`,
+            `Today your open ${names[0]} feels stronger and more reliable than usual — almost as if it has always been yours.`
+          )
+        : BL(
+            `Heute fuehlen sich deine offenen Bereiche ${names.join(" und ")} staerker und zuverlaessiger an als sonst — fast so, als waere das immer schon deins.`,
+            `Today your open ${names.join(" and ")} feel stronger and more reliable than usual — almost as if they have always been yours.`
+          );
+      const second = BL(
+        "Das ist nur voruebergehend. Triff darauf heute keine grossen Entscheidungen.",
+        "This is only temporary. Don't make major decisions based on it today."
+      );
+      return BL(`${first.de} ${second.de}`, `${first.en} ${second.en}`);
+    }
+
+    function renderCollapsedBorrowedDefinition(items, profile, model) {
+      const body = borrowedDefinitionPlainBody(items);
       const refs = items.map(e => {
         const t = e.transit;
         const ch = channelForTransitGate(model, t.gate);
@@ -2818,15 +2910,18 @@
 
     function impactSubgroup(impactKey, items, profile, model, expanded = false) {
       const meta = IMPACT_META[impactKey] || IMPACT_META.definedNuance;
-      const countLabel = String(items.length);
+      const fieldLabel = impactKey === "borrowedDefinition"
+        ? borrowedDefinitionFieldLabel(items)
+        : meta.label;
+      const countLabel = impactKey === "borrowedDefinition" ? "" : String(items.length);
       const bodyHtml = renderImpactEntries(impactKey, items, profile, model, expanded);
       return `
         <details class="reading-card reading-accordion reading-subgroup ${meta.kind}"${expanded ? " open" : ""}>
           <summary>
             <span class="acc-head">
               <span class="acc-icon">${meta.icon}</span>
-              <span class="acc-field">${T(meta.label)}</span>
-              <span class="acc-tag">${countLabel}</span>
+              <span class="acc-field">${T(fieldLabel)}</span>
+              ${countLabel ? `<span class="acc-tag">${countLabel}</span>` : ""}
             </span>
             <span class="acc-chevron">▼</span>
           </summary>
@@ -2998,8 +3093,8 @@
           c.completedByTransit && (c.a === transit.gate || c.b === transit.gate)
         );
         return BL(
-          `${planet} G${transit.gate} schliesst heute Kanal ${ch.a}-${ch.b} und definiert temporaer dein offenes ${centerLabel}. Fuehlt sich ${gateName} gerade vermeintlich zuverlaessig an — obwohl das nicht dein festes Design ist? (${hint} — geliehene Energie, keine grossen Entscheidungen.)`,
-          `${planet} G${transit.gate} completes channel ${ch.a}-${ch.b} today and temporarily defines your open ${centerLabel}. Does ${gateName} feel misleadingly reliable right now — even though that's not your fixed design? (${hint} — borrowed energy, no major decisions.)`
+          `Heute fuehlt sich dein offenes ${centerLabel} staerker an — fast so, als gehoere ${gateName} fest zu dir. Das ist nur voruebergehend; keine grossen Entscheidungen darauf.`,
+          `Today your open ${centerLabel} feels stronger — almost as if ${gateName} permanently belongs to you. This is only temporary; no major decisions on it.`
         );
       }
       if (impact === "ownAmplification") {
@@ -3291,6 +3386,87 @@
       };
     }
 
+    function strategyMantraSecond(profile) {
+      const strategy = T(profile.strategy || "").toLowerCase();
+      if (strategy.includes("einladung") || strategy.includes("invitation")) return MANTRA_SECOND_LINES.invitation;
+      if (strategy.includes("inform")) return MANTRA_SECOND_LINES.inform;
+      if (strategy.includes("reag") || strategy.includes("respond")) return MANTRA_SECOND_LINES.respond;
+      return null;
+    }
+
+    function pickFocusDimension(profile, model, baseline) {
+      const values = model.values;
+      const deltas = baseline
+        ? Object.fromEntries(DIMENSION_ORDER.map(d => [d, values[d] - baseline.values[d]]))
+        : Object.fromEntries(DIMENSION_ORDER.map(d => [d, 0]));
+      const ranked = [...DIMENSION_ORDER].sort((a, b) => {
+        const scoreA = values[a] + Math.max(0, deltas[a]) * 0.85;
+        const scoreB = values[b] + Math.max(0, deltas[b]) * 0.85;
+        return scoreB - scoreA;
+      });
+      let focusDim = ranked[0];
+      const { sun } = resolveLuminaries(model);
+      if (sun) {
+        const sunDim = GATE_INFO[sun.gate].dimension;
+        const sunScore = values[sunDim] + Math.max(0, deltas[sunDim]) * 0.85;
+        const topScore = values[focusDim] + Math.max(0, deltas[focusDim]) * 0.85;
+        if (sunScore >= topScore - 0.45) focusDim = sunDim;
+      }
+      const openCenters = Object.keys(CENTER_LABELS).filter(c => !profile.definedCenters.includes(c));
+      const throatActive = openCenters.includes("Throat") && model.transits.some(t => t.center === "Throat");
+      if (throatActive && values.expression >= 6.5) focusDim = "expression";
+      const authority = T(profile.authority || "").toLowerCase();
+      if ((authority.includes("milz") || authority.includes("spleen")) && values.intuition >= values[focusDim] - 0.25) {
+        focusDim = "intuition";
+      }
+      return { focusDim, sun };
+    }
+
+    function buildDailyMantra(profile, model, baseline) {
+      const { focusDim, sun } = pickFocusDimension(profile, model, baseline);
+      const buckets = collectTransitEntries(profile, model, new Set(["sun", "earth", "moon"]));
+      const entries = buckets[focusDim] || [];
+      const primary = DIMENSION_MANTRAS[focusDim];
+      let second = strategyMantraSecond(profile);
+      if (entries.some(e => e.impactKey === "borrowedDefinition")) second = MANTRA_SECOND_LINES.borrowed;
+      else if (entries.some(e => e.impactKey === "ownAmplification")) second = MANTRA_SECOND_LINES.amplify;
+      else if (!entries.length && model.overall < 6) second = MANTRA_SECOND_LINES.quiet;
+      const body = second
+        ? BL(`${primary.de} ${second.de}`, `${primary.en} ${second.en}`)
+        : primary;
+      const tag = sun
+        ? `${T(DIMENSIONS[focusDim].label)} · ${T(GATE_NAMES[sun.gate])}`
+        : T(DIMENSIONS[focusDim].label);
+      return { focusDim, body, tag };
+    }
+
+    function buildChartMantra(profile, chart) {
+      const baseline = computeChartScores(profile, chart);
+      const focusDim = [...DIMENSION_ORDER].sort((a, b) => baseline.values[b] - baseline.values[a])[0];
+      const primary = DIMENSION_MANTRAS[focusDim];
+      const second = strategyMantraSecond(profile);
+      const body = second
+        ? BL(`${primary.de} ${second.de}`, `${primary.en} ${second.en}`)
+        : primary;
+      return { focusDim, body, tag: T(DIMENSIONS[focusDim].label) };
+    }
+
+    function renderDailyMantraCard(mantra) {
+      return `
+        <div class="reading-card focus-mantra focus-overview" role="region" aria-label="${T(BL("Tages-Mantra", "Daily mantra"))}">
+          <div class="focus-overview-head">
+            <span class="acc-head">
+              <span class="acc-icon">✦</span>
+              <span class="acc-field">${T(BL("Tages-Mantra", "Daily mantra"))}</span>
+              <span class="acc-tag">${mantra.tag}</span>
+            </span>
+          </div>
+          <div class="focus-overview-body">
+            <p class="daily-mantra-text">${T(mantra.body)}</p>
+          </div>
+        </div>`;
+    }
+
     function transitHeadline(transit) {
       return BL(
         `${T(GATE_NAMES[transit.gate])} · G${transit.gate}.${transit.line}`,
@@ -3520,6 +3696,7 @@
             BL("Transite aus — Scores und Lesung zeigen deine Chart-Baseline. Bereich links waehlen.", "Transits off — scores and reading show your chart baseline. Select a field on the left.")
           )}
           ${selectedDimension ? `<button type="button" class="btn-text" id="clearDimFilter">${T(BL("← Alle Bereiche", "← All fields"))}</button>` : ""}
+          ${renderDailyMantraCard(buildChartMantra(profile, chart))}
           <div class="reading-cards">${groups.join("")}</div>
         </section>`;
     }
@@ -3542,6 +3719,7 @@
       }
 
       const warning = buildDailyWarning(profile, model);
+      const mantra = buildDailyMantra(profile, model, baseline);
       const buckets = collectTransitEntries(profile, model, new Set(["sun", "earth", "moon"]));
       const dims = selectedDimension ? [selectedDimension] : DIMENSION_ORDER;
       const groups = dims.map((dimKey, idx) => {
@@ -3573,6 +3751,7 @@
             BL("Score, Tageskern und Transite pro Bereich — ohne Doppelungen. Sonne, Erde und Mond nur im Tageskern.", "Score, day core and transits per field — no duplicates. Sun, Earth and Moon only in day core.")
           )}
           ${selectedDimension ? `<button type="button" class="btn-text" id="clearDimFilter">${T(BL("← Alle Bereiche", "← All fields"))}</button>` : ""}
+          ${renderDailyMantraCard(mantra)}
           ${globalWarn}
           <div class="reading-cards">${groups.join("")}</div>
         </section>`;
