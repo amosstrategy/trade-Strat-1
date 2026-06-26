@@ -2351,7 +2351,7 @@
       Object.keys(values).forEach(dim => values[dim] = +clamp(values[dim]).toFixed(1));
       const weighted = Object.entries(values).reduce((sum, [dim, value]) => sum + value * DIMENSIONS[dim].weight, 0);
       const weight = Object.values(DIMENSIONS).reduce((sum, dim) => sum + dim.weight, 0);
-      const overall = +(weighted / weight).toFixed(1);
+      const overall = +clamp(weighted / weight).toFixed(1);
       const abundance = (values.energy >= 7.2 && values.flow >= 6.2) || [14, 45, 26, 44, 21].some(g => transitGates.has(g) && personal.has(g));
       return { values, overall, abundance };
     }
@@ -2368,7 +2368,7 @@
       Object.keys(values).forEach(dim => values[dim] = +clamp(values[dim]).toFixed(1));
       const weighted = Object.entries(values).reduce((sum, [dim, value]) => sum + value * DIMENSIONS[dim].weight, 0);
       const weight = Object.values(DIMENSIONS).reduce((sum, dim) => sum + dim.weight, 0);
-      const overall = +(weighted / weight).toFixed(1);
+      const overall = +clamp(weighted / weight).toFixed(1);
       const abundance = [14, 45, 26, 44, 21].some(g => chart.gateSet.has(g));
       return { values, overall, abundance };
     }
@@ -3065,17 +3065,6 @@
       };
     }
 
-    function scoreDeviation(current, baseline) {
-      const d = +(current - baseline).toFixed(1);
-      if (Math.abs(d) < 0.05) return null;
-      const sign = d > 0 ? "+" : "";
-      return {
-        value: d,
-        cls: d > 0 ? "up" : "down",
-        label: BL(`${sign}${d} vs. Chart`, `${sign}${d} vs. chart`)
-      };
-    }
-
     function transitHeadline(transit) {
       return BL(
         `${T(GATE_NAMES[transit.gate])} · G${transit.gate}.${transit.line}`,
@@ -3186,7 +3175,6 @@
       const hasContent = !!(tageskern || entries.length);
       const baseValue = baseline?.values[dimKey];
       const value = hasContent ? model.values[dimKey] : (baseValue ?? model.values[dimKey]);
-      const dev = hasContent && baseline ? scoreDeviation(model.values[dimKey], baseline.values[dimKey]) : null;
       const byImpact = {};
       entries.forEach(e => {
         if (!byImpact[e.impactKey]) byImpact[e.impactKey] = [];
@@ -3196,7 +3184,6 @@
         .filter(k => byImpact[k]?.length)
         .map(k => impactSubgroup(k, byImpact[k], profile, model));
       const kind = entries.length ? groupAccentKind(entries) : "transit";
-      const devHtml = dev ? `<span class="acc-dev ${dev.cls}">${T(dev.label)}</span>` : "";
       const bodyParts = [];
       if (tageskern) bodyParts.push(tageskern);
       if (subgroups.length) {
@@ -3215,7 +3202,6 @@
               <span class="acc-icon">${dim.icon}</span>
               <span class="acc-field">${T(dim.label)}</span>
               <span class="acc-score">${value}/10</span>
-              ${devHtml}
             </span>
             <span class="acc-chevron">▼</span>
           </summary>
@@ -3233,18 +3219,16 @@
           <div class="score-ring" style="--score:${model.overall};--ring:${ringColor(model.overall)}">
             <strong>${model.overall}</strong>
           </div>
-          <p class="score-caption">${scoreCaption}: ${T(scoreLabel)}${model.abundance ? " · " + T(BL("Abundance offen", "Abundance open")) : ""}</p>
+          <p class="score-caption">${scoreCaption}: ${T(scoreLabel)}${model.abundance ? " · " + T(BL("Abundance offen", "Abundance open")) : ""}<br><span style="opacity:.75">${T(BL("Skala 0–10 pro Bereich", "Scale 0–10 per field"))}</span></p>
           <div class="dimension-list">
             ${DIMENSION_ORDER.map(dim => {
               const active = showTransitsFlag && profile ? dimensionHasActiveInfluences(profile, model, dim) : true;
               const value = active ? model.values[dim] : (baseline?.values[dim] ?? model.values[dim]);
-              const dev = active && showTransitsFlag && baseline ? scoreDeviation(model.values[dim], baseline.values[dim]) : null;
               return `
                 <button type="button" class="dimension-select ${selectedDimension === dim ? "active" : ""}" data-dimension="${dim}" aria-pressed="${selectedDimension === dim}">
                   <span class="dim-icon">${DIMENSIONS[dim].icon}</span>
                   <span class="dim-label">${T(DIMENSIONS[dim].label)}</span>
                   <span class="dim-score">${value}/10</span>
-                  ${dev ? `<span class="dim-dev ${dev.cls}">${T(dev.label)}</span>` : (!active && showTransitsFlag ? `<span class="dim-dev">${T(BL("Baseline", "Baseline"))}</span>` : "")}
                   <div class="bar" style="--value:${value};--ring:${ringColor(value)}"><i></i></div>
                 </button>`;
             }).join("")}
