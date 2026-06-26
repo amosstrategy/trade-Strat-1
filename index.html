@@ -2532,27 +2532,29 @@
       );
     }
 
+    function impactContentBlock(body, astroHtml, question) {
+      return `
+        <div class="reading-accordion-body impact-content-block">
+          <div class="reading-card-body">${T(body)}</div>
+          ${question ? `<div class="reading-card-q">${T(question)}</div>` : ""}
+          ${astroHtml || ""}
+        </div>`;
+    }
+
     function renderCollapsedBorrowedDefinition(items, profile, model) {
       const centers = [...new Set(items.map(e => e.transit.center || gateCenter(e.transit.gate)))];
       const centerLabels = centers.map(c => T(CENTER_LABELS[c])).join(", ");
       const body = BL(
-        `${items.length} Transit${items.length === 1 ? "" : "e"} schliessen heute Kanaele zu deinen offenen Zentren (${centerLabels}). Fuehlt sich fest und verdaemlich zuverlaessig an — ist geliehene Definition, nicht dein Design. Keine grossen Entscheidungen.`,
-        `${items.length} transit${items.length === 1 ? "" : "s"} complete channels to your open centers (${centerLabels}) today. Feels solid and misleadingly reliable — borrowed definition, not your design. No major decisions.`
+        `${items.length} Transit${items.length === 1 ? "" : "e"} ${items.length === 1 ? "schliesst" : "schliessen"} heute Kanaele zu deinem offenen Zentrum (${centerLabels}). Fuehlt sich fest und vermeintlich zuverlaessig an — nicht dein Design. Keine grossen Entscheidungen.`,
+        `${items.length} transit${items.length === 1 ? "" : "s"} complete${items.length === 1 ? "s" : ""} channels to your open center (${centerLabels}) today. Feels solid and misleadingly reliable — not your design. No major decisions.`
       );
-      const question = null;
       const refs = items.map(e => {
         const t = e.transit;
         const ch = channelForTransitGate(model, t.gate);
         const chLabel = ch ? ` · Kanal ${ch.a}–${ch.b}` : "";
         return transitAstroLine(t) + chLabel;
       }).join("<br>");
-      return influenceAccordion(
-        "transit-open",
-        BL("Geliehene Definition", "Borrowed definition"),
-        body,
-        question,
-        `<div class="acc-astro-stack">${refs}</div>`
-      );
+      return impactContentBlock(body, `<div class="acc-astro-stack">${refs}</div>`, null);
     }
 
     function renderCollapsedOpenConditioning(items, profile, model) {
@@ -2570,13 +2572,7 @@
           `${group.length} transits activate your open ${centerLabel}. ${NOT_SELF_QUESTIONS[center].en}`
         );
         const refs = group.map(e => transitAstroLine(e.transit)).join("<br>");
-        return influenceAccordion(
-          "transit-open",
-          BL(`Fremdenergie · ${centerLabel}`, `Outside energy · ${centerLabel}`),
-          body,
-          null,
-          `<div class="acc-astro-stack">${refs}</div>`
-        );
+        return impactContentBlock(body, `<div class="acc-astro-stack">${refs}</div>`, null);
       }).join("");
     }
 
@@ -2776,7 +2772,7 @@
           c.completedByTransit && (c.a === transit.gate || c.b === transit.gate)
         );
         return BL(
-          `${planet} G${transit.gate} schliesst heute Kanal ${ch.a}-${ch.b} und definiert temporaer dein offenes ${centerLabel}. Fuehlt sich ${gateName} gerade verdaemlich zuverlaessig an — obwohl das nicht dein festes Design ist? (${hint} — geliehene Energie, keine grossen Entscheidungen.)`,
+          `${planet} G${transit.gate} schliesst heute Kanal ${ch.a}-${ch.b} und definiert temporaer dein offenes ${centerLabel}. Fuehlt sich ${gateName} gerade vermeintlich zuverlaessig an — obwohl das nicht dein festes Design ist? (${hint} — geliehene Energie, keine grossen Entscheidungen.)`,
           `${planet} G${transit.gate} completes channel ${ch.a}-${ch.b} today and temporarily defines your open ${centerLabel}. Does ${gateName} feel misleadingly reliable right now — even though that's not your fixed design? (${hint} — borrowed energy, no major decisions.)`
         );
       }
