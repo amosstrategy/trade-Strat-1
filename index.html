@@ -419,11 +419,12 @@
     }
 
     .hero-card.compact-top-card .hero-top-row {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px 16px;
+      text-align: center;
+    }
+
+    .hero-card.compact-top-card .hero-copy {
+      max-width: 40rem;
+      margin: 0 auto;
     }
 
     .hero-card.compact-top-card h1 {
@@ -448,6 +449,7 @@
     .hero-card.compact-top-card .toolbar {
       margin-top: 0;
       flex-shrink: 0;
+      justify-content: center;
     }
 
     .hero-card.compact-top-card .toolbar button {
@@ -950,6 +952,23 @@
       margin-bottom: 0;
       flex: 1;
       min-width: 0;
+    }
+
+    .focus-panel-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      flex-shrink: 0;
+      align-items: center;
+    }
+
+    .focus-lang-toggle {
+      flex-shrink: 0;
+      padding: .45rem .85rem;
+      font-size: .8rem;
+      font-weight: 600;
+      white-space: nowrap;
+      min-width: 3rem;
     }
 
     .focus-transit-toggle {
@@ -3965,6 +3984,10 @@
         </section>`;
     }
 
+    function renderLangBtn() {
+      return `<button id="langBtn" type="button" class="focus-lang-toggle">${lang === "de" ? "EN" : "DE"}</button>`;
+    }
+
     function renderTransitToggleBtn() {
       return `<button id="transitToggleBtn" type="button" class="focus-transit-toggle ${showTransits ? "active" : ""}" aria-pressed="${showTransits}">${showTransits ? T(BL("Transite: An", "Transits: On")) : T(BL("Transite: Aus", "Transits: Off"))}</button>`;
     }
@@ -3973,7 +3996,10 @@
       return `
         <div class="focus-panel-head">
           <h2>${T(title)}</h2>
-          ${renderTransitToggleBtn()}
+          <div class="focus-panel-actions">
+            ${renderLangBtn()}
+            ${renderTransitToggleBtn()}
+          </div>
         </div>
         ${intro ? `<p class="focus-intro">${T(intro)}</p>` : ""}`;
     }
@@ -4571,13 +4597,10 @@
         <section class="hero compact-top">
           <div class="hero-card compact-top-card">
             <div class="hero-top-row">
-              <div>
+              <div class="hero-copy">
                 <div class="eyebrow">${T(BL("Daily Energy Map", "Daily Energy Map"))}</div>
                 <h1>${T(BL("Wann ist der beste Moment fuer was?", "When is the best moment for what?"))}</h1>
                 <p class="lead">${T(BL("Score links, Chart Mitte, Tages-Fokus rechts — Bereich anklicken fuer Filter.", "Score left, chart center, day focus right — click a field to filter."))}</p>
-              </div>
-              <div class="toolbar">
-                <button id="langBtn" type="button">${lang === "de" ? "EN" : "DE"}</button>
               </div>
             </div>
           </div>
