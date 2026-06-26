@@ -2667,9 +2667,9 @@
       );
     }
 
-    function influenceAccordion(kind, headline, body, question, astroLine) {
+    function influenceAccordion(kind, headline, body, question, astroLine, expanded = false) {
       return `
-        <details class="reading-card reading-accordion ${kind}">
+        <details class="reading-card reading-accordion ${kind}"${expanded ? " open" : ""}>
           <summary>
             <span class="acc-head">
               <span class="acc-field">${T(headline)}</span>
@@ -2728,18 +2728,19 @@
       );
     }
 
-    function renderTransitEntryCard(entry, profile, model) {
+    function renderTransitEntryCard(entry, profile, model, expanded = false) {
       const t = entry.transit;
       return influenceAccordion(
         entry.kind,
         entry.headline || transitHeadline(t),
         gateInfluenceShort(profile, t.gate, t, model),
         transitReadingQuestion(profile, t, model),
-        transitAstroLine(t)
+        transitAstroLine(t),
+        expanded
       );
     }
 
-    function renderChannelEntryCard(entry, profile) {
+    function renderChannelEntryCard(entry, profile, expanded = false) {
       const ch = entry.channel;
       const body = entry.impactKey === "channelTransit"
         ? channelInfluenceText(profile, ch)
@@ -2752,7 +2753,8 @@
         entry.headline,
         body,
         channelReadingQuestion(profile, ch),
-        channelAstroLine(ch)
+        channelAstroLine(ch),
+        expanded
       );
     }
 
@@ -2781,7 +2783,7 @@
       return impactContentBlock(body, `<div class="acc-astro-stack">${refs}</div>`, null);
     }
 
-    function renderCollapsedOpenConditioning(items, profile, model) {
+    function renderCollapsedOpenConditioning(items, profile, model, expanded = false) {
       const byCenter = {};
       items.forEach(e => {
         const c = e.transit.center || gateCenter(e.transit.gate);
@@ -2789,7 +2791,7 @@
         byCenter[c].push(e);
       });
       return Object.entries(byCenter).map(([center, group]) => {
-        if (group.length === 1) return renderTransitEntryCard(group[0], profile, model);
+        if (group.length === 1) return renderTransitEntryCard(group[0], profile, model, expanded);
         const centerLabel = T(CENTER_LABELS[center]);
         const body = BL(
           `${group.length} Transite aktivieren dein offenes ${centerLabel}. ${NOT_SELF_QUESTIONS[center].de}`,
@@ -2800,26 +2802,26 @@
       }).join("");
     }
 
-    function renderImpactEntries(impactKey, items, profile, model) {
+    function renderImpactEntries(impactKey, items, profile, model, expanded = false) {
       if (!items.length) return "";
       if (impactKey === "borrowedDefinition") {
         return renderCollapsedBorrowedDefinition(items, profile, model);
       }
       if (impactKey === "openConditioning" && items.length >= 2) {
-        return renderCollapsedOpenConditioning(items, profile, model);
+        return renderCollapsedOpenConditioning(items, profile, model, expanded);
       }
       return items.map(e => e.channel
-        ? renderChannelEntryCard(e, profile)
-        : renderTransitEntryCard(e, profile, model)
+        ? renderChannelEntryCard(e, profile, expanded)
+        : renderTransitEntryCard(e, profile, model, expanded)
       ).join("");
     }
 
-    function impactSubgroup(impactKey, items, profile, model) {
+    function impactSubgroup(impactKey, items, profile, model, expanded = false) {
       const meta = IMPACT_META[impactKey] || IMPACT_META.definedNuance;
       const countLabel = String(items.length);
-      const bodyHtml = renderImpactEntries(impactKey, items, profile, model);
+      const bodyHtml = renderImpactEntries(impactKey, items, profile, model, expanded);
       return `
-        <details class="reading-card reading-accordion reading-subgroup ${meta.kind}">
+        <details class="reading-card reading-accordion reading-subgroup ${meta.kind}"${expanded ? " open" : ""}>
           <summary>
             <span class="acc-head">
               <span class="acc-icon">${meta.icon}</span>
@@ -3346,7 +3348,7 @@
       return null;
     }
 
-    function renderLuminariesForDim(profile, model, dimKey, luminaries) {
+    function renderLuminariesForDim(profile, model, dimKey, luminaries, expanded = false) {
       const { sun, earth, moon } = luminaries;
       const parts = [];
 
@@ -3356,7 +3358,8 @@
           BL("Kollektiv · Sonne", "Collective · Sun"),
           luminaryInfluenceText(profile, sun, model, "sun"),
           luminaryQuestion(profile, sun, model, "sun"),
-          transitAstroLine(sun)
+          transitAstroLine(sun),
+          expanded
         ));
       }
 
@@ -3366,7 +3369,8 @@
           BL("Erdung · Erde", "Grounding · Earth"),
           luminaryInfluenceText(profile, earth, model, "earth"),
           luminaryQuestion(profile, earth, model, "earth"),
-          transitAstroLine(earth)
+          transitAstroLine(earth),
+          expanded
         ));
       }
 
@@ -3376,7 +3380,8 @@
           BL("Koerper & Stimmung · Mond", "Body & mood · Moon"),
           luminaryInfluenceText(profile, moon, model, "moon"),
           luminaryQuestion(profile, moon, model, "moon"),
-          transitAstroLine(moon)
+          transitAstroLine(moon),
+          expanded
         ));
       }
 
@@ -3406,7 +3411,7 @@
       });
       const subgroups = IMPACT_ORDER
         .filter(k => byImpact[k]?.length)
-        .map(k => impactSubgroup(k, byImpact[k], profile, model));
+        .map(k => impactSubgroup(k, byImpact[k], profile, model, openDefault));
       const kind = entries.length ? groupAccentKind(entries) : "transit";
       const bodyParts = [];
       if (tageskern) bodyParts.push(tageskern);
@@ -3489,6 +3494,7 @@
       });
       const dims = selectedDimension ? [selectedDimension] : DIMENSION_ORDER;
       const groups = dims.map((dimKey, idx) => {
+        const openDefault = selectedDimension ? true : idx < 2;
         const entries = buckets[dimKey] || [];
         const designIntro = !selectedDimension && dimKey === "energy" ? `
           <div class="focus-tageskern">
@@ -3501,10 +3507,11 @@
                 `${T(profile.subtitle)}. ${T(profile.authority)} · ${T(profile.strategy)}.`
               ),
               BL("Was gehoert fest zu dir?", "What is permanently yours?"),
-              `${chart.gateCount} ${T(BL("Tore", "gates"))} · ${chart.centerCount} ${T(BL("Zentren", "centers"))}`
+              `${chart.gateCount} ${T(BL("Tore", "gates"))} · ${chart.centerCount} ${T(BL("Zentren", "centers"))}`,
+              openDefault
             )}
           </div>` : "";
-        return dimensionFocusGroup(dimKey, entries, profile, model, baseline, designIntro, selectedDimension ? true : idx < 2);
+        return dimensionFocusGroup(dimKey, entries, profile, model, baseline, designIntro, openDefault);
       });
       return `
         <section class="panel focus-panel">
@@ -3538,9 +3545,9 @@
       const buckets = collectTransitEntries(profile, model, new Set(["sun", "earth", "moon"]));
       const dims = selectedDimension ? [selectedDimension] : DIMENSION_ORDER;
       const groups = dims.map((dimKey, idx) => {
-        const tageskern = renderLuminariesForDim(profile, model, dimKey, luminaries);
-        const entries = buckets[dimKey] || [];
         const openDefault = selectedDimension ? true : idx < 2;
+        const tageskern = renderLuminariesForDim(profile, model, dimKey, luminaries, openDefault);
+        const entries = buckets[dimKey] || [];
         return dimensionFocusGroup(dimKey, entries, profile, model, baseline, tageskern, openDefault);
       });
 
@@ -4150,6 +4157,15 @@
       });
       const clearDimFilter = document.getElementById("clearDimFilter");
       if (clearDimFilter) clearDimFilter.addEventListener("click", () => { selectedDimension = null; renderApp(); });
+
+      const syncFocusDimensionNested = details => {
+        if (!details.open) return;
+        details.querySelectorAll("details").forEach(nested => { nested.open = true; });
+      };
+      document.querySelectorAll(".focus-dimension").forEach(details => {
+        syncFocusDimensionNested(details);
+        details.addEventListener("toggle", () => syncFocusDimensionNested(details));
+      });
 
       const onDateChange = value => {
         if (!value) return;
