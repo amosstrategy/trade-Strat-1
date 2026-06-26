@@ -734,6 +734,81 @@
       align-items: start;
     }
 
+    .map-chart-col {
+      display: grid;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .day-overview-strip {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .day-overview-strip--single {
+      grid-template-columns: 1fr;
+      max-width: 420px;
+    }
+
+    .day-overview-strip .focus-overview {
+      margin-bottom: 0;
+      height: 100%;
+    }
+
+    .day-overview-strip .focus-overview-head {
+      padding: 8px 10px 6px 12px;
+    }
+
+    .day-overview-strip .focus-overview .acc-field {
+      font-size: .84rem;
+    }
+
+    .day-overview-strip .focus-overview .acc-tag {
+      font-size: .68rem;
+    }
+
+    .day-overview-strip .focus-overview .acc-icon {
+      font-size: .95rem;
+    }
+
+    .day-overview-strip .focus-overview-body {
+      padding: 0 12px 10px;
+    }
+
+    .day-overview-strip .focus-overview-body .reading-card-body {
+      margin-top: 8px;
+      font-size: .8rem;
+      line-height: 1.42;
+    }
+
+    .day-overview-strip .daily-mantra-text {
+      margin-top: 8px;
+      font-size: .82rem;
+      line-height: 1.42;
+    }
+
+    .day-overview-strip .focus-mantra.focus-overview,
+    .day-overview-strip .focus-global-warn.focus-overview {
+      box-shadow:
+        0 0 0 1px rgba(132, 220, 198, .12),
+        0 0 14px rgba(132, 220, 198, .14);
+    }
+
+    .day-overview-strip .focus-global-warn.focus-overview {
+      box-shadow:
+        0 0 0 1px rgba(255, 209, 102, .12),
+        0 0 14px rgba(255, 209, 102, .14);
+    }
+
+    @media (max-width: 1120px) {
+      .day-overview-strip {
+        grid-template-columns: 1fr;
+        max-width: none;
+      }
+    }
+
     .score-sidebar {
       display: grid;
       gap: 14px;
@@ -926,6 +1001,50 @@
       line-height: 1.55;
       font-weight: 500;
       color: #e8faf5;
+    }
+
+    .focus-phs {
+      margin-bottom: 12px;
+      padding: 12px 14px 14px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(113, 227, 155, .28);
+      border-left: 4px solid var(--good);
+      background: linear-gradient(135deg, rgba(113, 227, 155, .1), rgba(255, 255, 255, .03));
+    }
+
+    .focus-phs-title {
+      font-size: .95rem;
+      font-weight: 700;
+      color: var(--text);
+      margin: 4px 0 10px;
+    }
+
+    .focus-phs-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 8px;
+      font-size: .88rem;
+      line-height: 1.5;
+      color: var(--text);
+    }
+
+    .focus-phs-list li strong {
+      color: var(--good);
+      font-size: .72rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-right: 6px;
+    }
+
+    .focus-phs-note {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, .08);
+      font-size: .82rem;
+      line-height: 1.45;
+      color: var(--muted);
     }
 
     .focus-section-label {
@@ -1553,10 +1672,97 @@
       nutrition: BL("Tempo, Essen und Aufnahme feiner steuern", "tuning pace, food, and intake")
     };
 
+    const PHS_DETERMINATIONS = {
+      "1-L": {
+        title: BL("Appetite · Consecutive", "Appetite · Consecutive"),
+        how: BL("Eine Sache nach der anderen essen — jeden Bissen zu Ende, bevor etwas Neues kommt.", "Eat one thing at a time — finish each bite before the next food."),
+        what: BL("Einfach und unverarbeitet. Wenig Mischung im Mund.", "Simple, whole foods. Little mixing of flavors in your mouth."),
+        where: BL("Ruhig essen, wenig Ablenkung.", "Eat calmly, with few distractions."),
+        energy: BL("Gezielte Mahlzeiten mit klarem Anfang und Ende. Aktives System: lieber satt essen als den ganzen Tag nibbeln.", "Clear meals with a start and end. Active system: eat to satisfaction at meals rather than grazing all day.")
+      },
+      "1-R": {
+        title: BL("Appetite · Alternating", "Appetite · Alternating"),
+        how: BL("Zwischen verschiedenen Lebensmitteln wechseln — Bissen abwechseln, nicht alles auf einmal mischen.", "Switch between foods — alternate bites rather than mixing everything at once."),
+        what: BL("Abwechslung in der Mahlzeit ist gut. Trotzdem moeglichst einfache Zutaten.", "Variety within a meal works well. Still prefer simple ingredients."),
+        where: BL("Flexibel — auch unterwegs oder zwischendurch.", "Flexible — including on the go or between tasks."),
+        energy: BL("Lieber oefter klein als selten sehr viel. Grosse Portionen auf einmal koennen traege machen.", "Prefer smaller amounts more often than one huge meal. Large portions at once can feel sluggish.")
+      },
+      "2-L": {
+        title: BL("Taste · Open", "Taste · Open"),
+        how: BL("Neues ausprobieren, wenn es gut schmeckt — Geschmack ist dein Kompass.", "Try new foods when they taste good — flavor is your compass."),
+        what: BL("Vielfalt und Experimente sind willkommen.", "Variety and experimentation are welcome."),
+        where: BL("Dort essen, wo du Lust auf Neues hast — z. B. neue Orte oder Kuechen.", "Eat where you feel open to discovery — new places or cuisines."),
+        energy: BL("Wenn der Geschmack stimmt, ist die Portion oft von selbst richtig — auf Ueberessen achten, wenn es nur «okay» schmeckt.", "When taste is right, portion size often sorts itself — watch overeating when food is only «okay».")
+      },
+      "2-R": {
+        title: BL("Taste · Closed", "Taste · Closed"),
+        how: BL("Vorher spueren, ob etwas «deins» ist — du merkst oft frueh, ob es passt.", "Sense beforehand if something is «yours» — you often know early if it fits."),
+        what: BL("Selektiv essen, was wirklich schmeckt. Lieber weniger, aber passend.", "Be selective — eat what truly tastes right. Less but fitting is better."),
+        where: BL("Vertraute Umgebung und bekannte Qualitaet.", "Familiar settings and trusted quality."),
+        energy: BL("Nicht essen «weil es da ist». Weniger ist mehr, wenn der Geschmack nicht stimmt.", "Don't eat «because it's there». Less is more when taste isn't right.")
+      },
+      "3-L": {
+        title: BL("Thirst · Hot", "Thirst · Hot"),
+        how: BL("Warm oder heiss essen und trinken — auch scharf kann gut sein.", "Eat and drink warm or hot — spicy can work well too."),
+        what: BL("Suppen, warme Gerichte, heisse Getraenke.", "Soups, warm dishes, hot drinks."),
+        where: BL("Wo du dich waermen und wohlfuehlen kannst.", "Where you can stay warm and comfortable."),
+        energy: BL("Warme Mahlzeiten koennen Energie geben — zu viel Koffein oder Zucker trotzdem begrenzen.", "Warm meals can boost energy — still limit excess caffeine or sugar.")
+      },
+      "3-R": {
+        title: BL("Thirst · Cold", "Thirst · Cold"),
+        how: BL("Kalt oder Zimmertemperatur — heiss kann zu intensiv sein.", "Cold or room temperature — hot can feel too intense."),
+        what: BL("Kuehle Getraenke, Salate, eher leichte Kueche.", "Cool drinks, salads, lighter food."),
+        where: BL("Kuehl und ruhig — nicht in Hitze oder unter Druck essen.", "Cool and calm — avoid eating in heat or under pressure."),
+        energy: BL("Leichter essen kann wacher machen — bei Muedigkeit nicht automatisch «mehr und schwerer» essen.", "Lighter food can keep you alert — when tired, don't default to «more and heavier» food.")
+      },
+      "4-L": {
+        title: BL("Touch · Calm", "Touch · Calm"),
+        how: BL("In Ruhe essen — allein oder mit ruhiger Gesellschaft.", "Eat in peace — alone or with calm company."),
+        what: BL("Was sich angenehm anfuehlt — Textur und Atmosphaere zaehlen.", "What feels pleasant — texture and atmosphere matter."),
+        where: BL("Keine hitzigen Gespraeche, kein Stress am Tisch.", "No heated talk, no stress at the table."),
+        energy: BL("Ruhige Mahlzeiten stabilisieren — hetziges Essen raubt oft Energie statt sie zu geben.", "Calm meals stabilize — rushed eating often drains rather than fuels.")
+      },
+      "4-R": {
+        title: BL("Touch · Nervous", "Touch · Nervous"),
+        how: BL("Essen darf Bewegung oder leichte Beschaeftigung haben — z. B. spazieren, etwas Kleines tun.", "Eating can include movement or light activity — walking, doing something small."),
+        what: BL("Handliche, einfache Kost passt oft besser als lange Menues.", "Handheld, simple food often beats long sit-down menus."),
+        where: BL("Nicht zwingend stillsitzen — leichte Reize koennen helfen.", "You don't have to sit still — mild stimulation can help."),
+        energy: BL("Kleine Portionen unterwegs statt einer schweren «Sitz-Mahlzeit».", "Small portions on the move rather than one heavy seated feast.")
+      },
+      "5-L": {
+        title: BL("Sound · High", "Sound · High"),
+        how: BL("Mit Geraeuschen essen — Gespraech, Musik, Restaurant, Hintergrundton.", "Eat with sound — conversation, music, restaurant, background noise."),
+        what: BL("Was dir schmeckt, in einer lebendigen Umgebung.", "What tastes good in a lively setting."),
+        where: BL("Nicht zu still — leichte akustische Reize sind ok.", "Not too silent — mild acoustic stimulation is fine."),
+        energy: BL("Soziales Essen kann Energie geben — trotzdem auf echtes Hunger-Signal achten.", "Social eating can energize — still watch for real hunger signals.")
+      },
+      "5-R": {
+        title: BL("Sound · Low", "Sound · Low"),
+        how: BL("Leise oder still essen — wenig Hintergrundlaerm.", "Eat quietly or in silence — little background noise."),
+        what: BL("Einfaches Essen, das nicht viel Aufmerksamkeit braucht.", "Simple food that doesn't demand much attention."),
+        where: BL("Ruhiger Raum, kein Fernseher oder laute Musik.", "Quiet room, no TV or loud music."),
+        energy: BL("Stille beim Essen hilft dem Koerper aufzunehmen — nach dem Essen oft klarer im Kopf.", "Silence while eating helps absorption — often clearer in the head afterward.")
+      },
+      "6-L": {
+        title: BL("Light · Direct", "Light · Direct"),
+        how: BL("Tagsueber essen, idealerweise bei Tageslicht.", "Eat during the day, ideally in daylight."),
+        what: BL("Hauptmahlzeiten eher mittags als spaet nachts.", "Main meals rather at midday than late at night."),
+        where: BL("Fenster, Tageslicht — nicht im Dunkeln essen.", "By a window, daylight — avoid eating in the dark."),
+        energy: BL("Essen am Tag, Energie am Tag — spaetes Schweressen kann den Schlaf und den naechsten Tag bremsen.", "Eat in daylight, energy in daylight — heavy late eating can hurt sleep and the next day.")
+      },
+      "6-R": {
+        title: BL("Light · Indirect", "Light · Indirect"),
+        how: BL("Indirektes Licht — auch abends oder bei gedaempftem Licht.", "Indirect light — including evening or soft lighting."),
+        what: BL("Was leicht verdaulich ist, wenn das Licht nachlasst.", "What is easy to digest as light fades."),
+        where: BL("Kein grelles Mittagssonnenlicht noetig — gedimmte Raeume sind ok.", "No harsh midday sun needed — dimmed rooms are fine."),
+        energy: BL("Abends eher leichter — grosses Essen bei greller Sonne kann unangenehm sein.", "Lighter in the evening — big meals in harsh direct sun can feel off.")
+      }
+    };
+
     const DIMENSION_MANTRAS = {
       expression: BL(
-        "Gut gewaehlte Worte an den Richtigen bringen heute Chancen.",
-        "Well-chosen words to the right person bring opportunities today."
+        "Die richtigen Worte zur richtigen Person — heute oeffnen sich Tueren.",
+        "The right words to the right person — doors open today."
       ),
       energy: BL(
         "Echte Energie fliesst dort, wo du eingeladen bist und es sich im Koerper richtig anfuehlt.",
@@ -1584,7 +1790,7 @@
       invitation: BL("Warte auf das echte Signal — dann ist deine Wirkung am groessten.", "Wait for the real signal — then your impact is greatest."),
       inform: BL("Informiere klar — dann darf deine Energie wirken.", "Inform clearly — then your energy may act."),
       respond: BL("Antworte nur, was wirklich bei dir ankommt.", "Respond only to what truly lands with you."),
-      borrowed: BL("Festgefuehltes ist nicht automatisch richtig — dein Tempo zaehlt.", "What feels solid is not automatically right — your pace matters."),
+      borrowed: BL("Gewohnte Emotionen sind nicht automatisch deine — bleib bei deinem Tempo.", "Familiar emotions aren't automatically yours — stay at your own pace."),
       amplify: BL("Dein Licht darf heute heller scheinen — bleib bei dir.", "Your light may shine brighter today — stay with yourself."),
       quiet: BL("Kleine bewusste Schritte tragen heute weiter als grosse Spruenge.", "Small conscious steps carry further today than big leaps.")
     };
@@ -3451,9 +3657,10 @@
       return { focusDim, body, tag: T(DIMENSIONS[focusDim].label) };
     }
 
-    function renderDailyMantraCard(mantra) {
+    function renderDailyMantraCard(mantra, compact = false) {
+      const compactCls = compact ? " overview-compact" : "";
       return `
-        <div class="reading-card focus-mantra focus-overview" role="region" aria-label="${T(BL("Tages-Mantra", "Daily mantra"))}">
+        <div class="reading-card focus-mantra focus-overview${compactCls}" role="region" aria-label="${T(BL("Tages-Mantra", "Daily mantra"))}">
           <div class="focus-overview-head">
             <span class="acc-head">
               <span class="acc-icon">✦</span>
@@ -3465,6 +3672,37 @@
             <p class="daily-mantra-text">${T(mantra.body)}</p>
           </div>
         </div>`;
+    }
+
+    function renderMindfulnessCard(warning, compact = false) {
+      const compactCls = compact ? " overview-compact" : "";
+      return `
+        <div class="reading-card focus-global-warn focus-overview warning${compactCls}" role="region" aria-label="${T(BL("Achtsamkeit heute", "Mindfulness today"))}">
+          <div class="focus-overview-head">
+            <span class="acc-head">
+              <span class="acc-icon">⚠</span>
+              <span class="acc-field">${T(BL("Achtsamkeit heute", "Mindfulness today"))}</span>
+              <span class="acc-tag">${warning.pressured.length ? warning.pressured.map(c => T(CENTER_LABELS[c])).join(" · ") : T(BL("Allgemein", "General"))}</span>
+            </span>
+          </div>
+          <div class="focus-overview-body">
+            <div class="reading-card-body">${T(warning.body)}</div>
+            ${warning.question && !compact ? `<div class="reading-card-q">${T(warning.question)}</div>` : ""}
+          </div>
+        </div>`;
+    }
+
+    function renderDayOverviewStrip(profile, day, model) {
+      if (!profile.chartComputed) return "";
+      const chart = day.chart;
+      if (showTransits && model.mode !== "chartOnly") {
+        const baseline = computeChartScores(profile, chart);
+        const warning = buildDailyWarning(profile, model);
+        const mantra = buildDailyMantra(profile, model, baseline);
+        return `<div class="day-overview-strip">${renderDailyMantraCard(mantra, true)}${renderMindfulnessCard(warning, true)}</div>`;
+      }
+      const mantra = buildChartMantra(profile, chart);
+      return `<div class="day-overview-strip day-overview-strip--single">${renderDailyMantraCard(mantra, true)}</div>`;
     }
 
     function transitHeadline(transit) {
@@ -3565,6 +3803,48 @@
       return `<div class="focus-tageskern"><div class="focus-section-label">${T(BL("Tageskern", "Day core"))}</div>${parts.join("")}</div>`;
     }
 
+    function resolvePhsDetermination(profile) {
+      const sun = profile.design?.sun;
+      if (!sun?.color || !sun?.tone) return null;
+      const isLeft = sun.tone <= 3;
+      const key = `${sun.color}-${isLeft ? "L" : "R"}`;
+      const data = PHS_DETERMINATIONS[key];
+      if (!data) return null;
+      return { key, color: sun.color, tone: sun.tone, isLeft, ...data };
+    }
+
+    function renderPhsNutritionCard(profile) {
+      const phs = resolvePhsDetermination(profile);
+      if (!phs) {
+        return `<div class="focus-phs"><div class="focus-section-label">${T(BL("PHS · Ernaehrung", "PHS · Nutrition"))}</div><p class="focus-empty">${T(BL("PHS braucht ein gespeichertes Chart mit Design-Sonne (Farbe/Ton).", "PHS needs a saved chart with design sun (color/tone)."))}</p></div>`;
+      }
+      const openSacral = !profile.definedCenters.includes("Sacral");
+      const sacralNote = openSacral ? `<p class="focus-phs-note">${T(BL(
+        "Offenes Sakral: Hunger und «ich koennte noch» kommen oft vom Feld — nicht jeder Ess-Impuls ist deiner. Mehr Energie von aussen fuehlt sich manchmal wie eigener Appetit an.",
+        "Open sacral: hunger and «I could eat more» often come from the field — not every urge to eat is yours. Outside energy can feel like your own appetite."
+      ))}</p>` : "";
+      const definedSacral = profile.definedCenters.includes("Sacral") ? `<p class="focus-phs-note">${T(BL(
+        "Definiertes Sakral: Iss, wenn der Koerper ein klares Ja gibt — nicht aus dem Kopf. Weniger ist noetig, wenn die Antwort Nein ist.",
+        "Defined sacral: eat when the body gives a clear yes — not from the head. Less is needed when the answer is no."
+      ))}</p>` : "";
+      return `
+        <div class="focus-phs">
+          <div class="focus-section-label">${T(BL("PHS · Dein Koerper (fest)", "PHS · Your body (fixed)"))}</div>
+          <div class="focus-phs-title">${T(phs.title)}</div>
+          <ul class="focus-phs-list">
+            <li><strong>${T(BL("Wie", "How"))}</strong>${T(phs.how)}</li>
+            <li><strong>${T(BL("Was", "What"))}</strong>${T(phs.what)}</li>
+            <li><strong>${T(BL("Wo / Wann", "Where / When"))}</strong>${T(phs.where)}</li>
+            <li><strong>${T(BL("Energie & Menge", "Energy & amount"))}</strong>${T(phs.energy)}</li>
+          </ul>
+          ${sacralNote || definedSacral}
+          <p class="focus-phs-note" style="margin-top:8px;opacity:.85">${T(BL(
+            "PHS sagt nicht vegan oder keto — sondern unter welchen Bedingungen dein Koerper aufnimmt. Score unten = heutiges Transit-Wetter.",
+            "PHS doesn't mean vegan or keto — it's the conditions your body digests best under. Score below = today's transit weather."
+          ))}</p>
+        </div>`;
+    }
+
     function dimensionHasActiveInfluences(profile, model, dimKey) {
       if (model.mode === "chartOnly") return false;
       const { sun, earth, moon } = resolveLuminaries(model);
@@ -3590,9 +3870,10 @@
         .map(k => impactSubgroup(k, byImpact[k], profile, model, openDefault));
       const kind = entries.length ? groupAccentKind(entries) : "transit";
       const bodyParts = [];
+      if (dimKey === "nutrition" && profile.chartComputed) bodyParts.push(renderPhsNutritionCard(profile));
       if (tageskern) bodyParts.push(tageskern);
       if (subgroups.length) {
-        bodyParts.push(`<div class="focus-section-label" style="margin-top:${tageskern ? "4px" : "0"}">${T(BL("Einfluesse", "Influences"))}</div>${subgroups.join("")}`);
+        bodyParts.push(`<div class="focus-section-label" style="margin-top:${bodyParts.length ? "4px" : "0"}">${T(BL("Heute · Einfluesse", "Today · influences"))}</div>${subgroups.join("")}`);
       }
       if (!hasContent) {
         bodyParts.push(`<p class="focus-empty">${T(BL(
@@ -3696,7 +3977,6 @@
             BL("Transite aus — Scores und Lesung zeigen deine Chart-Baseline. Bereich links waehlen.", "Transits off — scores and reading show your chart baseline. Select a field on the left.")
           )}
           ${selectedDimension ? `<button type="button" class="btn-text" id="clearDimFilter">${T(BL("← Alle Bereiche", "← All fields"))}</button>` : ""}
-          ${renderDailyMantraCard(buildChartMantra(profile, chart))}
           <div class="reading-cards">${groups.join("")}</div>
         </section>`;
     }
@@ -3718,8 +3998,6 @@
         return `<section class="panel focus-panel">${renderFocusPanelHead(BL("Tages-Fokus", "Day focus"))}<div class="small-card warning">${T(BL("Mond-Transit nicht verfuegbar — Seite neu laden.", "Moon transit unavailable — reload."))}</div></section>`;
       }
 
-      const warning = buildDailyWarning(profile, model);
-      const mantra = buildDailyMantra(profile, model, baseline);
       const buckets = collectTransitEntries(profile, model, new Set(["sun", "earth", "moon"]));
       const dims = selectedDimension ? [selectedDimension] : DIMENSION_ORDER;
       const groups = dims.map((dimKey, idx) => {
@@ -3729,21 +4007,6 @@
         return dimensionFocusGroup(dimKey, entries, profile, model, baseline, tageskern, openDefault);
       });
 
-      const globalWarn = `
-        <div class="reading-card focus-global-warn focus-overview warning" role="region" aria-label="${T(BL("Achtsamkeit heute", "Mindfulness today"))}">
-          <div class="focus-overview-head">
-            <span class="acc-head">
-              <span class="acc-icon">⚠</span>
-              <span class="acc-field">${T(BL("Achtsamkeit heute", "Mindfulness today"))}</span>
-              <span class="acc-tag">${warning.pressured.length ? warning.pressured.map(c => T(CENTER_LABELS[c])).join(" · ") : T(BL("Allgemein", "General"))}</span>
-            </span>
-          </div>
-          <div class="focus-overview-body">
-            <div class="reading-card-body">${T(warning.body)}</div>
-            ${warning.question ? `<div class="reading-card-q">${T(warning.question)}</div>` : ""}
-          </div>
-        </div>`;
-
       return `
         <section class="panel focus-panel">
           ${renderFocusPanelHead(
@@ -3751,8 +4014,6 @@
             BL("Score, Tageskern und Transite pro Bereich — ohne Doppelungen. Sonne, Erde und Mond nur im Tageskern.", "Score, day core and transits per field — no duplicates. Sun, Earth and Moon only in day core.")
           )}
           ${selectedDimension ? `<button type="button" class="btn-text" id="clearDimFilter">${T(BL("← Alle Bereiche", "← All fields"))}</button>` : ""}
-          ${renderDailyMantraCard(mantra)}
-          ${globalWarn}
           <div class="reading-cards">${groups.join("")}</div>
         </section>`;
     }
@@ -4283,12 +4544,15 @@
         ${renderProfileStrip(profile, day, date)}
         <section class="map-grid">
           ${renderScoreSidebar(model, baseline, showTransits, profile)}
-          <section class="panel bodygraph-wrap">
-            <h2>${showTransits ? T(BL("Live Bodygraph", "Live bodygraph")) : T(BL("Dein Bodygraph", "Your bodygraph"))}</h2>
-            ${renderBodygraph()}
-            <div class="chips">${bodygraphChips}</div>
-            <div class="detail-box" id="detailBox"><strong>${T(BL("Klicke ein Tor oder Zentrum.", "Click a gate or center."))}</strong><br>${T(profile.tone)}</div>
-          </section>
+          <div class="map-chart-col">
+            ${renderDayOverviewStrip(profile, day, model)}
+            <section class="panel bodygraph-wrap">
+              <h2>${showTransits ? T(BL("Live Bodygraph", "Live bodygraph")) : T(BL("Dein Bodygraph", "Your bodygraph"))}</h2>
+              ${renderBodygraph()}
+              <div class="chips">${bodygraphChips}</div>
+              <div class="detail-box" id="detailBox"><strong>${T(BL("Klicke ein Tor oder Zentrum.", "Click a gate or center."))}</strong><br>${T(profile.tone)}</div>
+            </section>
+          </div>
           ${renderUnifiedFocusPanel(profile, day, model)}
         </section>
         ${renderProfileExtras(profile, day, date)}`;
@@ -4533,9 +4797,17 @@
           const sunDetail = sunP && sunD
             ? `<br><span style="color:var(--muted)">${T(BL("Sonne Persoenlichkeit", "Personality Sun"))}: G${sunP.gate}.${sunP.line} · ${T(BL("Sonne Design", "Design Sun"))}: G${sunD.gate}.${sunD.line} · ${T(BL("Sonnenbogen", "Solar arc"))}: ${(result.solarArcDegrees ?? ((sunP.longitude - sunD.longitude + 360) % 360)).toFixed(2)}° · Engine v${HDEngine.CHART_ENGINE_VERSION}</span>`
             : "";
+          const phs = sunD?.color && sunD?.tone
+            ? (() => {
+                const isLeft = sunD.tone <= 3;
+                const key = `${sunD.color}-${isLeft ? "L" : "R"}`;
+                const d = PHS_DETERMINATIONS[key];
+                return d ? `<br><span style="color:var(--good)">${T(BL("PHS Determination", "PHS determination"))}: ${T(d.title)}</span>` : "";
+              })()
+            : "";
           const gateSet = new Set(payload.definedGates);
           const nativeChannels = CHANNELS.filter(ch => gateSet.has(ch.a) && gateSet.has(ch.b)).map(ch => ch.key).join(", ");
-          box.innerHTML = `<strong>${T(BL("Vorschau", "Preview"))}</strong><br>${T(payload.subtitle)}<br>${T(payload.authority)} · ${T(payload.strategy)}${sunDetail}<br><span style="color:var(--muted)">${payload.definedGates.length} ${T(BL("Tore", "gates"))}: ${payload.definedGates.join(", ")}</span><br><span style="color:var(--muted)">${T(BL("Definierte Zentren", "Defined centers"))}: ${payload.definedCenters.map(c => T(CENTER_LABELS[c])).join(" · ") || "—"}</span>${nativeChannels ? `<br><span style="color:var(--muted)">${T(BL("Aktive Kanaele", "Active channels"))}: ${nativeChannels}</span>` : ""}`;
+          box.innerHTML = `<strong>${T(BL("Vorschau", "Preview"))}</strong><br>${T(payload.subtitle)}<br>${T(payload.authority)} · ${T(payload.strategy)}${sunDetail}${phs}<br><span style="color:var(--muted)">${payload.definedGates.length} ${T(BL("Tore", "gates"))}: ${payload.definedGates.join(", ")}</span><br><span style="color:var(--muted)">${T(BL("Definierte Zentren", "Defined centers"))}: ${payload.definedCenters.map(c => T(CENTER_LABELS[c])).join(" · ") || "—"}</span>${nativeChannels ? `<br><span style="color:var(--muted)">${T(BL("Aktive Kanaele", "Active channels"))}: ${nativeChannels}</span>` : ""}`;
         }
       });
 
