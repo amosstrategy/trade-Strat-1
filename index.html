@@ -423,15 +423,17 @@
     }
 
     .hero-card.compact-top-card .hero-copy {
-      max-width: 40rem;
+      max-width: 100%;
       margin: 0 auto;
+      width: 100%;
     }
 
     .hero-card.compact-top-card h1 {
-      font-size: clamp(1.05rem, 2vw, 1.35rem);
-      line-height: 1.15;
-      letter-spacing: -.03em;
-      margin: 2px 0 4px;
+      font-size: clamp(1.35rem, 2.9vw + 0.55rem, 2.85rem);
+      line-height: 1.08;
+      letter-spacing: -.045em;
+      margin: 1px 0 3px;
+      text-wrap: balance;
     }
 
     .hero-card.compact-top-card .lead {
@@ -1499,6 +1501,10 @@
       .planet-grid, .penta-members, .penta-core-grid, .penta-layer-grid { grid-template-columns: 1fr; }
       .form-grid { grid-template-columns: 1fr; }
       h1 { font-size: 2.55rem; }
+      .hero-card.compact-top-card h1 {
+        font-size: clamp(1.2rem, 5.2vw, 1.75rem);
+        line-height: 1.12;
+      }
     }
   </style>
 </head>
