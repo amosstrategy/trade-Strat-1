@@ -561,6 +561,19 @@
       }
     }
 
+    @media (min-width: 960px) {
+      .map-sidebar-col .profile-strip.compact-top .profile-card {
+        display: grid;
+      }
+
+      .map-sidebar-col .profile-strip.compact-top .form-grid,
+      .map-sidebar-col .profile-strip.compact-top .profile-summary,
+      .map-sidebar-col .profile-strip.compact-top .tag-row {
+        flex: none;
+        min-width: 0;
+      }
+    }
+
     .eyebrow {
       color: var(--accent);
       letter-spacing: .18em;
@@ -805,6 +818,33 @@
         grid-template-columns: 1fr;
         max-width: none;
       }
+    }
+
+    .map-sidebar-col {
+      display: grid;
+      gap: 10px;
+      align-content: start;
+      position: sticky;
+      top: 12px;
+      min-width: 0;
+    }
+
+    .map-sidebar-col .profile-strip.compact-top {
+      margin-bottom: 0;
+    }
+
+    .map-sidebar-col .profile-strip.compact-top .profile-card {
+      display: grid;
+      gap: 6px;
+    }
+
+    .map-sidebar-col .profile-strip.compact-top .form-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .map-sidebar-col .score-sidebar {
+      position: static;
+      top: auto;
     }
 
     .score-sidebar {
@@ -1408,6 +1448,7 @@
 
     @media (max-width: 1120px) {
       .hero, .grid, .map-grid { grid-template-columns: 1fr; }
+      .map-sidebar-col { position: static; }
       .score-sidebar { position: static; }
       .score-sidebar .score-ring { width: 170px; height: 170px; }
     }
@@ -4126,7 +4167,7 @@
     function renderProfileStrip(profile, day, date) {
       const allProfiles = getAllProfiles();
       return `
-        <section class="panel profile-strip compact-top" style="margin-bottom:10px">
+        <section class="panel profile-strip compact-top">
           <div class="profile-card">
             <div class="form-grid">
               <div class="field">
@@ -4542,10 +4583,12 @@
           </div>
         </section>
         ${renderDateBar(date)}
-        ${renderProfileStrip(profile, day, date)}
         ${renderDayOverviewStrip(profile, day, model)}
         <section class="map-grid">
-          ${renderScoreSidebar(model, baseline, showTransits, profile)}
+          <div class="map-sidebar-col">
+            ${renderProfileStrip(profile, day, date)}
+            ${renderScoreSidebar(model, baseline, showTransits, profile)}
+          </div>
           <section class="panel bodygraph-wrap">
             <h2>${showTransits ? T(BL("Live Bodygraph", "Live bodygraph")) : T(BL("Dein Bodygraph", "Your bodygraph"))}</h2>
             ${renderBodygraph()}
