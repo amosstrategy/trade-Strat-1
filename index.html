@@ -1712,6 +1712,54 @@
       margin: 12px 0 4px;
     }
 
+    .zeit-field-once {
+      margin: 10px 0 14px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(0, 245, 255, .12);
+      background: rgba(0, 245, 255, .04);
+      font-size: .8rem;
+      line-height: 1.55;
+      color: rgba(232, 244, 255, .82);
+    }
+
+    .zeit-field-once em {
+      display: block;
+      margin-top: 8px;
+      font-size: .76rem;
+      color: rgba(167, 177, 194, .75);
+      font-style: normal;
+    }
+
+    .zeit-featured-reading {
+      margin-top: 8px;
+    }
+
+    .zeit-more-transits {
+      margin-top: 12px;
+      border-top: 1px dashed rgba(0, 245, 255, .12);
+      padding-top: 10px;
+    }
+
+    .zeit-more-transits summary {
+      cursor: pointer;
+      font-size: .68rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: rgba(0, 245, 255, .55);
+      user-select: none;
+      list-style: none;
+    }
+
+    .zeit-more-transits summary::-webkit-details-marker { display: none; }
+
+    .zeit-tech-row {
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, .04);
+    }
+
+    .zeit-tech-row:last-child { border-bottom: none; }
+
     .zeit-unified-card {
       border-color: rgba(0, 245, 255, .28);
       background:
@@ -4951,29 +4999,59 @@
         </div>`;
     }
 
-    function renderConcordanceStackItem(c, profile, win, typeId) {
+    function featuredConcordanceCount(typeId) {
+      if (typeId || zeitScope === "day") return 1;
+      return 2;
+    }
+
+    function concordanceEventLabel(c) {
+      if (c.astro.aspect) return `${c.astro.aspect} (${c.astro.angle}°)`;
+      if (c.astro.phase) {
+        return c.astro.phase === "new" ? T(BL("Neumond", "New moon")) : T(BL("Vollmond", "Full moon"));
+      }
+      if (c.astro.ingress) return `${T(BL("Ingress", "Ingress"))}: ${c.astro.ingress}`;
+      if (c.astro.station) return `${T(BL("Station", "Station"))}: ${c.astro.station}`;
+      return c.kind;
+    }
+
+    function renderConcordanceTechRow(c, profile, win) {
       const jdPeak = c.activity?.jd_peak ?? c.jd_ut;
       const hdLines = (c.hd.activations || []).map(a => renderHdActivationLine(a, jdPeak, win)).join("<br>");
       const astroLines = (c.astro.placements || []).map(p =>
         `${p.body}: ${p.sign} ${p.deg_in_sign.toFixed(1)}°`
       ).join("<br>");
-      const label = c.astro.aspect
-        ? `${c.astro.aspect} (${c.astro.angle}°)`
-        : c.astro.phase
-          ? `${c.astro.phase === "new" ? T(BL("Neumond", "New moon")) : T(BL("Vollmond", "Full moon"))}`
-          : c.astro.ingress
-            ? `${T(BL("Ingress", "Ingress"))}: ${c.astro.ingress}`
-            : c.astro.station
-              ? `${T(BL("Station", "Station"))}: ${c.astro.station}`
-              : c.kind;
-      const hdDeut = buildConcordanceHdInterpretation(c, profile);
+      const label = concordanceEventLabel(c);
+      const timeRange = formatActivityRange(c);
+      return `
+        <div class="zeit-tech-row ${c.both_significant ? "match" : ""}">
+          <div class="zeit-tech-layer" style="margin-top:0;padding-top:0;border-top:none">
+            <div class="zeit-tech-meta">
+              <strong>${label}</strong>
+              <span>${c.bodies.join(" / ")}</span>
+              <span class="zeit-tech-time concordance-time">${timeRange}</span>
+            </div>
+            ${hdLines ? `<div class="zeit-tech-hd">${hdLines}</div>` : ""}
+            ${astroLines ? `<div class="zeit-tech-astro">${astroLines}</div>` : ""}
+          </div>
+        </div>`;
+    }
+
+    function renderConcordanceStackItem(c, profile, win, typeId, featured = true) {
+      if (!featured) return renderConcordanceTechRow(c, profile, win);
+      const jdPeak = c.activity?.jd_peak ?? c.jd_ut;
+      const hdLines = (c.hd.activations || []).map(a => renderHdActivationLine(a, jdPeak, win)).join("<br>");
+      const astroLines = (c.astro.placements || []).map(p =>
+        `${p.body}: ${p.sign} ${p.deg_in_sign.toFixed(1)}°`
+      ).join("<br>");
+      const label = concordanceEventLabel(c);
+      const hdDeut = buildConcordanceHdInterpretation(c, profile, { includeField: false, includeAmbient: false });
       const astroDeut = buildConcordanceAstroInterpretation(c);
       const timeRange = formatActivityRange(c);
       const astroInline = astroDeut.short?.trim()
         ? `<div class="zeit-deutung-astro-inline">${renderConcordanceDeutung(astroDeut.short, astroDeut.detail, "inline", T(BL("Astro", "Astro")))}</div>`
         : "";
       return `
-        <div class="zeit-concordance-item zeit-cyber-item ${c.both_significant ? "match" : ""}">
+        <div class="zeit-featured-reading ${c.both_significant ? "match" : ""}">
           <div class="zeit-deutung-block">
             ${renderConcordanceDeutung(hdDeut.short, hdDeut.detail, "primary", T(BL("Deutung", "Interpretation")))}
             ${astroInline}
@@ -4997,31 +5075,47 @@
       if (!items.length) {
         return `<div class="small-card">${T(BL("Keine Events in diesem Fenster.", "No events in this window."))}</div>`;
       }
-      return items.map(c => renderConcordanceStackItem(c, profile, win, typeId)).join("");
+      const featuredN = featuredConcordanceCount(typeId);
+      const featured = items.slice(0, featuredN);
+      const rest = items.slice(featuredN);
+      let html = featured.map(c => renderConcordanceStackItem(c, profile, win, typeId, true)).join("");
+      if (rest.length) {
+        html += `
+          <details class="zeit-more-transits">
+            <summary>${T(BL(`Weitere Schaltmomente (${rest.length})`, `More switch moments (${rest.length})`))}</summary>
+            <div class="zeit-more-transits-body">
+              ${rest.map(c => renderConcordanceStackItem(c, profile, win, typeId, false)).join("")}
+            </div>
+          </details>`;
+      }
+      return html;
     }
 
     function renderZeitUnifiedView(concordances, collectiveGates, win, profile, datasetCount, addedRecords, scopeLabel, formatScopeWindowFn) {
       const unique = dedupeConcordances(concordances);
       const gateText = collectiveGates.length ? collectiveGates.map(g => `G${g}`).join(", ") : "—";
       const typeId = zeitHdType;
-      const stackTitle = typeId
-        ? T(BL("Transits fuer diesen Typ (priorisiert)", "Transits for this type (prioritized)"))
-        : T(BL("Vergleichs-Layer / Konkordanz", "Comparison layer / concordance"));
       const topItem = typeId ? topConcordancesForType(unique, typeId, 1)[0] : null;
       const typeHeroHtml = topItem ? renderTypeHero(typeTransitExample(topItem, typeId)) : "";
       const typeHeroSlot = typeHeroHtml ? `<div class="zeit-type-hero-slot">${typeHeroHtml}</div>` : "";
 
+      const fieldCenters = new Set();
+      const fieldSource = typeId
+        ? topConcordancesForType(unique, typeId, 3)
+        : unique.slice(0, 5);
+      fieldSource.forEach(c => (c.hd.activations || []).forEach(a => { if (a.center) fieldCenters.add(a.center); }));
+      const fieldSummary = weaveFieldConditioning(fieldCentersOrdered([...fieldCenters]), 2);
+      const fieldOnceBlock = fieldSummary
+        ? `<div class="zeit-field-once">${fieldSummary}<em>${T(FIELD_AMBIENT_CLOSER)}</em></div>`
+        : "";
+
       let header = "";
       if (!typeId) {
-        const centers = new Set();
-        unique.forEach(c => (c.hd.activations || []).forEach(a => { if (a.center) centers.add(a.center); }));
-        const fieldSummary = weaveFieldConditioning(fieldCentersOrdered([...centers]), 2);
         header = `
           <strong>${T(BL("Gesamtauswirkung", "Overall impact"))}</strong>
           <span class="zeit-layer-tag">${T(ZEIT_TYPE_ALL.tag)}</span>
           ${T(ZEIT_TYPE_LENS[""].overview)}<br>
           <span style="color:var(--muted);font-size:.78rem;margin-top:8px;display:block">${T(BL("Aktive Tore", "Active gates"))}: ${gateText}</span>
-          ${fieldSummary ? `<span style="color:var(--muted);font-size:.78rem;display:block;margin-top:4px">${fieldSummary}</span>` : ""}
           <span style="color:var(--muted);font-size:.76rem;display:block;margin-top:8px">${T(BL("Typ waehlen fuer konkrete Beispiele (z. B. Projektor: Sprechen leichter).", "Pick a type for concrete examples (e.g. projector: speaking easier)."))}</span>`;
       } else {
         const t = zeitTypeById(typeId);
@@ -5054,8 +5148,8 @@
           <div class="zeit-window-banner">${formatScopeWindowFn(win)}</div>
           ${header}
           ${typeHeroSlot}
+          ${fieldOnceBlock}
           <div class="zeit-concordance-stack">
-            <div class="zeit-layer-tag">${stackTitle}</div>
             ${renderConcordanceStack(unique, profile, win, typeId)}
           </div>
           ${ichBlock}
@@ -5323,7 +5417,9 @@
       return `<div class="concordance-deutung concordance-deutung--${tier}"><span class="concordance-deutung-tag">${tag}</span><div class="concordance-deutung-body">${shortText || "—"}</div>${more}</div>`;
     }
 
-    function buildConcordanceHdInterpretation(c, profile) {
+    function buildConcordanceHdInterpretation(c, profile, opts = {}) {
+      const includeField = opts.includeField !== false;
+      const includeAmbient = opts.includeAmbient !== false;
       const acts = c.hd.activations || [];
       if (!acts.length) {
         return {
@@ -5363,8 +5459,9 @@
 
       const gates = acts.map(a => `G${a.gate}.${a.line}`);
       const channels = [...new Set(acts.map(a => a.channel).filter(Boolean))];
-      const fieldText = weaveFieldConditioning(centers);
-      const ambientCloser = T(FIELD_AMBIENT_CLOSER);
+      const fieldText = includeField ? weaveFieldConditioning(centers) : "";
+      const ambientCloser = includeAmbient ? T(FIELD_AMBIENT_CLOSER) : "";
+      const fieldSuffix = [fieldText, ambientCloser].filter(Boolean).join(" ");
 
       let short;
       if (acts.length === 1) {
@@ -5372,13 +5469,13 @@
         const planet = zeitBodyLabel(a.body);
         const gateName = GATE_NAMES[a.gate] ? T(GATE_NAMES[a.gate]) : `G${a.gate}`;
         short = T(BL(
-          `${planet} auf Tor ${a.gate} (${gateName}) — exakter Schaltmoment im Kollektiv-Feld. ${fieldText || ""} ${ambientCloser}`,
-          `${planet} on gate ${a.gate} (${gateName}) — exact switch moment in the collective field. ${fieldText || ""} ${ambientCloser}`
+          `${planet} auf Tor ${a.gate} (${gateName}) — exakter Schaltmoment im Kollektiv-Feld.${fieldSuffix ? ` ${fieldSuffix}` : ""}`,
+          `${planet} on gate ${a.gate} (${gateName}) — exact switch moment in the collective field.${fieldSuffix ? ` ${fieldSuffix}` : ""}`
         ));
       } else if (c.kind === "lunation" || (acts.length === 2 && acts.some(a => a.body === "Sun") && acts.some(a => a.body === "Moon"))) {
         short = T(BL(
-          `Sonne und Mond im selben Moment — Tore ${gates.join(" und ")}. Emotionaler Kollektiv-Takt: Stimmung im Raum wird lauter, auch wenn dein Solarplexus definiert ist (zweite Welle obendrauf). ${fieldText} ${ambientCloser}`,
-          `Sun and Moon in the same moment — gates ${gates.join(" and ")}. Collective emotional beat: mood in the room gets louder, even if your solar plexus is defined (a second wave on top). ${fieldText} ${ambientCloser}`
+          `Sonne und Mond im selben Moment — Tore ${gates.join(" und ")}. Emotionaler Kollektiv-Takt: Stimmung im Raum wird lauter, auch wenn dein Solarplexus definiert ist (zweite Welle obendrauf).${fieldSuffix ? ` ${fieldSuffix}` : ""}`,
+          `Sun and Moon in the same moment — gates ${gates.join(" and ")}. Collective emotional beat: mood in the room gets louder, even if your solar plexus is defined (a second wave on top).${fieldSuffix ? ` ${fieldSuffix}` : ""}`
         ));
       } else {
         const bodies = acts.map(a => zeitBodyLabel(a.body)).join(" und ");
@@ -5386,8 +5483,8 @@
           ? T(BL(`Kanal ${channels[0]} flackert mit —`, `Channel ${channels[0]} flickers along —`))
           : "";
         short = T(BL(
-          `${bodies}, ein Moment: ${gates.join(" trifft ")}. ${chHint} ${fieldText} ${ambientCloser}`,
-          `${bodies}, one moment: ${gates.join(" meets ")}. ${chHint} ${fieldText} ${ambientCloser}`
+          `${bodies}, ein Moment: ${gates.join(" trifft ")}. ${chHint}${fieldSuffix ? ` ${fieldSuffix}` : ""}`,
+          `${bodies}, one moment: ${gates.join(" meets ")}. ${chHint}${fieldSuffix ? ` ${fieldSuffix}` : ""}`
         ));
       }
 
