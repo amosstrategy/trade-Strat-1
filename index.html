@@ -1636,7 +1636,8 @@
       transits: "hd-transit-cache-v2",
       overrides: "hd-profile-overrides-v1",
       profileDb: "hd-profile-db-v2",
-      penta: "hd-penta-members-v1"
+      penta: "hd-penta-members-v1",
+      concordance: "hd-concordance-v1"
     };
 
     const T = value => typeof value === "string" ? value : (value[lang] || value.de);
@@ -2458,6 +2459,79 @@
     };
     const loadTransitCache = () => loadJSON(STORAGE_KEYS.transits, {});
     const saveTransitCache = cache => saveJSON(STORAGE_KEYS.transits, cache);
+
+    const CONCORDANCE_STORE_VERSION = 1;
+    const CONCORDANCE_MAX_RECORDS = 5000;
+    const emptyConcordanceStore = () => ({ version: CONCORDANCE_STORE_VERSION, records: {} });
+    const loadConcordanceStore = () => {
+      const raw = loadJSON(STORAGE_KEYS.concordance, null);
+      return raw?.records && typeof raw.records === "object" ? raw : emptyConcordanceStore();
+    };
+    const saveConcordanceStore = store => saveJSON(STORAGE_KEYS.concordance, store);
+    const concordanceRecordFromView = (c, meta) => {
+      const rec = {
+        event_key: c.event_key,
+        jd_ut: c.jd_ut,
+        jd_iso: c.jd_iso,
+        kind: c.kind,
+        bodies: c.bodies,
+        hd: { event_key: c.hd.event_key, activations: c.hd.activations, natal_profiles: {} },
+        astro: c.astro,
+        both_significant: c.both_significant,
+        _persist: {
+          saved_at: new Date().toISOString(),
+          window_scope: meta.scope,
+          window_date: meta.dateISO,
+          chart_id: meta.chartId || null
+        }
+      };
+      if (meta.chartId && c.hd.natal?.length) rec.hd.natal_profiles[meta.chartId] = c.hd.natal;
+      return rec;
+    };
+    const mergeConcordanceRecords = (existing, incoming) => ({
+      ...existing,
+      jd_iso: incoming.jd_iso || existing.jd_iso,
+      both_significant: incoming.both_significant,
+      hd: {
+        event_key: incoming.hd.event_key,
+        activations: incoming.hd.activations,
+        natal_profiles: { ...(existing.hd?.natal_profiles || {}), ...(incoming.hd.natal_profiles || {}) }
+      },
+      astro: incoming.astro,
+      _persist: {
+        ...existing._persist,
+        saved_at: incoming._persist.saved_at,
+        window_scope: incoming._persist.window_scope,
+        window_date: incoming._persist.window_date,
+        chart_id: incoming._persist.chart_id,
+        views: (existing._persist?.views || 0) + 1
+      }
+    });
+    const persistConcordanceBatch = (concordances, meta) => {
+      if (!concordances.length) return 0;
+      const store = loadConcordanceStore();
+      let added = 0;
+      concordances.forEach(c => {
+        const rec = concordanceRecordFromView(c, meta);
+        if (!store.records[c.event_key]) added++;
+        store.records[c.event_key] = store.records[c.event_key]
+          ? mergeConcordanceRecords(store.records[c.event_key], rec)
+          : rec;
+      });
+      const keys = Object.keys(store.records);
+      if (keys.length > CONCORDANCE_MAX_RECORDS) {
+        keys
+          .map(k => store.records[k])
+          .sort((a, b) => a.jd_ut - b.jd_ut)
+          .slice(0, keys.length - CONCORDANCE_MAX_RECORDS)
+          .forEach(r => delete store.records[r.event_key]);
+      }
+      saveConcordanceStore(store);
+      return added;
+    };
+    const concordanceExportArray = () =>
+      Object.values(loadConcordanceStore().records).sort((a, b) => a.jd_ut - b.jd_ut);
+    const concordanceRecordCount = () => Object.keys(loadConcordanceStore().records).length;
     const transitsFor = date => {
       const key = isoDate(date);
       const cache = loadTransitCache();
@@ -4370,6 +4444,12 @@
       } catch (err) {
         return `<section class="panel warning">${T(BL("Berechnung fehlgeschlagen", "Calculation failed"))}: ${err.message}</section>`;
       }
+      const addedRecords = persistConcordanceBatch(concordances, {
+        scope: zeitScope,
+        dateISO: isoDate(date),
+        chartId: profile.chartComputed ? profile.id : null
+      });
+      const datasetCount = concordanceRecordCount();
       const collectiveGates = collectiveGatesForWindow(concordances);
       const scopeLabel = zeitScope === "week"
         ? T(BL("Woche", "Week"))
@@ -4406,6 +4486,7 @@
           </div>
           <section class="concordance-panel">
             <h3 style="font-size:.82rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)">${T(BL("Vergleichs-Layer / Konkordanz", "Comparison layer / concordance"))}</h3>
+            <div class="small-card" style="margin-bottom:10px;color:var(--muted);font-size:.78rem">${datasetCount} ${T(BL("Events im lokalen Konkordanz-Datensatz", "events in local concordance dataset"))}${addedRecords ? ` · +${addedRecords} ${T(BL("neu", "new"))}` : ""} · ${T(BL("Export unter Admin", "Export under Admin"))}</div>
             ${renderConcordanceRows(concordances)}
           </section>
         </section>`;
@@ -4628,18 +4709,20 @@
       const records = listProfileRecords(PROFILES);
       const cache = loadTransitCache();
       const cacheDates = Object.keys(cache).sort((a, b) => b.localeCompare(a));
+      const concordanceCount = concordanceRecordCount();
       const withChart = records.filter(r => ProfileStore.chartIsValid(r)).length;
       const profiles = getAllProfiles();
 
       return `
         <section class="panel" id="adminPanel">
           <h2>${T(BL("Admin Console", "Admin console"))}</h2>
-          <p style="color:var(--muted);line-height:1.5;margin-bottom:16px">${T(BL("Lokale Eintraege in diesem Browser verwalten — Profile, Penta-Mitglieder, Transit-Cache.", "Manage local entries in this browser — profiles, Penta members, transit cache."))}</p>
+          <p style="color:var(--muted);line-height:1.5;margin-bottom:16px">${T(BL("Lokale Eintraege in diesem Browser verwalten — Profile, Penta-Mitglieder, Transit-Cache, Konkordanz-Datensatz.", "Manage local entries in this browser — profiles, Penta members, transit cache, concordance dataset."))}</p>
 
           <div class="admin-stats">
             <div class="admin-stat"><strong>${records.length}</strong><span>${T(BL("Profile", "Profiles"))}</span></div>
             <div class="admin-stat"><strong>${withChart}</strong><span>${T(BL("Mit Chart", "With chart"))}</span></div>
             <div class="admin-stat"><strong>${cacheDates.length}</strong><span>${T(BL("Cache-Tage", "Cache days"))}</span></div>
+            <div class="admin-stat"><strong>${concordanceCount}</strong><span>${T(BL("Konkordanz", "Concordance"))}</span></div>
           </div>
 
           <h3 style="font-size:.85rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin:0 0 8px">${T(BL("Profile", "Profiles"))}</h3>
@@ -4695,6 +4778,16 @@
           </div>
 
           <div class="admin-section">
+            <h3 style="font-size:.85rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin:0 0 8px">${T(BL("Konkordanz-Datensatz", "Concordance dataset"))}</h3>
+            <p style="color:var(--muted);line-height:1.5;margin:0 0 10px;font-size:.85rem">${T(BL("Strukturierte Ephemeris-Events aus dem Heute-Reiter — eine Zeile pro Event fuer Fusions-/Training-Export.", "Structured ephemeris events from the Today tab — one row per event for fusion/training export."))}</p>
+            <div class="toolbar" style="margin-bottom:12px">
+              <button type="button" id="adminExportConcordance">${T(BL("Konkordanz exportieren", "Export concordance"))}</button>
+              <button type="button" class="danger" id="adminClearConcordance">${T(BL("Datensatz leeren", "Clear dataset"))}</button>
+            </div>
+            ${concordanceCount ? `<div class="small-card">${concordanceCount} ${T(BL("Events gespeichert", "events stored"))}</div>` : `<div class="small-card">${T(BL("Noch leer — Heute-Reiter oeffnen zum Sammeln.", "Empty — open Today tab to collect."))}</div>`}
+          </div>
+
+          <div class="admin-section">
             <h3 style="font-size:.85rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin:0 0 8px">${T(BL("Backup", "Backup"))}</h3>
             <div class="toolbar">
               <button type="button" id="adminExportDb">${T(BL("Profil-DB exportieren", "Export profile DB"))}</button>
@@ -4706,7 +4799,7 @@
           <div class="admin-section">
             <div class="small-card admin-danger">
               <strong>${T(BL("Gefahrenzone", "Danger zone"))}</strong>
-              <p style="color:var(--muted);line-height:1.5;margin:10px 0">${T(BL("Setzt alle Standard-Profile zurueck und entfernt Custom-Profile, Transit-Cache und Penta-Auswahl.", "Resets all built-in profiles and removes custom profiles, transit cache, and Penta selection."))}</p>
+              <p style="color:var(--muted);line-height:1.5;margin:10px 0">${T(BL("Setzt alle Standard-Profile zurueck und entfernt Custom-Profile, Transit-Cache, Konkordanz-Datensatz und Penta-Auswahl.", "Resets all built-in profiles and removes custom profiles, transit cache, concordance dataset, and Penta selection."))}</p>
               <button type="button" class="danger" id="adminResetAll">${T(BL("Alle App-Daten zuruecksetzen", "Reset all app data"))}</button>
             </div>
           </div>
@@ -5082,6 +5175,29 @@
           renderApp();
         });
 
+        const adminExportConcordance = document.getElementById("adminExportConcordance");
+        if (adminExportConcordance) adminExportConcordance.addEventListener("click", () => {
+          const payload = {
+            version: CONCORDANCE_STORE_VERSION,
+            exported_at: new Date().toISOString(),
+            records: concordanceExportArray()
+          };
+          const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `hd-concordance-${isoDate(today())}.json`;
+          a.click();
+          URL.revokeObjectURL(url);
+        });
+
+        const adminClearConcordance = document.getElementById("adminClearConcordance");
+        if (adminClearConcordance) adminClearConcordance.addEventListener("click", () => {
+          if (!confirm(T(BL("Konkordanz-Datensatz loeschen?", "Delete concordance dataset?")))) return;
+          localStorage.removeItem(STORAGE_KEYS.concordance);
+          renderApp();
+        });
+
         const adminExportDb = document.getElementById("adminExportDb");
         if (adminExportDb) adminExportDb.addEventListener("click", () => {
           const snapshot = ProfileStore.getDbSnapshot?.() || loadJSON(STORAGE_KEYS.profileDb, {});
@@ -5118,6 +5234,7 @@
           if (!confirm(T(BL("Wirklich ALLE App-Daten in diesem Browser loeschen?", "Really delete ALL app data in this browser?")))) return;
           Object.keys(ProfileStore.getDbSnapshot?.() || loadJSON(STORAGE_KEYS.profileDb, {})).forEach(id => ProfileStore.clearPerson(id, PROFILES));
           localStorage.removeItem(STORAGE_KEYS.transits);
+          localStorage.removeItem(STORAGE_KEYS.concordance);
           localStorage.removeItem(STORAGE_KEYS.penta);
           Object.keys(pentaOn).forEach(k => delete pentaOn[k]);
           Object.assign(pentaOn, { daniel: true, patrick: true, paradise: true });
