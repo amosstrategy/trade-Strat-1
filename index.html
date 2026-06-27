@@ -4521,6 +4521,113 @@
       Root: BL("Druck, Tempo, Adrenalin", "Pressure, pace, adrenaline")
     };
 
+    const CENTER_FIELD_CONDITIONING = {
+      Head: {
+        emotion: BL("Neugier, mentaler Druck, unbeantwortete Fragen", "Curiosity, mental pressure, unanswered questions"),
+        feels: BL(
+          "Im Umfeld wirkt alles plötzlich fragwürdiger — News, Gespräche, Scrollen ziehen mit. Du musst keinen offenen Kopf haben, um mitzudenken, was gerade im Raum kreist.",
+          "The environment suddenly feels more questioning — news, talk, scrolling pull you along. You don't need an open head to think along with what's circling in the room."
+        )
+      },
+      Ajna: {
+        emotion: BL("Meinungsdruck, Fixierung, „Ich muss das verstehen“", "Opinion pressure, fixation, \"I must get this\""),
+        feels: BL(
+          "Alle wollen gerade Recht haben oder Klarheit — auch du kannst dich fester an eine Sicht klammern, die eigentlich aus dem Kollektiv kam.",
+          "Everyone wants to be right or clear right now — you may cling to a view that actually came from the collective."
+        )
+      },
+      Throat: {
+        emotion: BL("Ausdrucksdrang, Sichtbarkeit, „Jetzt reden / jetzt handeln“", "Urge to express, visibility, \"speak now / act now\""),
+        feels: BL(
+          "Die Luft will Ausdruck — posten, sagen, machen. Konditionierung heißt hier: du fühlst Druck zu sprechen, auch wenn niemand dich wirklich gefragt hat.",
+          "The air wants expression — post, say, do. Conditioning here: you feel pressure to speak even when no one truly asked."
+        )
+      },
+      G: {
+        emotion: BL("Identität, Richtung, „Wohin gehöre ich?“", "Identity, direction, \"where do I belong?\""),
+        feels: BL(
+          "Plötzlich vergleichst du dich oder suchst Halt — oft weil das Feld Richtungs-Fragen in die Luft legt, nicht weil dein Kompass wirklich kippt.",
+          "Suddenly you compare or seek footing — often because the field puts direction questions in the air, not because your compass truly shifted."
+        )
+      },
+      Ego: {
+        emotion: BL("Wille, Wert, Versprechen, Kontrolle", "Will, worth, promises, control"),
+        feels: BL(
+          "Im Raum geht es um Macht und Commitment — auch wer kein offenes Ego hat, kann sich plötzlich beweisen wollen, weil das Umfeld das Thema laut spielt.",
+          "The room turns to power and commitment — even without an open ego, you may suddenly want to prove yourself because the environment plays that theme loud."
+        )
+      },
+      Spleen: {
+        emotion: BL("Angst, Sicherheit, Instinkt, Gesundheits-Sensibilität", "Fear, safety, instinct, health sensitivity"),
+        feels: BL(
+          "Feinere Alarme im Körper — „passt nicht“, „jetzt“, „vorsicht“. Das kann aus dem Feld kommen: andere sind nervös, du spürst es im Bauch.",
+          "Finer body alarms — \"doesn't fit\", \"now\", \"careful\". It may come from the field: others are nervous, you feel it in the gut."
+        )
+      },
+      Solar: {
+        emotion: BL("Stimmung, Sehnsucht, Reizbarkeit, emotionale Hochs und Tiefs", "Mood, longing, irritability, emotional highs and lows"),
+        feels: BL(
+          "Die emotionale Luft ist dichter — Freude, Drama oder Schwere fühlen sich normal an, weil alle mitten drin sind. Mit definiertem Solarplexus mischst du oft Umfeld-Welle und eigene Welle; offen verstärkst du nur schneller.",
+          "Emotional air gets thicker — joy, drama, or heaviness feel normal because everyone's in it. With a defined solar plexus you often blend field wave and your own; open, you amplify faster."
+        )
+      },
+      Sacral: {
+        emotion: BL("Arbeitsenergie, Lust, Ausdauer, körperliches Ja/Nein", "Work energy, desire, stamina, bodily yes/no"),
+        feels: BL(
+          "Das Kollektiv ist im „Go“-Modus — oder im Absturz. Als Generator/MG spürst du das am Sakral: plötzlich Energie für alles oder Leere, manchmal vom Raum, nicht von dir.",
+          "The collective is in \"go\" mode — or in crash. As a generator/MG you feel it in the sacral: sudden energy for everything or emptiness, sometimes from the room, not from you."
+        )
+      },
+      Root: {
+        emotion: BL("Stress, Tempo, Adrenalin, „Es muss jetzt“", "Stress, pace, adrenaline, \"it must be now\""),
+        feels: BL(
+          "Hetz-Druck liegt in der Luft — Deadlines, News, andere in Eile. Auch mit definierter Wurzel: du spürst fremdes Tempo und kannst es für deins halten.",
+          "Rush pressure hangs in the air — deadlines, news, others hurrying. Even with a defined root: you sense foreign pace and may mistake it for yours."
+        )
+      }
+    };
+
+    const FIELD_AMBIENT_CLOSER = BL(
+      "Kurz: indirekte Konditionierung über Umfeld, Medien und Nähe — nicht nur über offene Zentren. Beobachte, ob der Impuls wirklich von dir kommt.",
+      "In short: indirect conditioning through environment, media, and closeness — not only through open centers. Notice whether the impulse truly comes from you."
+    );
+
+    function fieldCentersOrdered(centers) {
+      const priority = ["Solar", "Root", "Sacral", "Spleen", "Ego", "Throat", "G", "Ajna", "Head"];
+      return [...new Set(centers)].sort((a, b) => {
+        const ia = priority.indexOf(a);
+        const ib = priority.indexOf(b);
+        return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+      });
+    }
+
+    function weaveFieldConditioning(centers, maxCenters = 2) {
+      const picked = fieldCentersOrdered(centers).slice(0, maxCenters);
+      if (!picked.length) return "";
+      return picked.map(cn => {
+        const f = CENTER_FIELD_CONDITIONING[cn];
+        const label = T(CENTER_LABELS[cn] || cn);
+        if (!f) return `${label}: ${CENTER_MOOD[cn] ? T(CENTER_MOOD[cn]) : ""}`;
+        return T(BL(
+          `${label} — ${f.emotion.de}. So wirkt's im Feld: ${f.feels.de}`,
+          `${label} — ${f.emotion.en}. In the field it feels like: ${f.feels.en}`
+        ));
+      }).join(" ");
+    }
+
+    function fieldConditioningDetail(centers) {
+      const lines = fieldCentersOrdered(centers).map(cn => {
+        const f = CENTER_FIELD_CONDITIONING[cn];
+        const label = T(CENTER_LABELS[cn] || cn);
+        const desc = CENTER_DESCRIPTIONS[cn] ? T(CENTER_DESCRIPTIONS[cn]) : "";
+        const notSelf = NOT_SELF_QUESTIONS[cn] ? T(NOT_SELF_QUESTIONS[cn]) : "";
+        if (!f) return `<strong>${label}</strong><br>${desc}`;
+        return `<strong>${label}</strong> · ${T(f.emotion)}<br>${T(f.feels)}<br>${desc}${notSelf ? `<br><em>${T(BL("Frage", "Question"))}: ${notSelf}</em>` : ""}`;
+      });
+      lines.push(`<em>${T(FIELD_AMBIENT_CLOSER)}</em>`);
+      return lines.join("<br><br>");
+    }
+
     const STATION_MEANINGS = {
       retrograde: BL(
         "Der Planet dreht figurativ auf dem Absatz — Themen werden zurückgespult, überprüft, manchmal auch nervig verzögert.",
@@ -4571,6 +4678,8 @@
         };
       }
 
+      const centers = [...new Set(acts.map(a => a.center).filter(Boolean))];
+
       const detailParts = acts.map(a => {
         const planet = zeitBodyLabel(a.body);
         const gateName = GATE_NAMES[a.gate] ? T(GATE_NAMES[a.gate]) : `G${a.gate}`;
@@ -4591,35 +4700,37 @@
           : `<strong>${T(BL("Ich-Schicht", "Personal layer"))}</strong> · Kanal ${ch.key}`);
       });
 
+      if (centers.length) {
+        detailParts.push(`<strong>${T(BL("Feld & Konditionierung", "Field & conditioning"))}</strong><br>${fieldConditioningDetail(centers)}`);
+      }
+
       const gates = acts.map(a => `G${a.gate}.${a.line}`);
-      const centers = [...new Set(acts.map(a => a.center).filter(Boolean))];
       const channels = [...new Set(acts.map(a => a.channel).filter(Boolean))];
-      const centerMoods = centers.map(cn => CENTER_MOOD[cn] ? T(CENTER_MOOD[cn]) : T(CENTER_LABELS[cn] || cn));
+      const fieldText = weaveFieldConditioning(centers);
+      const ambientCloser = T(FIELD_AMBIENT_CLOSER);
 
       let short;
       if (acts.length === 1) {
         const a = acts[0];
         const planet = zeitBodyLabel(a.body);
         const gateName = GATE_NAMES[a.gate] ? T(GATE_NAMES[a.gate]) : `G${a.gate}`;
-        const center = T(CENTER_LABELS[a.center] || a.center);
-        const mood = CENTER_MOOD[a.center] ? T(CENTER_MOOD[a.center]) : center;
         short = T(BL(
-          `${planet} sitzt gerade exakt auf Tor ${a.gate} (${gateName}) — im ${center} wird's spürbarer. ${mood}. Das ist Kollektiv-Wetter: für alle da, nicht automatisch dein persönliches Design.`,
-          `${planet} sits exactly on gate ${a.gate} (${gateName}) — the ${center} gets louder. ${mood}. That's collective weather: there for everyone, not automatically your personal design.`
+          `${planet} auf Tor ${a.gate} (${gateName}) — exakter Schaltmoment im Kollektiv-Feld. ${fieldText || ""} ${ambientCloser}`,
+          `${planet} on gate ${a.gate} (${gateName}) — exact switch moment in the collective field. ${fieldText || ""} ${ambientCloser}`
         ));
       } else if (c.kind === "lunation" || (acts.length === 2 && acts.some(a => a.body === "Sun") && acts.some(a => a.body === "Moon"))) {
         short = T(BL(
-          `Sonne und Mond ziehen am selben Strang — Tore ${gates.join(" und ")} werden gleichzeitig scharf geschaltet. Im Feld: ${centerMoods.slice(0, 2).join(", ")}. Kurz gesagt, der Tag hat einen klaren emotionalen Takt, der alle mitnimmt.`,
-          `Sun and Moon pull the same rope — gates ${gates.join(" and ")} switch on together. In the field: ${centerMoods.slice(0, 2).join(", ")}. In short, the day has a clear emotional beat that carries everyone along.`
+          `Sonne und Mond im selben Moment — Tore ${gates.join(" und ")}. Emotionaler Kollektiv-Takt: Stimmung im Raum wird lauter, auch wenn dein Solarplexus definiert ist (zweite Welle obendrauf). ${fieldText} ${ambientCloser}`,
+          `Sun and Moon in the same moment — gates ${gates.join(" and ")}. Collective emotional beat: mood in the room gets louder, even if your solar plexus is defined (a second wave on top). ${fieldText} ${ambientCloser}`
         ));
       } else {
         const bodies = acts.map(a => zeitBodyLabel(a.body)).join(" und ");
         const chHint = channels.length && CHANNEL_INFLUENCE[channels[0]]
-          ? T(BL(` Kanal ${channels[0]} flackert mit.`, ` Channel ${channels[0]} flickers along.`))
+          ? T(BL(`Kanal ${channels[0]} flackert mit —`, `Channel ${channels[0]} flickers along —`))
           : "";
         short = T(BL(
-          `${bodies} — zwei Akteure, ein Moment: ${gates.join(" trifft ")}. Schwerpunkt im Feld: ${centerMoods.join(", ")}.${chHint} Transit-Rauschen für alle, nicht dein festes Chart — aber spürbar, wenn du offene Zentren hast.`,
-          `${bodies} — two actors, one moment: ${gates.join(" meets ")}. Field focus: ${centerMoods.join(", ")}.${chHint} Transit noise for everyone, not your fixed chart — but noticeable if you have open centers.`
+          `${bodies}, ein Moment: ${gates.join(" trifft ")}. ${chHint} ${fieldText} ${ambientCloser}`,
+          `${bodies}, one moment: ${gates.join(" meets ")}. ${chHint} ${fieldText} ${ambientCloser}`
         ));
       }
 
