@@ -21,6 +21,10 @@
       --defined: #d7a4ff;
       --transit: #84dcc6;
       --both: #f6c177;
+      --cyber-cyan: #00f5ff;
+      --cyber-magenta: #ff2aab;
+      --cyber-lime: #c8ff57;
+      --cyber-violet: #b44dff;
       --shadow: 0 24px 80px rgba(0,0,0,.32);
       --radius: 22px;
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -1628,6 +1632,13 @@
       margin-bottom: 12px;
     }
 
+    .zeit-type-select .btn.active {
+      border-color: rgba(0, 245, 255, .55);
+      background: rgba(0, 245, 255, .12);
+      color: var(--cyber-cyan);
+      box-shadow: 0 0 14px rgba(0, 245, 255, .2);
+    }
+
     .zeit-type-select .btn {
       font-size: .72rem;
       padding: 5px 10px;
@@ -1654,63 +1665,244 @@
     }
 
     .zeit-unified-card {
-      border-color: rgba(132, 220, 198, .2);
-      background: rgba(132, 220, 198, .03);
+      border-color: rgba(0, 245, 255, .28);
+      background:
+        linear-gradient(160deg, rgba(255, 42, 171, .05) 0%, transparent 42%),
+        linear-gradient(340deg, rgba(0, 245, 255, .07) 0%, transparent 48%),
+        rgba(10, 14, 24, .92);
+      box-shadow:
+        0 0 32px rgba(0, 245, 255, .1),
+        inset 0 1px 0 rgba(255, 255, 255, .06);
     }
 
     .zeit-concordance-stack {
       margin-top: 14px;
-      border-top: 1px solid rgba(255,255,255,.08);
-      padding-top: 12px;
+      border-top: 1px solid rgba(0, 245, 255, .14);
+      padding-top: 14px;
     }
 
-    .zeit-concordance-item {
-      padding: 12px 0;
-      border-bottom: 1px solid rgba(255,255,255,.06);
+    .zeit-concordance-stack > .zeit-layer-tag {
+      font-size: .62rem;
+      letter-spacing: .2em;
+      color: var(--cyber-cyan);
+      text-shadow: 0 0 10px rgba(0, 245, 255, .55);
+      margin-bottom: 12px;
     }
 
-    .zeit-concordance-item:last-child { border-bottom: none; }
-
-    .zeit-concordance-item.match {
-      background: rgba(132, 220, 198, .04);
-      margin: 0 -12px;
-      padding: 12px;
-      border-radius: 10px;
-      border-bottom: none;
+    .zeit-cyber-item {
+      position: relative;
+      padding: 14px 14px 12px;
+      margin-bottom: 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(0, 245, 255, .2);
+      background:
+        linear-gradient(135deg, rgba(255, 42, 171, .04) 0%, transparent 45%),
+        linear-gradient(225deg, rgba(0, 245, 255, .05) 0%, transparent 55%),
+        rgba(8, 12, 22, .88);
+      box-shadow:
+        0 0 18px rgba(0, 245, 255, .07),
+        inset 0 1px 0 rgba(255, 255, 255, .05);
+      overflow: hidden;
     }
 
-    .zeit-concordance-hd,
-    .zeit-concordance-astro {
-      margin-top: 8px;
+    .zeit-cyber-item::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, .14) 2px,
+        rgba(0, 0, 0, .14) 4px
+      );
+      pointer-events: none;
+      opacity: .28;
+    }
+
+    .zeit-cyber-item > * { position: relative; z-index: 1; }
+
+    .zeit-cyber-item.match {
+      border-color: rgba(200, 255, 87, .35);
+      box-shadow:
+        0 0 28px rgba(200, 255, 87, .12),
+        0 0 12px rgba(0, 245, 255, .1),
+        inset 0 0 24px rgba(255, 42, 171, .04);
+    }
+
+    .zeit-cyber-item.match::after {
+      content: "◆ KONKORDANZ";
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      font-size: .55rem;
+      letter-spacing: .14em;
+      color: var(--cyber-lime);
+      text-shadow: 0 0 8px rgba(200, 255, 87, .6);
+      opacity: .85;
+      z-index: 2;
+    }
+
+    .zeit-deutung-block { margin-bottom: 4px; }
+
+    .concordance-deutung {
+      display: block;
+      margin-top: 0;
+      padding-top: 0;
+      border-top: none;
+      line-height: 1.6;
+    }
+
+    .concordance-deutung--primary {
+      font-size: .94rem;
+      color: #e8f4ff;
+      margin-bottom: 10px;
+    }
+
+    .concordance-deutung--primary .concordance-deutung-tag {
+      display: block;
+      font-size: .6rem;
+      letter-spacing: .24em;
+      text-transform: uppercase;
+      color: var(--cyber-cyan);
+      text-shadow: 0 0 12px rgba(0, 245, 255, .65);
+      margin: 0 0 8px;
+      font-weight: 700;
+    }
+
+    .concordance-deutung--primary .concordance-deutung-body {
+      text-shadow: 0 0 1px rgba(255, 255, 255, .08);
+    }
+
+    .concordance-deutung--secondary {
       font-size: .8rem;
+      color: rgba(232, 244, 255, .72);
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 42, 171, .14);
+      background: rgba(255, 42, 171, .04);
+    }
+
+    .concordance-deutung--secondary .concordance-deutung-tag {
+      display: block;
+      font-size: .58rem;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--cyber-magenta);
+      text-shadow: 0 0 8px rgba(255, 42, 171, .45);
+      margin: 0 0 6px;
+    }
+
+    .zeit-type-hero {
+      margin: 12px 0 14px;
+      padding: 12px 14px 12px 16px;
+      border-radius: 10px;
+      border: 1px solid rgba(200, 255, 87, .28);
+      border-left: 3px solid var(--cyber-lime);
+      background:
+        linear-gradient(90deg, rgba(200, 255, 87, .1) 0%, rgba(0, 245, 255, .03) 100%);
+      box-shadow:
+        0 0 22px rgba(200, 255, 87, .14),
+        inset 0 0 20px rgba(200, 255, 87, .04);
+    }
+
+    .zeit-type-hero-label {
+      display: block;
+      font-size: .64rem;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--cyber-lime);
+      text-shadow: 0 0 10px rgba(200, 255, 87, .55);
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .zeit-type-hero-text {
+      margin: 0;
+      font-size: 1.02rem;
       line-height: 1.5;
+      color: #f0ffe8;
+      text-shadow: 0 0 14px rgba(200, 255, 87, .2);
+      font-weight: 500;
+    }
+
+    .zeit-tech-layer {
+      margin-top: 14px;
+      padding-top: 10px;
+      border-top: 1px dashed rgba(0, 245, 255, .12);
+      font-family: ui-monospace, "Cascadia Code", "Consolas", monospace;
+      font-size: .58rem;
+      line-height: 1.55;
+      color: rgba(140, 155, 175, .48);
+      letter-spacing: .03em;
+    }
+
+    .zeit-tech-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 12px;
+      align-items: baseline;
+      margin-bottom: 6px;
+    }
+
+    .zeit-tech-meta strong {
+      font-size: .62rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: rgba(0, 245, 255, .42);
+      font-weight: 600;
+    }
+
+    .zeit-tech-meta span {
+      color: rgba(167, 177, 194, .4);
+    }
+
+    .zeit-tech-time {
+      color: rgba(0, 245, 255, .35) !important;
+      font-size: .56rem !important;
+    }
+
+    .zeit-tech-hd,
+    .zeit-tech-astro {
+      margin-top: 3px;
+      opacity: .85;
+    }
+
+    .zeit-tech-hd::before,
+    .zeit-tech-astro::before {
+      display: inline-block;
+      width: 2.2em;
+      margin-right: 4px;
+      font-size: .54rem;
+      letter-spacing: .1em;
+      color: rgba(0, 245, 255, .32);
+    }
+
+    .zeit-tech-hd::before { content: "HD"; }
+    .zeit-tech-astro::before { content: "AS"; }
+
+    .concordance-deutung--primary .concordance-more summary,
+    .concordance-deutung--secondary .concordance-more summary {
+      color: var(--cyber-cyan);
+      text-shadow: 0 0 6px rgba(0, 245, 255, .35);
     }
 
     .zeit-type-example {
-      display: block;
-      margin-top: 6px;
-      padding: 6px 8px;
-      border-radius: 8px;
-      background: rgba(255,255,255,.04);
-      font-size: .76rem;
-      color: var(--accent);
-      font-style: italic;
+      display: none;
+    }
+
+    .zeit-tech-layer .concordance-time {
+      display: inline;
+      margin: 0;
+      color: rgba(0, 245, 255, .28) !important;
+      font-size: .54rem !important;
     }
 
     .zeit-dataset-hint {
       margin-top: 12px;
       font-size: .7rem;
       color: var(--muted);
-    }
-
-    .concordance-deutung {
-      display: block;
-      margin-top: 8px;
-      padding-top: 8px;
-      border-top: 1px solid rgba(255,255,255,.06);
-      font-size: .76rem;
-      color: var(--muted);
-      line-height: 1.5;
     }
 
     .concordance-deutung-tag {
@@ -4678,6 +4870,23 @@
       return text ? `${typeLabel}: ${text}` : "";
     }
 
+    function parseTypeExample(typeEx) {
+      if (!typeEx) return null;
+      const idx = typeEx.indexOf(":");
+      if (idx < 0) return { label: "", text: typeEx };
+      return { label: typeEx.slice(0, idx).trim(), text: typeEx.slice(idx + 1).trim() };
+    }
+
+    function renderTypeHero(typeEx) {
+      const parsed = parseTypeExample(typeEx);
+      if (!parsed?.text) return "";
+      return `
+        <div class="zeit-type-hero">
+          ${parsed.label ? `<span class="zeit-type-hero-label">${parsed.label}</span>` : ""}
+          <p class="zeit-type-hero-text">${parsed.text}</p>
+        </div>`;
+    }
+
     function renderConcordanceStackItem(c, profile, win, typeId) {
       const jdPeak = c.activity?.jd_peak ?? c.jd_ut;
       const hdLines = (c.hd.activations || []).map(a => renderHdActivationLine(a, jdPeak, win)).join("<br>");
@@ -4697,18 +4906,25 @@
       const astroDeut = buildConcordanceAstroInterpretation(c);
       const timeRange = formatActivityRange(c);
       const typeEx = typeTransitExample(c, typeId);
+      const typeHero = renderTypeHero(typeEx);
+      const astroBlock = astroDeut.short?.trim()
+        ? `<div class="zeit-deutung-block">${renderConcordanceDeutung(astroDeut.short, astroDeut.detail, "secondary", T(BL("Astro", "Astro")))}</div>`
+        : "";
       return `
-        <div class="zeit-concordance-item ${c.both_significant ? "match" : ""}">
-          <div class="concordance-meta"><strong>${label}</strong> · ${c.bodies.join(" / ")}</div>
-          <div class="concordance-time">${timeRange}</div>
-          <div class="zeit-concordance-hd">
-            <strong>HD</strong><br>${hdLines || "—"}
-            ${renderConcordanceDeutung(hdDeut.short, hdDeut.detail)}
-            ${typeEx ? `<span class="zeit-type-example">${typeEx}</span>` : ""}
+        <div class="zeit-concordance-item zeit-cyber-item ${c.both_significant ? "match" : ""}">
+          <div class="zeit-deutung-block">
+            ${renderConcordanceDeutung(hdDeut.short, hdDeut.detail, "primary", T(BL("Deutung", "Interpretation")))}
           </div>
-          <div class="zeit-concordance-astro">
-            <strong>Astro</strong><br>${astroLines || "—"}${c.both_significant ? ` · <span style="color:var(--accent)">${T(BL("Konkordanz", "Concordance"))}</span>` : ""}
-            ${renderConcordanceDeutung(astroDeut.short, astroDeut.detail)}
+          ${typeHero}
+          ${astroBlock}
+          <div class="zeit-tech-layer">
+            <div class="zeit-tech-meta">
+              <strong>${label}</strong>
+              <span>${c.bodies.join(" / ")}</span>
+              <span class="zeit-tech-time concordance-time">${timeRange}</span>
+            </div>
+            ${hdLines ? `<div class="zeit-tech-hd">${hdLines}</div>` : ""}
+            ${astroLines ? `<div class="zeit-tech-astro">${astroLines}</div>` : ""}
           </div>
         </div>`;
     }
@@ -5021,12 +5237,13 @@
       return (c.astro.placements || []).find(p => p.body === bodyName);
     }
 
-    function renderConcordanceDeutung(shortText, detailText) {
+    function renderConcordanceDeutung(shortText, detailText, tier = "primary", tagLabel = null) {
       const detail = detailText?.trim();
       const more = detail && detail !== shortText?.trim()
         ? `<details class="concordance-more"><summary>${T(BL("Mehr dazu …", "Tell me more …"))}</summary><div class="concordance-more-body">${detail}</div></details>`
         : "";
-      return `<span class="concordance-deutung"><span class="concordance-deutung-tag">${T(BL("Deutung", "Interpretation"))}</span>${shortText || "—"}${more}</span>`;
+      const tag = tagLabel || T(BL("Deutung", "Interpretation"));
+      return `<div class="concordance-deutung concordance-deutung--${tier}"><span class="concordance-deutung-tag">${tag}</span><div class="concordance-deutung-body">${shortText || "—"}</div>${more}</div>`;
     }
 
     function buildConcordanceHdInterpretation(c, profile) {
