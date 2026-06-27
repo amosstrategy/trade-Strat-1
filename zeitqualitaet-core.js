@@ -19,6 +19,12 @@
 
   const HD_IGNORE = new Set(["Chiron"]);
 
+  const SWE_TO_BODY_ID = {
+    0: "sun", 1: "moon", 2: "mercury", 3: "venus", 4: "mars",
+    5: "jupiter", 6: "saturn", 7: "uranus", 8: "neptune", 9: "pluto",
+    11: "north_node", 15: "chiron"
+  };
+
   const ZODIAC = [
     "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
     "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"
@@ -52,7 +58,16 @@
   function lonSpeed(bodyNum, jdUt) {
     const eph = global.HDEphemeris;
     if (!eph?.ready) throw new Error("no_ephemeris");
-    return eph.lonSpeed(jdUt, bodyNum);
+    if (typeof eph.lonSpeed === "function") return eph.lonSpeed(jdUt, bodyNum);
+    const bodyId = SWE_TO_BODY_ID[bodyNum];
+    if (!bodyId || typeof eph.longitudeForBody !== "function") {
+      throw new Error("lonSpeed unavailable — bitte Seite hart neu laden (Strg+F5).");
+    }
+    const h = 0.0001;
+    const lon0 = eph.longitudeForBody(jdUt - h, bodyId);
+    const lon1 = eph.longitudeForBody(jdUt + h, bodyId);
+    const delta = ((lon1 - lon0 + 540) % 360) - 180;
+    return { longitude: eph.longitudeForBody(jdUt, bodyId), speed: delta / (2 * h) };
   }
 
   function stableEventKey(payload) {
