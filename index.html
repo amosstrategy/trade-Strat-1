@@ -1621,6 +1621,29 @@
       margin-right: 6px;
     }
 
+    .concordance-more {
+      margin-top: 8px;
+    }
+
+    .concordance-more summary {
+      cursor: pointer;
+      color: var(--accent);
+      font-size: .72rem;
+      user-select: none;
+      list-style: none;
+    }
+
+    .concordance-more summary::-webkit-details-marker { display: none; }
+
+    .concordance-more-body {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed rgba(255,255,255,.08);
+      font-size: .74rem;
+      line-height: 1.6;
+      color: var(--muted);
+    }
+
     @media (max-width: 720px) {
       .concordance-row { grid-template-columns: 1fr; }
     }
@@ -4431,114 +4454,271 @@
     };
 
     const ASPECT_MEANINGS = {
-      conjunction: BL("Fusion — zwei Kraefte treffen sich im selben Punkt; Themen ueberlagern sich.", "Fusion — two forces meet at the same point; themes overlap."),
-      semisquare: BL("Reiz-Reibung (45°) — leichter Druck, der Anpassung verlangt.", "Irritation (45°) — light pressure demanding adjustment."),
-      sextile: BL("Oeffnung (60°) — Gelegenheit, wenn du aktiv zugreifst.", "Opening (60°) — opportunity when you engage actively."),
-      square: BL("Spannung (90°) — Reibung, die Handlung oder Klarheit erzwingt.", "Tension (90°) — friction that forces action or clarity."),
-      trine: BL("Fluss (120°) — leichtes Mitlaufen, aber nicht automatisch produktiv.", "Flow (120°) — easy momentum, not automatically productive."),
-      sesquiquadrate: BL("Unerloeste Reibung (135°) — Restspannung sucht Ausweg.", "Unresolved friction (135°) — leftover tension seeks release."),
-      opposition: BL("Polaritaet (180°) — Gegensaetze spiegeln sich; Balance durch Bewusstsein.", "Polarity (180°) — opposites mirror; balance through awareness.")
+      conjunction: BL(
+        "Zwei Energien verschmelzen — als würden zwei Handlungsstränge plötzlich denselben Plot fahren. Alles fühlt sich gerade stärker, enger, manchmal auch ein bisschen zu voll.",
+        "Two energies merge — like two storylines suddenly sharing the same plot. Everything feels tighter, louder, sometimes a bit much."
+      ),
+      semisquare: BL(
+        "Leises Knirschen unter der Oberfläche — nicht Drama, eher so ein „hmm, das passt gerade nicht ganz“. Kleine Reibung, die nachjustieren will.",
+        "A quiet grind beneath the surface — not full drama, more of a \"hmm, this doesn't quite fit.\" Small friction asking for a tweak."
+      ),
+      sextile: BL(
+        "Eine Tür steht einen Spalt offen — wenn du sie selbst anschiebst, passiert was. Kein Geschenk vom Himmel, eher eine freundliche Einladung.",
+        "A door is slightly open — push it yourself and something moves. Not a free ride, more like a friendly invite."
+      ),
+      square: BL(
+        "Klassischer Plot-Twist: beide Seiten wollen was anderes, und keiner weicht zurück. Spannung, die dich irgendwann zum Handeln oder Loslassen zwingt.",
+        "Classic plot twist: both sides want different things and neither budges. Tension that eventually pushes you to act or let go."
+      ),
+      trine: BL(
+        "Alles läuft erstaunlich geschmeidig — fast schon verdächtig easy. Nutzen kannst du es, wenn du mitspielst; liegen lassen geht auch.",
+        "Things run suspiciously smooth — almost too easy. You can use it if you play along; ignoring it works too."
+      ),
+      sesquiquadrate: BL(
+        "Restliche Spannung, die noch nicht abgebaut ist — wie ein Satz, den du noch im Kopf nachredest. Nervt leise, bis du ihm einen Platz gibst.",
+        "Leftover tension not fully discharged — like a line you keep replaying in your head. It nags quietly until you give it a seat."
+      ),
+      opposition: BL(
+        "Zwei Pole schauen sich an — du in der Mitte, und plötzlich siehst du beide Seiten klar. Es geht weniger um Gewinner, mehr um ehrliches Gegeneinander.",
+        "Two poles face each other — you're in the middle seeing both sides clearly. Less about winning, more about honest contrast."
+      )
+    };
+
+    const ASPECT_FLOW = {
+      conjunction: BL("laufen im selben Takt", "run in the same rhythm"),
+      semisquare: BL("reiben sich leise", "rub quietly"),
+      sextile: BL("winken sich zu", "beckon each other"),
+      square: BL("stehen sich im Weg", "block each other"),
+      trine: BL("fließen leicht zusammen", "flow together easily"),
+      sesquiquadrate: BL("nagen noch an offener Reibung", "still chew on open friction"),
+      opposition: BL("spiegeln sich gegenseitig", "mirror each other")
     };
 
     const SIGN_THEMES = {
-      Aries: BL("Initiative, Start, Durchbruch", "Initiative, start, breakthrough"),
-      Taurus: BL("Stabilitaet, Werte, Verkoerperung", "Stability, values, embodiment"),
-      Gemini: BL("Austausch, Neugier, Verknuepfung", "Exchange, curiosity, connection"),
-      Cancer: BL("Schutz, Zugehoerigkeit, Innenleben", "Protection, belonging, inner life"),
-      Leo: BL("Ausdruck, Sichtbarkeit, Herz", "Expression, visibility, heart"),
-      Virgo: BL("Ordnung, Verbesserung, Praxis", "Order, improvement, practice"),
-      Libra: BL("Beziehung, Ausgleich, Fairness", "Relationship, balance, fairness"),
-      Scorpio: BL("Tiefe, Transformation, Wahrheit", "Depth, transformation, truth"),
-      Sagittarius: BL("Sinn, Weite, Richtung", "Meaning, breadth, direction"),
-      Capricorn: BL("Struktur, Verantwortung, Ziel", "Structure, responsibility, goal"),
-      Aquarius: BL("Zukunft, System, Freiheit", "Future, system, freedom"),
-      Pisces: BL("Aufloesung, Mitgefuehl, Uebergang", "Dissolution, compassion, transition")
+      Aries: BL("mutig, impulsiv, Start", "bold, impulsive, beginning"),
+      Taurus: BL("fest, sinnlich, behalten", "steady, sensual, holding on"),
+      Gemini: BL("neugierig, wendig, redselig", "curious, nimble, chatty"),
+      Cancer: BL("schützend, innig, heimisch", "protective, intimate, homely"),
+      Leo: BL("sichtbar, stolz, warm", "visible, proud, warm"),
+      Virgo: BL("sortierend, praktisch, fein", "sorting, practical, precise"),
+      Libra: BL("ausbalancierend, charmant, verbindend", "balancing, charming, connecting"),
+      Scorpio: BL("tief, intensiv, radikal ehrlich", "deep, intense, radically honest"),
+      Sagittarius: BL("weit, suchend, optimistisch", "wide, searching, optimistic"),
+      Capricorn: BL("strukturiert, ernst, zielstrebig", "structured, serious, goal-driven"),
+      Aquarius: BL("unkonventionell, kollektiv, frei", "unconventional, collective, free"),
+      Pisces: BL("verschmelzend, träumerisch, weich", "merging, dreamy, soft")
+    };
+
+    const CENTER_MOOD = {
+      Head: BL("Kopf voll mit Bildern und Fragen", "Head full of images and questions"),
+      Ajna: BL("Fixierung auf eine klare Idee", "Fixation on one clear idea"),
+      Throat: BL("Drang, es auszusprechen", "Urge to speak it out"),
+      G: BL("Richtungs- und Identitätsfragen", "Direction and identity questions"),
+      Ego: BL("Willens- und Machtdynamik", "Will and power dynamics"),
+      Solar: BL("emotionale Wellen und Stimmung", "emotional waves and mood"),
+      Spleen: BL("Körperwissen und Instinkt", "Body knowing and instinct"),
+      Sacral: BL("Lebensenergie und Ja/Nein", "Life force and yes/no"),
+      Root: BL("Druck, Tempo, Adrenalin", "Pressure, pace, adrenaline")
     };
 
     const STATION_MEANINGS = {
-      retrograde: BL("Rueckwaerts — Thema des Planeten wird ueberprueft, verzoegert, vertieft.", "Retrograde — the planet's theme is reviewed, delayed, deepened."),
-      direct: BL("Direkt — Thema des Planeten laeuft wieder nach aussen; Entscheidungen koennen leichter vorwaerts gehen.", "Direct — the planet's theme moves outward again; forward decisions get easier."),
-      station: BL("Stillstand — Wendepunkt; das Thema des Planeten kippt gerade.", "Station — turning point; the planet's theme is shifting.")
+      retrograde: BL(
+        "Der Planet dreht figurativ auf dem Absatz — Themen werden zurückgespult, überprüft, manchmal auch nervig verzögert.",
+        "The planet figuratively turns on its heel — themes rewind, get reviewed, sometimes annoyingly delayed."
+      ),
+      direct: BL(
+        "Wieder Vorwärtsgang — was stockte, darf wieder nach außen. Entscheidungen fühlen sich weniger wie durch Watte.",
+        "Forward gear again — what stalled may move outward. Decisions feel less like wading through cotton."
+      ),
+      station: BL(
+        "Kurzer Stopp an der Wendemarke — als hielte die Geschichte den Atem an, bevor die Richtung kippt.",
+        "A brief pause at the turning point — like the story holding its breath before direction shifts."
+      )
     };
 
     const LUNATION_MEANINGS = {
-      new: BL("Neumond — neuer Zyklus, Samen setzen; noch wenig sichtbar im Kollektiv.", "New moon — new cycle, planting seeds; still little visible collectively."),
-      full: BL("Vollmond — Kulmination; was laeuft, wird sichtbar und emotional laut.", "Full moon — culmination; what is running becomes visible and emotionally loud.")
+      new: BL(
+        "Neumond — stiller Anfang, Samen im Dunkeln. Noch sieht kaum wer was, aber unter der Oberfläche startet schon was.",
+        "New moon — quiet start, seeds in the dark. Few see it yet, but something's already starting underneath."
+      ),
+      full: BL(
+        "Vollmond — alles leuchtet auf, Gefühle werden laut. Was im Verborgenen lief, tritt jetzt ziemlich unübersehbar auf die Bühne.",
+        "Full moon — everything lights up, feelings get loud. What ran hidden now walks onto the stage, hard to miss."
+      )
     };
 
-    function interpretConcordanceHd(c, profile) {
-      const lines = [];
-      (c.hd.activations || []).forEach(a => {
+    function placementOf(c, bodyName) {
+      return (c.astro.placements || []).find(p => p.body === bodyName);
+    }
+
+    function renderConcordanceDeutung(shortText, detailText) {
+      const detail = detailText?.trim();
+      const more = detail && detail !== shortText?.trim()
+        ? `<details class="concordance-more"><summary>${T(BL("Mehr dazu …", "Tell me more …"))}</summary><div class="concordance-more-body">${detail}</div></details>`
+        : "";
+      return `<span class="concordance-deutung"><span class="concordance-deutung-tag">${T(BL("Deutung", "Interpretation"))}</span>${shortText || "—"}${more}</span>`;
+    }
+
+    function buildConcordanceHdInterpretation(c, profile) {
+      const acts = c.hd.activations || [];
+      if (!acts.length) {
+        return {
+          short: T(BL(
+            "Hier rechnet das Feld nur Astro-seitig mit — im Bodygraph gibt's dazu kein Tor (z. B. Chiron). Kein Drama, einfach nicht die HD-Ebene.",
+            "The field computes astro-side only here — no gate in the bodygraph (e.g. Chiron). No drama, just not the HD layer."
+          )),
+          detail: ""
+        };
+      }
+
+      const detailParts = acts.map(a => {
         const planet = zeitBodyLabel(a.body);
         const gateName = GATE_NAMES[a.gate] ? T(GATE_NAMES[a.gate]) : `G${a.gate}`;
         const center = T(CENTER_LABELS[a.center] || a.center);
-        const info = GATE_INFO[a.gate];
-        const desc = info ? T(info.description) : "";
-        let text = `${planet} · G${a.gate}.${a.line} (${gateName}, ${center}): ${desc}`;
-        if (a.channel && CHANNEL_INFLUENCE[a.channel]) {
-          text += ` ${T(CHANNEL_INFLUENCE[a.channel])}`;
-        }
-        lines.push(text);
+        const desc = GATE_INFO[a.gate] ? T(GATE_INFO[a.gate].description) : "";
+        const ch = a.channel && CHANNEL_INFLUENCE[a.channel]
+          ? `<br><em>${T(CHANNEL_INFLUENCE[a.channel])}</em>` : "";
+        return `<strong>${planet}</strong> · G${a.gate}.${a.line} (${gateName}, ${center})<br>${desc}${ch}`;
       });
+
       (c.hd.natal || []).forEach(n => {
         if (!n.completes_channel) return;
-        const ch = CHANNELS.find(ch => ch.key === n.completes_channel);
+        const ch = CHANNELS.find(x => x.key === n.completes_channel);
         if (!ch) return;
         const effect = CHANNEL_INFLUENCE[ch.key];
-        lines.push(effect
-          ? T(BL(
-              `Ich-Schicht: Transit komplettiert ${ch.key} — ${effect.de}`,
-              `Personal layer: transit completes ${ch.key} — ${effect.en}`
-            ))
-          : T(BL(
-              `Ich-Schicht: Transit komplettiert temporaer Kanal ${ch.key}.`,
-              `Personal layer: transit temporarily completes channel ${ch.key}.`
-            )));
+        detailParts.push(effect
+          ? `<strong>${T(BL("Ich-Schicht", "Personal layer"))}</strong> · Kanal ${ch.key}<br>${T(effect)}`
+          : `<strong>${T(BL("Ich-Schicht", "Personal layer"))}</strong> · Kanal ${ch.key}`);
       });
-      return lines.length
-        ? lines.join(" ")
-        : T(BL("Keine HD-Aktivierung (z. B. Chiron-only).", "No HD activation (e.g. Chiron-only)."));
+
+      const gates = acts.map(a => `G${a.gate}.${a.line}`);
+      const centers = [...new Set(acts.map(a => a.center).filter(Boolean))];
+      const channels = [...new Set(acts.map(a => a.channel).filter(Boolean))];
+      const centerMoods = centers.map(cn => CENTER_MOOD[cn] ? T(CENTER_MOOD[cn]) : T(CENTER_LABELS[cn] || cn));
+
+      let short;
+      if (acts.length === 1) {
+        const a = acts[0];
+        const planet = zeitBodyLabel(a.body);
+        const gateName = GATE_NAMES[a.gate] ? T(GATE_NAMES[a.gate]) : `G${a.gate}`;
+        const center = T(CENTER_LABELS[a.center] || a.center);
+        const mood = CENTER_MOOD[a.center] ? T(CENTER_MOOD[a.center]) : center;
+        short = T(BL(
+          `${planet} sitzt gerade exakt auf Tor ${a.gate} (${gateName}) — im ${center} wird's spürbarer. ${mood}. Das ist Kollektiv-Wetter: für alle da, nicht automatisch dein persönliches Design.`,
+          `${planet} sits exactly on gate ${a.gate} (${gateName}) — the ${center} gets louder. ${mood}. That's collective weather: there for everyone, not automatically your personal design.`
+        ));
+      } else if (c.kind === "lunation" || (acts.length === 2 && acts.some(a => a.body === "Sun") && acts.some(a => a.body === "Moon"))) {
+        short = T(BL(
+          `Sonne und Mond ziehen am selben Strang — Tore ${gates.join(" und ")} werden gleichzeitig scharf geschaltet. Im Feld: ${centerMoods.slice(0, 2).join(", ")}. Kurz gesagt, der Tag hat einen klaren emotionalen Takt, der alle mitnimmt.`,
+          `Sun and Moon pull the same rope — gates ${gates.join(" and ")} switch on together. In the field: ${centerMoods.slice(0, 2).join(", ")}. In short, the day has a clear emotional beat that carries everyone along.`
+        ));
+      } else {
+        const bodies = acts.map(a => zeitBodyLabel(a.body)).join(" und ");
+        const chHint = channels.length && CHANNEL_INFLUENCE[channels[0]]
+          ? T(BL(` Kanal ${channels[0]} flackert mit.`, ` Channel ${channels[0]} flickers along.`))
+          : "";
+        short = T(BL(
+          `${bodies} — zwei Akteure, ein Moment: ${gates.join(" trifft ")}. Schwerpunkt im Feld: ${centerMoods.join(", ")}.${chHint} Transit-Rauschen für alle, nicht dein festes Chart — aber spürbar, wenn du offene Zentren hast.`,
+          `${bodies} — two actors, one moment: ${gates.join(" meets ")}. Field focus: ${centerMoods.join(", ")}.${chHint} Transit noise for everyone, not your fixed chart — but noticeable if you have open centers.`
+        ));
+      }
+
+      const natal = (c.hd.natal || []).filter(n => n.completes_channel);
+      if (natal.length && profile.chartComputed) {
+        short += " " + T(BL(
+          `Für dich persönlich: ein Kanal (${natal.map(n => n.completes_channel).join(", ")}) wird kurzzeitig mitgeschaltet — geliehene Energie, kein Dauer-Upgrade.`,
+          `For you personally: a channel (${natal.map(n => n.completes_channel).join(", ")}) briefly switches on — borrowed energy, not a permanent upgrade.`
+        ));
+      }
+
+      return { short, detail: detailParts.join("<br><br>") };
     }
 
-    function interpretConcordanceAstro(c) {
+    function buildConcordanceAstroInterpretation(c) {
+      const detailParts = [];
+      (c.astro.placements || []).forEach(p => {
+        const theme = SIGN_THEMES[p.sign] ? T(SIGN_THEMES[p.sign]) : p.sign;
+        detailParts.push(`<strong>${p.body}</strong> · ${p.sign} ${p.deg_in_sign.toFixed(2)}° (${theme})`);
+      });
+
       if (c.astro.aspect && c.bodies.length >= 2) {
-        const asp = ASPECT_MEANINGS[c.astro.aspect];
         const p1 = zeitBodyLabel(c.bodies[0]);
         const p2 = zeitBodyLabel(c.bodies[1]);
-        const base = asp
-          ? T(BL(`${p1} ${c.astro.aspect} ${p2}: ${asp.de}`, `${p1} ${c.astro.aspect} ${p2}: ${asp.en}`))
-          : T(BL(`${p1} und ${p2} in exaktem ${c.astro.angle}°-Aspekt.`, `${p1} and ${p2} in exact ${c.astro.angle}° aspect.`));
-        const signs = (c.astro.placements || []).map(p => `${p.body} ${T(SIGN_THEMES[p.sign] || BL(p.sign, p.sign))}`).join(" · ");
-        return signs ? `${base} (${signs})` : base;
+        const flow = ASPECT_FLOW[c.astro.aspect] ? T(ASPECT_FLOW[c.astro.aspect]) : c.astro.aspect;
+        const meaning = ASPECT_MEANINGS[c.astro.aspect] ? T(ASPECT_MEANINGS[c.astro.aspect]) : "";
+        const pl1 = placementOf(c, c.bodies[0]);
+        const pl2 = placementOf(c, c.bodies[1]);
+        const s1 = pl1 && SIGN_THEMES[pl1.sign] ? T(SIGN_THEMES[pl1.sign]) : "";
+        const s2 = pl2 && SIGN_THEMES[pl2.sign] ? T(SIGN_THEMES[pl2.sign]) : "";
+        const signBit = pl1 && pl2
+          ? T(BL(
+              `${p1} in ${pl1.sign} (${s1}), ${p2} in ${pl2.sign} (${s2}) — die Mischung macht den Ton.`,
+              `${p1} in ${pl1.sign} (${s1}), ${p2} in ${pl2.sign} (${s2}) — the blend sets the tone.`
+            ))
+          : "";
+        detailParts.unshift(`<strong>${c.astro.aspect}</strong> · ${c.astro.angle}°<br>${meaning}`);
+        const short = [
+          T(BL(`${p1} und ${p2} ${flow} — exakt auf ${c.astro.angle}°.`, `${p1} and ${p2} ${flow} — exact at ${c.astro.angle}°.`)),
+          signBit,
+          meaning
+        ].filter(Boolean).join(" ");
+        return { short, detail: detailParts.join("<br><br>") };
       }
+
       if (c.astro.phase) {
         const phaseLabel = c.astro.phase === "new" ? T(BL("Neumond", "New moon")) : T(BL("Vollmond", "Full moon"));
         const meaning = T(LUNATION_MEANINGS[c.astro.phase]);
-        const sign = c.astro.placements?.[1]?.sign || c.astro.placements?.[0]?.sign;
+        const moon = placementOf(c, "Moon") || c.astro.placements?.[1];
+        const sign = moon?.sign;
         const theme = sign && SIGN_THEMES[sign] ? T(SIGN_THEMES[sign]) : "";
-        return theme ? `${phaseLabel}: ${meaning} ${T(BL("in", "in"))} ${sign} (${theme}).` : `${phaseLabel}: ${meaning}`;
+        detailParts.unshift(`<strong>${phaseLabel}</strong><br>${meaning}`);
+        const short = sign
+          ? T(BL(
+              `${phaseLabel} in ${sign} (${theme}). ${meaning} Stell deine Erwartungen nicht zu hoch — der Kollektiv-Puls ist gerade ${c.astro.phase === "new" ? "leise" : "laut"}.`,
+              `${phaseLabel} in ${sign} (${theme}). ${meaning} Don't oversell expectations — the collective pulse is ${c.astro.phase === "new" ? "quiet" : "loud"} right now.`
+            ))
+          : `${phaseLabel}: ${meaning}`;
+        return { short, detail: detailParts.join("<br><br>") };
       }
+
       if (c.astro.ingress) {
         const body = zeitBodyLabel(c.bodies[0] || "");
-        const toSign = c.astro.placements?.[0]?.sign;
-        const theme = toSign && SIGN_THEMES[toSign] ? T(SIGN_THEMES[toSign]) : "";
-        return theme
+        const pl = placementOf(c, c.bodies[0]) || c.astro.placements?.[0];
+        const sign = pl?.sign;
+        const theme = sign && SIGN_THEMES[sign] ? T(SIGN_THEMES[sign]) : "";
+        detailParts.unshift(`<strong>${T(BL("Ingress", "Ingress"))}</strong> · ${c.astro.ingress}`);
+        const short = sign
           ? T(BL(
-              `${body} wechselt ins Kollektiv-Thema ${toSign}: ${theme}.`,
-              `${body} shifts into collective ${toSign} theme: ${theme}.`
+              `${body} zieht gerade um — neues Kapitel in ${sign}, Stimmung: ${theme}. Wie ein Staffelwechsel im Hintergrund: das Kollektiv-Thema kippt leise, aber spürbar.`,
+              `${body} is moving house — new chapter in ${sign}, mood: ${theme}. Like a backstage scene change: the collective theme shifts quietly but noticeably.`
             ))
-          : T(BL(`${body} wechselt das Zeichen — neues Kollektiv-Thema.`, `${body} changes sign — new collective theme.`));
+          : T(BL(`${body} wechselt das Zeichen — frisches Kollektiv-Thema.`, `${body} changes sign — fresh collective theme.`));
+        return { short, detail: detailParts.join("<br><br>") };
       }
+
       if (c.astro.station) {
         const body = zeitBodyLabel(c.bodies[0] || "");
         const dir = STATION_MEANINGS[c.astro.station] || STATION_MEANINGS.station;
-        const sign = c.astro.placements?.[0]?.sign;
+        const pl = placementOf(c, c.bodies[0]) || c.astro.placements?.[0];
+        const sign = pl?.sign;
         const theme = sign && SIGN_THEMES[sign] ? T(SIGN_THEMES[sign]) : "";
-        return theme
-          ? `${body} (${sign}, ${theme}): ${T(dir)}`
+        const dirWord = c.astro.station === "retrograde"
+          ? T(BL("rückwärts", "retrograde"))
+          : c.astro.station === "direct" ? T(BL("vorwärts", "direct")) : T(BL("am Wendepunkt", "at the turning point"));
+        detailParts.unshift(`<strong>${T(BL("Station", "Station"))}</strong> · ${body} · ${T(dir)}`);
+        const short = sign
+          ? T(BL(
+              `${body} ${dirWord} in ${sign} (${theme}). ${T(dir)} Typisch: alte ${body}-Themen kommen nochmal hoch, bevor die Richtung wirklich kippt.`,
+              `${body} ${dirWord} in ${sign} (${theme}). ${T(dir)} Typical: old ${body} themes resurface before direction truly shifts.`
+            ))
           : `${body}: ${T(dir)}`;
+        return { short, detail: detailParts.join("<br><br>") };
       }
-      return T(BL("Exakte Ephemeris-Geometrie — Deutung folgt dem Event-Typ.", "Exact ephemeris geometry — interpretation follows event type."));
+
+      return {
+        short: T(BL("Exakte Geometrie am Himmel — schau in die Datenzeile oben für die harten Fakten.", "Exact geometry in the sky — see the data line above for hard facts.")),
+        detail: detailParts.join("<br><br>")
+      };
     }
 
     function renderConcordanceRows(concordances, profile) {
@@ -4561,13 +4741,13 @@
               : c.astro.station
                 ? `${T(BL("Station", "Station"))}: ${c.astro.station}`
                 : c.kind;
-        const hdInterp = interpretConcordanceHd(c, profile);
-        const astroInterp = interpretConcordanceAstro(c);
+        const hdDeut = buildConcordanceHdInterpretation(c, profile);
+        const astroDeut = buildConcordanceAstroInterpretation(c);
         return `
           <div class="concordance-row ${c.both_significant ? "match" : ""}">
             <div class="concordance-meta">${label} · ${c.bodies.join(" / ")} · ${c.jd_iso?.slice(0, 16) || ""}</div>
-            <div><strong>HD</strong><br>${hdLines || "—"}<span class="concordance-deutung"><span class="concordance-deutung-tag">${T(BL("Deutung", "Interpretation"))}</span>${hdInterp}</span></div>
-            <div><strong>Astro</strong><br>${astroLines || "—"}${c.both_significant ? `<br><span style="color:var(--accent)">${T(BL("Uebereinstimmung", "Concordance"))}</span>` : ""}<span class="concordance-deutung"><span class="concordance-deutung-tag">${T(BL("Deutung", "Interpretation"))}</span>${astroInterp}</span></div>
+            <div><strong>HD</strong><br>${hdLines || "—"}${renderConcordanceDeutung(hdDeut.short, hdDeut.detail)}</div>
+            <div><strong>Astro</strong><br>${astroLines || "—"}${c.both_significant ? `<br><span style="color:var(--accent)">${T(BL("Uebereinstimmung", "Concordance"))}</span>` : ""}${renderConcordanceDeutung(astroDeut.short, astroDeut.detail)}</div>
           </div>`;
       }).join("");
     }
