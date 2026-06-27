@@ -1653,6 +1653,56 @@
       line-height: 1.45;
     }
 
+    .zeit-unified-card {
+      border-color: rgba(132, 220, 198, .2);
+      background: rgba(132, 220, 198, .03);
+    }
+
+    .zeit-concordance-stack {
+      margin-top: 14px;
+      border-top: 1px solid rgba(255,255,255,.08);
+      padding-top: 12px;
+    }
+
+    .zeit-concordance-item {
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+
+    .zeit-concordance-item:last-child { border-bottom: none; }
+
+    .zeit-concordance-item.match {
+      background: rgba(132, 220, 198, .04);
+      margin: 0 -12px;
+      padding: 12px;
+      border-radius: 10px;
+      border-bottom: none;
+    }
+
+    .zeit-concordance-hd,
+    .zeit-concordance-astro {
+      margin-top: 8px;
+      font-size: .8rem;
+      line-height: 1.5;
+    }
+
+    .zeit-type-example {
+      display: block;
+      margin-top: 6px;
+      padding: 6px 8px;
+      border-radius: 8px;
+      background: rgba(255,255,255,.04);
+      font-size: .76rem;
+      color: var(--accent);
+      font-style: italic;
+    }
+
+    .zeit-dataset-hint {
+      margin-top: 12px;
+      font-size: .7rem;
+      color: var(--muted);
+    }
+
     .concordance-deutung {
       display: block;
       margin-top: 8px;
@@ -4549,90 +4599,176 @@
         </div>`;
     }
 
-    function renderZeitTypeEventTeaser(c, typeId, win) {
+    function primaryCenterForType(c, typeId) {
+      const weights = ZEIT_TYPE_CENTER_WEIGHT[typeId] || {};
+      let best = null;
+      let bestScore = -1;
+      (c.hd.activations || []).forEach(a => {
+        const s = weights[a.center] ?? 0;
+        if (s > bestScore) { bestScore = s; best = a.center; }
+      });
+      return best || (c.hd.activations?.[0]?.center ?? null);
+    }
+
+    const TYPE_CENTER_EXAMPLES = {
+      Projector: {
+        Throat: BL("Antrieb von aussen moeglich — Sprechen faellt heute leichter als selbst initiieren.", "Outside drive possible — speaking comes easier today than initiating on your own."),
+        G: BL("Richtungs- und Identitaetsimpulse aus dem Feld — fuehre erst, wenn die Einladung da ist.", "Direction and identity impulses from the field — lead only once the invitation is there."),
+        Sacral: BL("Fremde Arbeitsenergie im Raum — du siehst und lenkst, musst nicht mithetzen.", "Foreign work energy in the room — you see and guide, you don't have to rush along."),
+        Solar: BL("Emotionale Wellen des Kollektivs — spiegeln und warten, nicht sofort mitentscheiden.", "Collective emotional waves — mirror and wait, don't decide along immediately."),
+        Root: BL("Hetze von aussen — dein Tempo ist Einladung, kein Wettrennen.", "Outside rush — your pace is invitation, not a race."),
+        Ajna: BL("Meinungsdruck im Raum — du darfst Klarheit halten, ohne alles zu fixieren.", "Opinion pressure in the room — you may hold clarity without fixing everything."),
+        Head: BL("Viele Fragen im Feld — Inspiration aufnehmen, nicht jede beantworten.", "Many questions in the field — take inspiration, don't answer every one."),
+        Spleen: BL("Instinkt-Signale lauter — koerperlich pruefen, ob es wirklich fuer dich ist.", "Instinct signals louder — check in the body whether it's truly for you."),
+        Ego: BL("Macht- und Commitment-Themen schweben — nur versprechen, was eingeladen ist.", "Power and commitment themes in the air — promise only what you're invited to.")
+      },
+      Manifestor: {
+        Throat: BL("Initiations-Druck steigt — informiere die Betroffenen, dann darf Bewegung kommen.", "Initiation pressure rises — inform those affected, then movement may come."),
+        Ego: BL("Wille und Commitment im Feld — dein Impuls braucht Vorwarnung, nicht Ueberraschung.", "Will and commitment in the field — your impulse needs warning, not surprise."),
+        Solar: BL("Emotionale Ladung — Wut oder Frieden kann kippen; informieren entlastet.", "Emotional charge — anger or peace may flip; informing eases it."),
+        Root: BL("Tempo-Druck — du darfst starten, aber nicht gegen uninformierte Widerstaende.", "Pace pressure — you may start, but not against uninformed resistance."),
+        G: BL("Richtungsfragen im Kollektiv — dein Durchbruch braucht Sichtbarkeit vor dem Schritt.", "Direction questions in the collective — your breakthrough needs visibility before the step."),
+        Sacral: BL("Fremde Motor-Energie im Raum — unterscheide deinen Impuls vom Generator-Rauschen.", "Foreign motor energy in the room — separate your impulse from generator noise."),
+        Spleen: BL("Timing im Koerper — jetzt oder nicht ist deine Wahrheit, nicht die Hetze.", "Timing in the body — now or not is your truth, not the rush."),
+        Ajna: BL("Meinungen wollen Ausdruck — informiere deine Sicht, bevor du handelst.", "Opinions want expression — inform your view before you act."),
+        Head: BL("Druck neue Ideen zu liefern — informiere, was kommt, statt es ueberraschend zu entfesseln.", "Pressure to deliver new ideas — inform what's coming instead of unleashing it by surprise.")
+      },
+      "Manifesting Generator": {
+        Sacral: BL("Sakral reagiert auf das Feld — erst Bauch-Ja, dann Tempo und Informieren.", "Sacral responds to the field — belly yes first, then pace and informing."),
+        Throat: BL("Ausdruck will nach dem Ja folgen — heute schneller sprechen oder machen nach dem Signal.", "Expression wants to follow the yes — speak or do faster today after the signal."),
+        Root: BL("Druck zu beschleunigen — nur mit Sakral-Ja, sonst Frustration.", "Pressure to speed up — only with sacral yes, otherwise frustration."),
+        Solar: BL("Stimmungsschwankungen — reagieren, informieren, nicht aus der Welle heraus hetzen.", "Mood swings — respond, inform, don't rush from the wave."),
+        G: BL("Richtungswechsel spuerbar — reagiere auf das Richtige, dann informiere den Schnitt.", "Direction shifts noticeable — respond to what's right, then inform the cut."),
+        Spleen: BL("Koerper sagt schneller Ja/Nein — vertraue dem ersten Signal vor dem Multitask.", "Body says yes/no faster — trust the first signal before multitasking.")
+      },
+      Generator: {
+        Sacral: BL("Sakral im Kollektiv laut — warte auf das konkrete Angebot, nicht auf die allgemeine Hektik.", "Sacral loud in the collective — wait for the concrete offer, not general hustle."),
+        Root: BL("Druck von aussen zu starten — nur wenn der Bauch mitgeht, sonst Frustration.", "Outside pressure to start — only if the belly agrees, otherwise frustration."),
+        Solar: BL("Emotionen im Raum — nicht jedes Ja ist deins; koerperlich nachfragen.", "Emotions in the room — not every yes is yours; ask the body."),
+        Throat: BL("Ausdrucksdruck — erst reagieren, dann sprechen oder handeln.", "Expression pressure — respond first, then speak or act."),
+        G: BL("Richtungsimpulse im Feld — dein Ja gilt dem Angebot, nicht der allgemeinen Stimmung.", "Direction impulses in the field — your yes is for the offer, not the general mood."),
+        Spleen: BL("Instinkt feinjustiert — wenn es nicht resoniert, ist Nein auch heute korrekt.", "Instinct fine-tuned — if it doesn't resonate, no is correct today too.")
+      },
+      Reflector: {
+        Solar: BL("Emotionale Spiegelung maximal — eine Nacht Schlaf vor grossen Entscheidungen.", "Emotional mirroring at max — a night's sleep before big decisions."),
+        Moon: BL("Mond-Sensitivitaet hoch — der Tages-Takt faerbt dich schneller als andere.", "Moon sensitivity high — the day's beat colors you faster than others."),
+        Sacral: BL("Fremde Lebensenergie im Raum — spiegeln, nicht als eigenen Motor halten.", "Foreign life energy in the room — mirror it, don't treat it as your motor."),
+        Root: BL("Stress-Spiegel — ist die Eile im Raum oder in dir?", "Stress mirror — is the urgency in the room or in you?"),
+        Throat: BL("Viel Gespraechsdruck — du darfst warten, bis Klarheit aus dem Zyklus kommt.", "Much talk pressure — you may wait until clarity comes from the cycle."),
+        G: BL("Identitaet im Feld — wer bin ich heute im Spiegel der anderen?", "Identity in the field — who am I today in others' mirror?")
+      }
+    };
+
+    function typeTransitExample(c, typeId) {
+      if (!typeId) return "";
+      const center = primaryCenterForType(c, typeId);
+      const moonHit = (c.hd.activations || []).some(a => a.body === "Moon");
+      const examples = TYPE_CENTER_EXAMPLES[typeId];
+      const typeLabel = T(zeitTypeById(typeId)?.label || BL(typeId, typeId));
+      let text = "";
+      if (typeId === "Reflector" && moonHit && examples?.Moon) text = T(examples.Moon);
+      else if (center && examples?.[center]) text = T(examples[center]);
+      else {
+        const lens = ZEIT_TYPE_LENS[typeId];
+        text = lens ? T(BL(
+          lens.ride.de.split(".")[0],
+          lens.ride.en.split(".")[0]
+        )) : "";
+      }
+      return text ? `${typeLabel}: ${text}` : "";
+    }
+
+    function renderConcordanceStackItem(c, profile, win, typeId) {
       const jdPeak = c.activity?.jd_peak ?? c.jd_ut;
-      const gates = (c.hd.activations || []).map(a => `G${a.gate}.${a.line}`).join(", ");
-      const time = formatActivityRange(c);
-      const lens = typeId && ZEIT_TYPE_LENS[typeId]
-        ? T(BL(
-            `Typ-Linse: ${ZEIT_TYPE_LENS[typeId].ride.de.split(".")[0]}.`,
-            `Type lens: ${ZEIT_TYPE_LENS[typeId].ride.en.split(".")[0]}.`
-          ))
-        : "";
+      const hdLines = (c.hd.activations || []).map(a => renderHdActivationLine(a, jdPeak, win)).join("<br>");
+      const astroLines = (c.astro.placements || []).map(p =>
+        `${p.body}: ${p.sign} ${p.deg_in_sign.toFixed(1)}°`
+      ).join("<br>");
+      const label = c.astro.aspect
+        ? `${c.astro.aspect} (${c.astro.angle}°)`
+        : c.astro.phase
+          ? `${c.astro.phase === "new" ? T(BL("Neumond", "New moon")) : T(BL("Vollmond", "Full moon"))}`
+          : c.astro.ingress
+            ? `${T(BL("Ingress", "Ingress"))}: ${c.astro.ingress}`
+            : c.astro.station
+              ? `${T(BL("Station", "Station"))}: ${c.astro.station}`
+              : c.kind;
+      const hdDeut = buildConcordanceHdInterpretation(c, profile);
+      const astroDeut = buildConcordanceAstroInterpretation(c);
+      const timeRange = formatActivityRange(c);
+      const typeEx = typeTransitExample(c, typeId);
       return `
-        <div class="zeit-type-event">
-          <strong>${c.bodies.join(" / ")}</strong> · ${gates || "—"}<br>
-          <span class="concordance-time">${time}</span>
-          ${lens ? `<br><span style="color:var(--muted)">${lens}</span>` : ""}
+        <div class="zeit-concordance-item ${c.both_significant ? "match" : ""}">
+          <div class="concordance-meta"><strong>${label}</strong> · ${c.bodies.join(" / ")}</div>
+          <div class="concordance-time">${timeRange}</div>
+          <div class="zeit-concordance-hd">
+            <strong>HD</strong><br>${hdLines || "—"}
+            ${renderConcordanceDeutung(hdDeut.short, hdDeut.detail)}
+            ${typeEx ? `<span class="zeit-type-example">${typeEx}</span>` : ""}
+          </div>
+          <div class="zeit-concordance-astro">
+            <strong>Astro</strong><br>${astroLines || "—"}${c.both_significant ? ` · <span style="color:var(--accent)">${T(BL("Konkordanz", "Concordance"))}</span>` : ""}
+            ${renderConcordanceDeutung(astroDeut.short, astroDeut.detail)}
+          </div>
         </div>`;
     }
 
-    function renderZeitHdColumn(concordances, collectiveGates, win, profile) {
-      const gateText = collectiveGates.length
-        ? collectiveGates.map(g => `G${g}`).join(", ")
-        : "—";
-      const centers = new Set();
-      concordances.forEach(c => (c.hd.activations || []).forEach(a => { if (a.center) centers.add(a.center); }));
-      const centerList = fieldCentersOrdered([...centers]);
-      const fieldSummary = weaveFieldConditioning(centerList, 2);
-
-      if (!zeitHdType) {
-        return `
-          ${renderZeitTypeSelector()}
-          <div class="zeit-layer-tag">${T(ZEIT_TYPE_ALL.tag)}</div>
-          <div class="zeit-card" style="margin-bottom:10px">
-            <strong>${T(BL("Gesamtauswirkung", "Overall impact"))}</strong><br>
-            ${T(ZEIT_TYPE_LENS[""].overview)}<br>
-            <span style="color:var(--muted);font-size:.78rem;margin-top:6px;display:block">${T(BL("Aktive Tore (Perfektionen)", "Active gates (perfections)"))}: ${gateText}</span>
-            ${fieldSummary ? `<span style="color:var(--muted);font-size:.78rem;display:block;margin-top:4px">${fieldSummary}</span>` : ""}
-          </div>
-          <div class="zeit-card-grid">${ZEIT_TYPES.map(t => {
-            const lens = ZEIT_TYPE_LENS[t.id];
-            return `
-              <div class="zeit-card">
-                <strong>${T(t.label)}</strong>
-                <span class="zeit-layer-tag">${T(BL("Strategie-Linse", "Strategy lens"))}</span>
-                ${T(t.strategy)}.<br>
-                <span style="color:var(--muted);font-size:.78rem">${T(lens.overview)}</span>
-              </div>`;
-          }).join("")}</div>
-          <div class="zeit-type-events">
-            <div class="zeit-layer-tag">${T(BL("Top-Events im Fenster", "Top events in window"))}</div>
-            ${topConcordancesForType(concordances, "", 4).map(c => renderZeitTypeEventTeaser(c, "", win)).join("") || `<div class="small-card">—</div>`}
-          </div>`;
+    function renderConcordanceStack(concordances, profile, win, typeId, limit = 8) {
+      const items = topConcordancesForType(concordances, typeId, limit);
+      if (!items.length) {
+        return `<div class="small-card">${T(BL("Keine Events in diesem Fenster.", "No events in this window."))}</div>`;
       }
+      return items.map(c => renderConcordanceStackItem(c, profile, win, typeId)).join("");
+    }
 
-      const t = zeitTypeById(zeitHdType);
-      const lens = ZEIT_TYPE_LENS[zeitHdType];
-      const topEvents = topConcordancesForType(concordances, zeitHdType, 6);
+    function renderZeitUnifiedView(concordances, collectiveGates, win, profile, datasetCount, addedRecords) {
+      const gateText = collectiveGates.length ? collectiveGates.map(g => `G${g}`).join(", ") : "—";
+      const typeId = zeitHdType;
+      const stackTitle = typeId
+        ? T(BL("Transits fuer diesen Typ (priorisiert)", "Transits for this type (prioritized)"))
+        : T(BL("Vergleichs-Layer / Konkordanz", "Comparison layer / concordance"));
 
-      return `
-        ${renderZeitTypeSelector()}
-        <div class="zeit-card zeit-type-focus" style="margin-bottom:10px">
+      let header = "";
+      if (!typeId) {
+        const centers = new Set();
+        concordances.forEach(c => (c.hd.activations || []).forEach(a => { if (a.center) centers.add(a.center); }));
+        const fieldSummary = weaveFieldConditioning(fieldCentersOrdered([...centers]), 2);
+        header = `
+          <strong>${T(BL("Gesamtauswirkung", "Overall impact"))}</strong>
+          <span class="zeit-layer-tag">${T(ZEIT_TYPE_ALL.tag)}</span>
+          ${T(ZEIT_TYPE_LENS[""].overview)}<br>
+          <span style="color:var(--muted);font-size:.78rem;margin-top:8px;display:block">${T(BL("Aktive Tore", "Active gates"))}: ${gateText}</span>
+          ${fieldSummary ? `<span style="color:var(--muted);font-size:.78rem;display:block;margin-top:4px">${fieldSummary}</span>` : ""}
+          <span style="color:var(--muted);font-size:.76rem;display:block;margin-top:8px">${T(BL("Typ waehlen fuer konkrete Beispiele (z. B. Projektor: Sprechen leichter).", "Pick a type for concrete examples (e.g. projector: speaking easier)."))}</span>`;
+      } else {
+        const t = zeitTypeById(typeId);
+        const lens = ZEIT_TYPE_LENS[typeId];
+        header = `
           <strong>${T(t.label)}</strong>
           <span class="zeit-layer-tag">${T(BL("Typ-Linse aktiv", "Type lens active"))}</span>
           ${T(t.strategy)}.<br>
           <span style="font-size:.84rem;line-height:1.5;margin-top:6px;display:block">${T(lens.overview)}</span>
           <span style="color:var(--muted);font-size:.78rem;display:block;margin-top:8px"><em>${T(BL("So reiten", "How to ride"))}:</em> ${T(lens.ride)}</span>
           <span style="color:var(--warn);font-size:.78rem;display:block;margin-top:4px"><em>${T(BL("Vorsicht", "Watch"))}:</em> ${T(lens.trap)}</span>
-          <span style="color:var(--muted);font-size:.78rem;margin-top:8px;display:block">${T(BL("Relevante Tore", "Relevant gates"))}: ${gateText}</span>
-        </div>
-        <div class="zeit-type-events">
-          <div class="zeit-layer-tag">${T(BL("Transits fuer diesen Typ (priorisiert)", "Transits for this type (prioritized)"))}</div>
-          ${topEvents.map(c => renderZeitTypeEventTeaser(c, zeitHdType, win)).join("") || `<div class="small-card">${T(BL("Keine Events im Fenster.", "No events in window."))}</div>`}
+          <span style="color:var(--muted);font-size:.78rem;margin-top:8px;display:block">${T(BL("Relevante Tore", "Relevant gates"))}: ${gateText}</span>`;
+      }
+
+      const ichBlock = profile.chartComputed
+        ? `<div style="margin-top:12px;padding-top:10px;border-top:1px dashed rgba(255,255,255,.08);font-size:.78rem"><strong>${T(BL("Ich-Schicht", "Personal layer"))}</strong> · ${concordances.filter(c => c.hd.natal?.some(n => n.completes_channel)).length} ${T(BL("Natal-Kanaele im Fenster", "natal channels in window"))}</div>`
+        : "";
+
+      return `
+        ${renderZeitTypeSelector()}
+        <div class="zeit-card zeit-unified-card">
+          ${header}
+          <div class="zeit-concordance-stack">
+            <div class="zeit-layer-tag">${stackTitle}</div>
+            ${renderConcordanceStack(concordances, profile, win, typeId)}
+          </div>
+          ${ichBlock}
+          <div class="zeit-dataset-hint">${datasetCount} ${T(BL("Events gespeichert", "events stored"))}${addedRecords ? ` · +${addedRecords}` : ""} · ${T(BL("Export: Admin", "Export: Admin"))}</div>
         </div>`;
     }
-
-    function typeLensHdSuffix(typeId) {
-      if (!typeId || !ZEIT_TYPE_LENS[typeId]) return "";
-      const t = zeitTypeById(typeId);
-      return " " + T(BL(
-        `(${T(t.label)}: ${ZEIT_TYPE_LENS[typeId].ride.de.split(".")[0]}.)`,
-        `(${T(t.label)}: ${ZEIT_TYPE_LENS[typeId].ride.en.split(".")[0]}.)`
-      ));
-    }
-
-    const ZEIT_SIGNS = ZeitqualitaetCore?.ZODIAC || [];
 
     function createZeitHDEngine(profile) {
       const personal = new Set(profile.definedGates || []);
@@ -4667,26 +4803,6 @@
         (c.hd.activations || []).forEach(a => { if (a.gate) gates.add(a.gate); });
       });
       return [...gates].sort((a, b) => a - b);
-    }
-
-    function renderZeitSignCards(concordances) {
-      return ZEIT_SIGNS.map(sign => {
-        const hits = [];
-        concordances.forEach(c => {
-          (c.astro.placements || []).forEach(p => {
-            if (p.sign === sign) hits.push(`${p.body} ${c.astro.aspect || ""}`.trim());
-          });
-        });
-        const body = hits.length
-          ? [...new Set(hits)].slice(0, 6).join(" · ")
-          : T(BL("keine exakten Transit-Treffer", "no exact transit hits"));
-        return `
-          <div class="zeit-card">
-            <strong>${sign}</strong>
-            <span class="zeit-layer-tag">${T(BL("grob / Kollektiv", "coarse / collective"))}</span>
-            ${body}
-          </div>`;
-      }).join("");
     }
 
     const ZEIT_BODY_ID = {
@@ -5168,39 +5284,6 @@
       return `${base}<span class="concordance-time">${T(BL("Tor/Linie aktiv", "Gate/line active"))}: ${formatDateTimeShort(gl.iso_from)} – ${formatDateTimeShort(gl.iso_to)}${dur ? ` · ${dur}` : ""}</span>`;
     }
 
-    function renderConcordanceRows(concordances, profile, win) {
-      if (!concordances.length) {
-        return `<div class="small-card">${T(BL("Keine Ephemeris-Events in diesem Fenster.", "No ephemeris events in this window."))}</div>`;
-      }
-      return concordances.slice(0, 50).map(c => {
-        const jdPeak = c.activity?.jd_peak ?? c.jd_ut;
-        const hdLines = (c.hd.activations || []).map(a => renderHdActivationLine(a, jdPeak, win)).join("<br>");
-        const astroLines = (c.astro.placements || []).map(p =>
-          `${p.body}: ${p.sign} ${p.deg_in_sign.toFixed(1)}°`
-        ).join("<br>");
-        const label = c.astro.aspect
-          ? `${c.astro.aspect} (${c.astro.angle}°)`
-          : c.astro.phase
-            ? `${c.astro.phase === "new" ? T(BL("Neumond", "New moon")) : T(BL("Vollmond", "Full moon"))}`
-            : c.astro.ingress
-              ? `${T(BL("Ingress", "Ingress"))}: ${c.astro.ingress}`
-              : c.astro.station
-                ? `${T(BL("Station", "Station"))}: ${c.astro.station}`
-                : c.kind;
-        const hdDeut = buildConcordanceHdInterpretation(c, profile);
-        const hdShort = hdDeut.short + typeLensHdSuffix(zeitHdType);
-        const astroDeut = buildConcordanceAstroInterpretation(c);
-        const timeRange = formatActivityRange(c);
-        return `
-          <div class="concordance-row ${c.both_significant ? "match" : ""}">
-            <div class="concordance-meta">${label} · ${c.bodies.join(" / ")}</div>
-            <div class="concordance-meta concordance-time" style="margin-top:0">${timeRange}</div>
-            <div><strong>HD</strong><br>${hdLines || "—"}${renderConcordanceDeutung(hdShort, hdDeut.detail)}</div>
-            <div><strong>Astro</strong><br>${astroLines || "—"}${c.both_significant ? `<br><span style="color:var(--accent)">${T(BL("Uebereinstimmung", "Concordance"))}</span>` : ""}${renderConcordanceDeutung(astroDeut.short, astroDeut.detail)}</div>
-          </div>`;
-      }).join("");
-    }
-
     function renderHeuteView(profile, date) {
       if (!window.HDEngine?.hasEphemeris() || !window.ZeitqualitaetCore) {
         return `<section class="panel warning">${T(BL("Swiss Ephemeris oder Zeitqualitaets-Kern nicht geladen.", "Swiss Ephemeris or time-quality core not loaded."))}</section>`;
@@ -5226,9 +5309,6 @@
       const scopeLabel = zeitScope === "week"
         ? T(BL("Woche", "Week"))
         : zeitScope === "month" ? T(BL("Monat", "Month")) : T(BL("Tag", "Day"));
-      const ichBlock = profile.chartComputed
-        ? `<div class="zeit-card" style="margin-top:10px"><strong>${T(BL("Auswirkung auf mich", "Impact on me"))}</strong><span class="zeit-layer-tag">${T(BL("praezise / Ich", "precise / me"))}</span>${T(BL("Transit-zu-Natal aus Perfektions-Events mit deinem Chart.", "Transit-to-natal from perfection events against your chart."))}${concordances.some(c => c.hd.natal?.length) ? `<br>${concordances.filter(c => c.hd.natal?.some(n => n.completes_channel)).length} ${T(BL("Kanaele mit Natal-Bezug im Fenster", "channels with natal link in window"))}` : ""}</div>`
-        : `<div class="small-card" style="margin-top:10px">${T(BL("Chart laden fuer Ich-Schicht.", "Load chart for personal layer."))}</div>`;
 
       return `
         ${renderDateBar(date)}
@@ -5242,24 +5322,8 @@
             </div>
           </div>
           <div class="zeit-window-banner">${formatScopeWindow(win)}</div>
-          <div class="zeit-split">
-            <div class="zeit-col">
-              <h3>${T(BL("Human Design", "Human Design"))}</h3>
-              ${renderZeitHdColumn(concordances, collectiveGates, win, profile)}
-              ${ichBlock}
-            </div>
-            <div class="zeit-col">
-              <h3>${T(BL("Astrologie", "Astrology"))}</h3>
-              <div class="zeit-layer-tag">${T(BL("Kollektiv-Feld", "Collective field"))}</div>
-              <div class="zeit-card" style="margin-bottom:10px">${concordances.length} ${T(BL("Ephemeris-Events (Aspekte, Ingresse, Stationen, Lunationen)", "Ephemeris events (aspects, ingresses, stations, lunations)"))} (${scopeLabel.toLowerCase()})</div>
-              <div class="zeit-card-grid" style="grid-template-columns:repeat(auto-fill,minmax(140px,1fr))">${renderZeitSignCards(concordances)}</div>
-            </div>
-          </div>
-          <section class="concordance-panel">
-            <h3 style="font-size:.82rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)">${T(BL("Vergleichs-Layer / Konkordanz", "Comparison layer / concordance"))}</h3>
-            <div class="small-card" style="margin-bottom:10px;color:var(--muted);font-size:.78rem">${datasetCount} ${T(BL("Events im lokalen Konkordanz-Datensatz", "events in local concordance dataset"))}${addedRecords ? ` · +${addedRecords} ${T(BL("neu", "new"))}` : ""} · ${T(BL("Export unter Admin", "Export under Admin"))}</div>
-            ${renderConcordanceRows(concordances, profile, win)}
-          </section>
+          <h3 style="font-size:.82rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 10px">${T(BL("Human Design", "Human Design"))}</h3>
+          ${renderZeitUnifiedView(concordances, collectiveGates, win, profile, datasetCount, addedRecords)}
         </section>`;
     }
 
