@@ -1664,6 +1664,54 @@
       line-height: 1.45;
     }
 
+    .zeit-unified-card .zeit-cyber-item {
+      padding: 14px 0;
+      margin-bottom: 0;
+      border: none;
+      border-radius: 0;
+      border-bottom: 1px solid rgba(0, 245, 255, .1);
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .zeit-unified-card .zeit-cyber-item::before { display: none; }
+
+    .zeit-unified-card .zeit-cyber-item:last-child { border-bottom: none; }
+
+    .zeit-unified-card .zeit-cyber-item.match {
+      margin: 0;
+      padding: 14px 0;
+      border-radius: 0;
+      background: rgba(200, 255, 87, .03);
+      border-bottom: 1px solid rgba(200, 255, 87, .12);
+    }
+
+    .zeit-unified-card .zeit-cyber-item.match::after {
+      top: 12px;
+      right: 0;
+    }
+
+    .concordance-deutung--inline {
+      margin-top: 8px;
+      font-size: .78rem;
+      color: rgba(232, 244, 255, .68);
+      line-height: 1.5;
+    }
+
+    .concordance-deutung--inline .concordance-deutung-tag {
+      display: inline;
+      font-size: .56rem;
+      letter-spacing: .16em;
+      margin-right: 8px;
+      vertical-align: baseline;
+      color: var(--cyber-magenta);
+      text-shadow: 0 0 6px rgba(255, 42, 171, .35);
+    }
+
+    .zeit-type-hero-slot {
+      margin: 12px 0 4px;
+    }
+
     .zeit-unified-card {
       border-color: rgba(0, 245, 255, .28);
       background:
@@ -4774,6 +4822,22 @@
       return score;
     }
 
+    function dedupeConcordances(concordances) {
+      const seen = new Set();
+      return concordances.filter(c => {
+        const key = c.event_key || `${c.kind}:${c.jd_ut}:${(c.bodies || []).join("-")}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
+    function concordanceStackLimit() {
+      if (zeitScope === "week") return 8;
+      if (zeitScope === "month") return 12;
+      return 5;
+    }
+
     function topConcordancesForType(concordances, typeId, limit = 5) {
       if (!typeId) return concordances.slice(0, limit);
       return [...concordances]
@@ -4905,18 +4969,15 @@
       const hdDeut = buildConcordanceHdInterpretation(c, profile);
       const astroDeut = buildConcordanceAstroInterpretation(c);
       const timeRange = formatActivityRange(c);
-      const typeEx = typeTransitExample(c, typeId);
-      const typeHero = renderTypeHero(typeEx);
-      const astroBlock = astroDeut.short?.trim()
-        ? `<div class="zeit-deutung-block">${renderConcordanceDeutung(astroDeut.short, astroDeut.detail, "secondary", T(BL("Astro", "Astro")))}</div>`
+      const astroInline = astroDeut.short?.trim()
+        ? `<div class="zeit-deutung-astro-inline">${renderConcordanceDeutung(astroDeut.short, astroDeut.detail, "inline", T(BL("Astro", "Astro")))}</div>`
         : "";
       return `
         <div class="zeit-concordance-item zeit-cyber-item ${c.both_significant ? "match" : ""}">
           <div class="zeit-deutung-block">
             ${renderConcordanceDeutung(hdDeut.short, hdDeut.detail, "primary", T(BL("Deutung", "Interpretation")))}
+            ${astroInline}
           </div>
-          ${typeHero}
-          ${astroBlock}
           <div class="zeit-tech-layer">
             <div class="zeit-tech-meta">
               <strong>${label}</strong>
@@ -4929,25 +4990,31 @@
         </div>`;
     }
 
-    function renderConcordanceStack(concordances, profile, win, typeId, limit = 8) {
-      const items = topConcordancesForType(concordances, typeId, limit);
+    function renderConcordanceStack(concordances, profile, win, typeId) {
+      const unique = dedupeConcordances(concordances);
+      const limit = concordanceStackLimit();
+      const items = topConcordancesForType(unique, typeId, limit);
       if (!items.length) {
         return `<div class="small-card">${T(BL("Keine Events in diesem Fenster.", "No events in this window."))}</div>`;
       }
       return items.map(c => renderConcordanceStackItem(c, profile, win, typeId)).join("");
     }
 
-    function renderZeitUnifiedView(concordances, collectiveGates, win, profile, datasetCount, addedRecords) {
+    function renderZeitUnifiedView(concordances, collectiveGates, win, profile, datasetCount, addedRecords, scopeLabel, formatScopeWindowFn) {
+      const unique = dedupeConcordances(concordances);
       const gateText = collectiveGates.length ? collectiveGates.map(g => `G${g}`).join(", ") : "—";
       const typeId = zeitHdType;
       const stackTitle = typeId
         ? T(BL("Transits fuer diesen Typ (priorisiert)", "Transits for this type (prioritized)"))
         : T(BL("Vergleichs-Layer / Konkordanz", "Comparison layer / concordance"));
+      const topItem = typeId ? topConcordancesForType(unique, typeId, 1)[0] : null;
+      const typeHeroHtml = topItem ? renderTypeHero(typeTransitExample(topItem, typeId)) : "";
+      const typeHeroSlot = typeHeroHtml ? `<div class="zeit-type-hero-slot">${typeHeroHtml}</div>` : "";
 
       let header = "";
       if (!typeId) {
         const centers = new Set();
-        concordances.forEach(c => (c.hd.activations || []).forEach(a => { if (a.center) centers.add(a.center); }));
+        unique.forEach(c => (c.hd.activations || []).forEach(a => { if (a.center) centers.add(a.center); }));
         const fieldSummary = weaveFieldConditioning(fieldCentersOrdered([...centers]), 2);
         header = `
           <strong>${T(BL("Gesamtauswirkung", "Overall impact"))}</strong>
@@ -4970,16 +5037,26 @@
       }
 
       const ichBlock = profile.chartComputed
-        ? `<div style="margin-top:12px;padding-top:10px;border-top:1px dashed rgba(255,255,255,.08);font-size:.78rem"><strong>${T(BL("Ich-Schicht", "Personal layer"))}</strong> · ${concordances.filter(c => c.hd.natal?.some(n => n.completes_channel)).length} ${T(BL("Natal-Kanaele im Fenster", "natal channels in window"))}</div>`
+        ? `<div style="margin-top:12px;padding-top:10px;border-top:1px dashed rgba(255,255,255,.08);font-size:.78rem"><strong>${T(BL("Ich-Schicht", "Personal layer"))}</strong> · ${unique.filter(c => c.hd.natal?.some(n => n.completes_channel)).length} ${T(BL("Natal-Kanaele im Fenster", "natal channels in window"))}</div>`
         : "";
 
       return `
         ${renderZeitTypeSelector()}
         <div class="zeit-card zeit-unified-card">
+          <div class="zeit-toolbar" style="margin-bottom:10px">
+            <h2 style="margin:0;font-size:1.1rem">${T(BL("Zeitqualitaet", "Time quality"))} · ${scopeLabel}</h2>
+            <div class="zeit-scope" role="group" aria-label="${T(BL("Zeit-Umfang", "Time scope"))}">
+              <button type="button" class="btn ${zeitScope === "day" ? "active" : ""}" data-zeit-scope="day">${T(BL("Tag", "Day"))}</button>
+              <button type="button" class="btn ${zeitScope === "week" ? "active" : ""}" data-zeit-scope="week">${T(BL("Woche", "Week"))}</button>
+              <button type="button" class="btn ${zeitScope === "month" ? "active" : ""}" data-zeit-scope="month">${T(BL("Monat", "Month"))}</button>
+            </div>
+          </div>
+          <div class="zeit-window-banner">${formatScopeWindowFn(win)}</div>
           ${header}
+          ${typeHeroSlot}
           <div class="zeit-concordance-stack">
             <div class="zeit-layer-tag">${stackTitle}</div>
-            ${renderConcordanceStack(concordances, profile, win, typeId)}
+            ${renderConcordanceStack(unique, profile, win, typeId)}
           </div>
           ${ichBlock}
           <div class="zeit-dataset-hint">${datasetCount} ${T(BL("Events gespeichert", "events stored"))}${addedRecords ? ` · +${addedRecords}` : ""} · ${T(BL("Export: Admin", "Export: Admin"))}</div>
@@ -5529,19 +5606,7 @@
 
       return `
         ${renderDateBar(date)}
-        <section class="panel">
-          <div class="zeit-toolbar">
-            <h2 style="margin:0;font-size:1.1rem">${T(BL("Zeitqualitaet", "Time quality"))} · ${scopeLabel}</h2>
-            <div class="zeit-scope" role="group" aria-label="${T(BL("Zeit-Umfang", "Time scope"))}">
-              <button type="button" class="btn ${zeitScope === "day" ? "active" : ""}" data-zeit-scope="day">${T(BL("Tag", "Day"))}</button>
-              <button type="button" class="btn ${zeitScope === "week" ? "active" : ""}" data-zeit-scope="week">${T(BL("Woche", "Week"))}</button>
-              <button type="button" class="btn ${zeitScope === "month" ? "active" : ""}" data-zeit-scope="month">${T(BL("Monat", "Month"))}</button>
-            </div>
-          </div>
-          <div class="zeit-window-banner">${formatScopeWindow(win)}</div>
-          <h3 style="font-size:.82rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 10px">${T(BL("Human Design", "Human Design"))}</h3>
-          ${renderZeitUnifiedView(concordances, collectiveGates, win, profile, datasetCount, addedRecords)}
-        </section>`;
+        ${renderZeitUnifiedView(concordances, collectiveGates, win, profile, datasetCount, addedRecords, scopeLabel, formatScopeWindow)}`;
     }
 
     function renderTabs() {
