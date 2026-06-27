@@ -1162,6 +1162,48 @@
 
     .focus-dimension .acc-dev.up { color: var(--good); }
     .focus-dimension .acc-dev.down { color: var(--low); }
+    .focus-dimension .acc-dev.flat { color: var(--muted); }
+
+    .focus-dimension .acc-baseline {
+      font-size: .68rem;
+      color: var(--muted);
+      font-weight: 500;
+      margin-left: 4px;
+    }
+
+    .focus-dim-bidirectional {
+      font-size: .72rem;
+      color: var(--muted);
+      line-height: 1.45;
+      padding: 6px 12px 2px;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      margin-bottom: 8px;
+    }
+
+    .acc-bidirectional {
+      color: var(--warn);
+      font-weight: 500;
+    }
+
+    .dimension-select .dim-delta {
+      font-size: .72rem;
+      font-weight: 600;
+      margin-left: 4px;
+    }
+
+    .dimension-select .dim-delta.up { color: var(--good); }
+    .dimension-select .dim-delta.down { color: var(--low); }
+    .dimension-select .dim-delta.flat { color: var(--muted); }
+
+    .score-caption .score-overall-delta {
+      display: block;
+      margin-top: 4px;
+      font-size: .78rem;
+    }
+
+    .score-caption .score-overall-delta.up { color: var(--good); }
+    .score-caption .score-overall-delta.down { color: var(--low); }
+    .score-caption .score-overall-delta.flat { color: var(--muted); }
 
     .focus-empty {
       color: var(--muted);
@@ -3518,14 +3560,29 @@
 
       transit.transits.forEach(t => {
         const dim = GATE_INFO[t.gate].dimension;
-        values[dim] += personal.has(t.gate) ? 0.35 : 0.5;
-        if (!profile.definedCenters.includes(t.center)) values.clarity -= 0.08;
+        const center = t.center || gateCenter(t.gate);
+        const centerOpen = !profile.definedCenters.includes(center);
+        const gateInChart = personal.has(t.gate);
+        const completesChannel = activatedChannels.some(ch =>
+          ch.completedByTransit && (ch.a === t.gate || ch.b === t.gate)
+        );
+
+        if (completesChannel && centerOpen) values[dim] -= 0.12;
+        else if (gateInChart) values[dim] += 0.35;
+        else if (centerOpen) values[dim] += 0.08;
+        else values[dim] += 0.2;
       });
 
       activatedChannels.forEach(channel => {
-        if (channel.completedByTransit) {
-          const dimA = GATE_INFO[channel.a].dimension;
-          const dimB = GATE_INFO[channel.b].dimension;
+        if (!channel.completedByTransit) return;
+        const dimA = GATE_INFO[channel.a].dimension;
+        const dimB = GATE_INFO[channel.b].dimension;
+        const openA = !profile.definedCenters.includes(gateCenter(channel.a));
+        const openB = !profile.definedCenters.includes(gateCenter(channel.b));
+        if (openA || openB) {
+          if (openA) values[dimA] -= 0.08;
+          if (openB) values[dimB] -= 0.06;
+        } else {
           values[dimA] += 0.45;
           values[dimB] += 0.35;
         }
@@ -3541,7 +3598,7 @@
       const weight = Object.values(DIMENSIONS).reduce((sum, dim) => sum + dim.weight, 0);
       const overall = +clamp(weighted / weight).toFixed(1);
       const abundance = (values.energy >= 7.2 && values.flow >= 6.2) || [14, 45, 26, 44, 21].some(g => transitGates.has(g) && personal.has(g));
-      return { values, overall, abundance };
+      return { values, overall, abundance, baseline: baseline.values, baselineOverall: baseline.overall };
     }
 
     function computeChartScores(profile, chart) {
@@ -3592,14 +3649,14 @@
       }
       if (impact === "openConditioning") {
         return BL(
-          `Offenes ${T(CENTER_LABELS[center])}: ${dim} aus dem Feld. Spuerbar — muss nicht deins werden.`,
-          `Open ${T(CENTER_LABELS[center])}: ${dim} from the field. Noticeable — doesn't have to become yours.`
+          `Offenes ${T(CENTER_LABELS[center])}: ${dim} aus dem Feld — spuerbar nach oben oder unten. Nicht automatisch deins.`,
+          `Open ${T(CENTER_LABELS[center])}: ${dim} from the field — can tip up or down. Not automatically yours.`
         );
       }
       if (impact === "borrowedDefinition") {
         return BL(
-          `Kanal temporaer zu — fuehlt sich echt an, ist es nicht. Keine grossen Entscheidungen.`,
-          `Channel temporarily complete — feels real, isn't. No big decisions.`
+          `Geliehene Definition: dein offenes ${T(CENTER_LABELS[center])} kann heute staerker wirken — und genauso leichter vernebelt sein. Keine grossen Entscheidungen in beide Richtungen.`,
+          `Borrowed definition: your open ${T(CENTER_LABELS[center])} may feel stronger today — and just as easily foggy. No major decisions either way.`
         );
       }
       return BL(
@@ -3749,12 +3806,12 @@
       const names = centers.map(c => T(CENTER_LABELS[c]));
       const first = centers.length === 1
         ? BL(
-            `Heute fuehlt sich dein offenes ${names[0]} staerker und zuverlaessiger an als sonst — fast so, als waere das immer schon deins.`,
-            `Today your open ${names[0]} feels stronger and more reliable than usual — almost as if it has always been yours.`
+            `Dein offenes ${names[0]} kann heute in beide Richtungen kippen: staerker und zuverlaessiger — oder vernebelter und ueberzeugter, als es wirklich ist.`,
+            `Your open ${names[0]} can tip both ways today: stronger and more reliable — or foggier and more convinced than it really is.`
           )
         : BL(
-            `Heute fuehlen sich deine offenen Bereiche ${names.join(" und ")} staerker und zuverlaessiger an als sonst — fast so, als waere das immer schon deins.`,
-            `Today your open ${names.join(" and ")} feel stronger and more reliable than usual — almost as if they have always been yours.`
+            `Deine offenen Bereiche ${names.join(" und ")} koennen heute in beide Richtungen kippen — staerker oder vernebelter als sonst.`,
+            `Your open ${names.join(" and ")} can tip both ways today — stronger or foggier than usual.`
           );
       const second = BL(
         "Das ist nur voruebergehend. Triff darauf heute keine grossen Entscheidungen.",
@@ -3992,8 +4049,8 @@
           c.completedByTransit && (c.a === transit.gate || c.b === transit.gate)
         );
         return BL(
-          `Heute fuehlt sich dein offenes ${centerLabel} staerker an — fast so, als gehoere ${gateName} fest zu dir. Das ist nur voruebergehend; keine grossen Entscheidungen darauf.`,
-          `Today your open ${centerLabel} feels stronger — almost as if ${gateName} permanently belongs to you. This is only temporary; no major decisions on it.`
+          `Heute kann dein offenes ${centerLabel} in beide Richtungen kippen — staerker oder vernebelter. Das ist nur voruebergehend; keine grossen Entscheidungen darauf.`,
+          `Today your open ${centerLabel} can tip both ways — stronger or foggier. This is only temporary; no major decisions based on it.`
         );
       }
       if (impact === "ownAmplification") {
@@ -4550,11 +4607,51 @@
       return model.transits.some(t => !skip.has(t.id) && GATE_INFO[t.gate].dimension === dimKey);
     }
 
+    function formatScoreDelta(value, baseValue, compact = false) {
+      if (baseValue == null || value == null) return { html: "", cls: "flat", delta: 0 };
+      const delta = +(value - baseValue).toFixed(1);
+      if (Math.abs(delta) < 0.05) {
+        const html = compact
+          ? `<span class="dim-delta flat">→</span>`
+          : `<span class="acc-dev flat">→ ${T(BL("wie Chart", "as chart"))}</span>`;
+        return { html, cls: "flat", delta: 0 };
+      }
+      const cls = delta > 0 ? "up" : "down";
+      const arrow = delta > 0 ? "▲" : "▼";
+      const sign = delta > 0 ? "+" : "";
+      const html = compact
+        ? `<span class="dim-delta ${cls}">${arrow}${sign}${delta}</span>`
+        : `<span class="acc-dev ${cls}">${arrow} ${sign}${delta}</span><span class="acc-baseline">${T(BL("vs. Chart", "vs. chart"))} ${baseValue}</span>`;
+      return { html, cls, delta };
+    }
+
+    function dimensionBidirectionalHint(entries) {
+      if (!entries.length) return "";
+      const keys = new Set(entries.map(e => e.impactKey));
+      const parts = [];
+      if (keys.has("borrowedDefinition")) {
+        parts.push(T(BL("↗ staerker im Gefuehl · ↘ nicht vertrauen", "↗ feels stronger · ↘ don't trust")));
+      }
+      if (keys.has("openConditioning")) {
+        parts.push(T(BL("↗ spuerbar · ↘ nicht automatisch deins", "↗ noticeable · ↘ not automatically yours")));
+      }
+      if (keys.has("ownAmplification")) {
+        parts.push(T(BL("↗ deine Frequenz · ↘ nicht uebertreiben", "↗ your frequency · ↘ don't overdo")));
+      }
+      if (keys.has("definedNuance")) {
+        parts.push(T(BL("↗ Nuance · ↘ kein Kernthema", "↗ nuance · ↘ not core theme")));
+      }
+      if (!parts.length) return "";
+      return `<div class="focus-dim-bidirectional"><span class="acc-bidirectional">${parts.join(" · ")}</span></div>`;
+    }
+
     function dimensionFocusGroup(dimKey, entries, profile, model, baseline, tageskern, openDefault) {
       const dim = DIMENSIONS[dimKey];
       const hasContent = !!(tageskern || entries.length);
       const baseValue = baseline?.values[dimKey];
       const value = hasContent ? model.values[dimKey] : (baseValue ?? model.values[dimKey]);
+      const deltaHtml = showTransits && baseline ? formatScoreDelta(value, baseValue).html : "";
+      const bidirectional = showTransits && entries.length ? dimensionBidirectionalHint(entries) : "";
       const byImpact = {};
       entries.forEach(e => {
         if (!byImpact[e.impactKey]) byImpact[e.impactKey] = [];
@@ -4582,34 +4679,42 @@
             <span class="acc-head">
               <span class="acc-icon">${dim.icon}</span>
               <span class="acc-field">${T(dim.label)}</span>
-              <span class="acc-score">${value}/10</span>
+              <span class="acc-score">${value}/10${deltaHtml}</span>
             </span>
             <span class="acc-chevron">▼</span>
           </summary>
-          <div class="reading-group-body">${bodyParts.join("")}</div>
+          <div class="reading-group-body">${bidirectional}${bodyParts.join("")}</div>
         </details>`;
     }
 
     function renderScoreSidebar(model, baseline, showTransitsFlag, profile) {
       const scoreLabel = model.overall >= 7 ? BL("stark", "strong") : model.overall >= 5 ? BL("steuerbar", "steerable") : BL("ruhig", "quiet");
       const scoreCaption = showTransitsFlag
-        ? T(BL("Gesamtscore", "Overall score"))
+        ? T(BL("Transit-Tag", "Transit day"))
         : T(BL("Chart-Baseline", "Chart baseline"));
+      const overallDelta = showTransitsFlag && baseline
+        ? formatScoreDelta(model.overall, baseline.overall)
+        : { html: "", cls: "flat", delta: 0 };
+      const overallDeltaLine = showTransitsFlag && baseline
+        ? `<span class="score-overall-delta ${overallDelta.cls}">${baseline.overall} → ${model.overall}${Math.abs(overallDelta.delta) < 0.05 ? ` · ${T(BL("wie Chart", "as chart"))}` : overallDelta.delta > 0 ? ` ▲ +${overallDelta.delta}` : ` ▼ ${overallDelta.delta}`}</span>`
+        : "";
       return `
         <section class="panel score-sidebar">
           <div class="score-ring" style="--score:${model.overall};--ring:${ringColor(model.overall)}">
             <strong>${model.overall}</strong>
           </div>
-          <p class="score-caption">${scoreCaption}: ${T(scoreLabel)}${model.abundance ? " · " + T(BL("Abundance offen", "Abundance open")) : ""}<br><span style="opacity:.75">${T(BL("Skala 0–10 pro Bereich", "Scale 0–10 per field"))}</span></p>
+          <p class="score-caption">${scoreCaption}: ${T(scoreLabel)}${model.abundance ? " · " + T(BL("Abundance offen", "Abundance open")) : ""}${overallDeltaLine}<br><span style="opacity:.75">${showTransitsFlag ? T(BL("Score kann vs. Chart steigen oder fallen — beide Richtungen gelten.", "Score can rise or fall vs. chart — both directions apply.")) : T(BL("Skala 0–10 pro Bereich", "Scale 0–10 per field"))}</span></p>
           <div class="dimension-list">
             ${DIMENSION_ORDER.map(dim => {
               const active = showTransitsFlag && profile ? dimensionHasActiveInfluences(profile, model, dim) : true;
               const value = active ? model.values[dim] : (baseline?.values[dim] ?? model.values[dim]);
+              const baseVal = baseline?.values[dim];
+              const delta = showTransitsFlag && baseline && active ? formatScoreDelta(value, baseVal, true).html : "";
               return `
                 <button type="button" class="dimension-select ${selectedDimension === dim ? "active" : ""}" data-dimension="${dim}" aria-pressed="${selectedDimension === dim}">
                   <span class="dim-icon">${DIMENSIONS[dim].icon}</span>
                   <span class="dim-label">${T(DIMENSIONS[dim].label)}</span>
-                  <span class="dim-score">${value}/10</span>
+                  <span class="dim-score">${value}/10${delta}</span>
                   <div class="bar" style="--value:${value};--ring:${ringColor(value)}"><i></i></div>
                 </button>`;
             }).join("")}
@@ -4713,7 +4818,7 @@
         <section class="panel focus-panel">
           ${renderFocusPanelHead(
             BL("Tages-Fokus", "Day focus"),
-            BL("Score, Tageskern und Transite pro Bereich — ohne Doppelungen. Sonne, Erde und Mond nur im Tageskern.", "Score, day core and transits per field — no duplicates. Sun, Earth and Moon only in day core.")
+            BL("Score, Tageskern und Transite pro Bereich — Delta vs. Chart (▲/▼). Einfluesse koennen in beide Richtungen kippen.", "Score, day core and transits per field — delta vs. chart (▲/▼). Influences can tip both ways.")
           )}
           ${selectedDimension ? `<button type="button" class="btn-text" id="clearDimFilter">${T(BL("← Alle Bereiche", "← All fields"))}</button>` : ""}
           <div class="reading-cards">${groups.join("")}</div>
