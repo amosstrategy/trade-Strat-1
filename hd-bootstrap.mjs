@@ -8,6 +8,9 @@ const Planet = {
   Jupiter: 5, Saturn: 6, Uranus: 7, Neptune: 8, Pluto: 9
 };
 const LunarPoint = { TrueNode: 11 };
+const Asteroid = { Chiron: 15 };
+
+export const SweBodies = { ...Planet, ...LunarPoint, ...Asteroid };
 
 const FLAG_SWISS = 2;
 const FLAG_SPEED = 256;
@@ -109,6 +112,10 @@ function julianDayUtc(date) {
 }
 
 function calcLongitude(jd, body) {
+  return calcLonSpeed(jd, body).longitude;
+}
+
+function calcLonSpeed(jd, body) {
   const xxPtr = mod._malloc(6 * 8);
   const serrPtr = mod._malloc(256);
   const ret = mod.ccall(
@@ -123,10 +130,11 @@ function calcLongitude(jd, body) {
     mod._free(serrPtr);
     throw new Error(msg || `swe_calc_ut failed (${ret})`);
   }
-  const lon = mod.getValue(xxPtr, "double");
+  const lon = norm(mod.getValue(xxPtr, "double"));
+  const speed = mod.getValue(xxPtr + 24, "double");
   mod._free(xxPtr);
   mod._free(serrPtr);
-  return lon;
+  return { longitude: lon, speed };
 }
 
 function norm(deg) {
@@ -157,9 +165,35 @@ function longitudeForBody(jd, bodyId) {
 globalThis.HDEphemeris = {
   ready: true,
   engine: "swiss-ephemeris",
+  bodies: SweBodies,
   utcToJulianDay: julianDayUtc,
   longitudeForBody,
+  lonSpeedForBody(jd, bodyId) {
+    const body = bodyIdToSwe(bodyId);
+    return calcLonSpeed(jd, body);
+  },
+  lonSpeed(jd, sweBody) {
+    return calcLonSpeed(jd, sweBody);
+  },
   norm
 };
+
+function bodyIdToSwe(bodyId) {
+  switch (bodyId) {
+    case "sun": return Planet.Sun;
+    case "moon": return Planet.Moon;
+    case "mercury": return Planet.Mercury;
+    case "venus": return Planet.Venus;
+    case "mars": return Planet.Mars;
+    case "jupiter": return Planet.Jupiter;
+    case "saturn": return Planet.Saturn;
+    case "uranus": return Planet.Uranus;
+    case "neptune": return Planet.Neptune;
+    case "pluto": return Planet.Pluto;
+    case "north_node": return LunarPoint.TrueNode;
+    case "chiron": return Asteroid.Chiron;
+    default: throw new Error(`unknown body ${bodyId}`);
+  }
+}
 
 dispatch("hd-ephemeris-ready");

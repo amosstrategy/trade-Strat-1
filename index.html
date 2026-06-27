@@ -1509,6 +1509,103 @@
         line-height: 1.12;
       }
     }
+
+    .zeit-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .zeit-scope {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .zeit-scope button.active {
+      border-color: var(--accent);
+      background: rgba(132, 220, 198, .14);
+      color: var(--accent);
+    }
+
+    .zeit-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      align-items: start;
+    }
+
+    @media (max-width: 960px) {
+      .zeit-split { grid-template-columns: 1fr; }
+    }
+
+    .zeit-col h3 {
+      font-size: .82rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin: 0 0 8px;
+    }
+
+    .zeit-layer-tag {
+      display: inline-block;
+      font-size: .65rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .zeit-card-grid {
+      display: grid;
+      gap: 8px;
+    }
+
+    .zeit-card {
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.03);
+      font-size: .84rem;
+      line-height: 1.45;
+    }
+
+    .zeit-card strong { display: block; margin-bottom: 4px; }
+
+    .concordance-panel {
+      margin-top: 14px;
+    }
+
+    .concordance-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.025);
+      font-size: .82rem;
+      line-height: 1.45;
+    }
+
+    .concordance-row.match {
+      border-color: rgba(132, 220, 198, .35);
+    }
+
+    .concordance-meta {
+      grid-column: 1 / -1;
+      font-size: .72rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    @media (max-width: 720px) {
+      .concordance-row { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -1520,12 +1617,14 @@
   <script type="module" src="hd-bootstrap.mjs"></script>
   <script src="hd-engine.js"></script>
   <script src="hd-logic.js?v=8"></script>
+  <script src="zeitqualitaet-core.js"></script>
   <main class="app" id="app"></main>
 
   <script>
     const BL = (de, en) => ({ de, en });
     let lang = "de";
     let activeTab = "daily";
+    let zeitScope = "day";
     let showTransits = true;
     let selectedDimension = null;
     let selectedDateISO = "";
@@ -4148,9 +4247,174 @@
       return `<strong>Tor ${gate}: ${T(info.name)}</strong><br>${T(status)}.<br>${T(info.description)}<br><span>${T(CENTER_LABELS[info.center])} | ${T(DIMENSIONS[info.dimension].label)}</span>`;
     }
 
+    const ZEIT_TYPES = [
+      { id: "Reflector", label: BL("Reflektor", "Reflector"), strategy: BL("28-Tage-Zyklus abwarten", "Wait a 28-day lunar cycle") },
+      { id: "Projector", label: BL("Projektor", "Projector"), strategy: BL("Auf Einladung warten", "Wait for invitation") },
+      { id: "Manifestor", label: BL("Manifestor", "Manifestor"), strategy: BL("Informieren vor dem Handeln", "Inform before acting") },
+      { id: "Manifesting Generator", label: BL("Manifestierender Generator", "Manifesting Generator"), strategy: BL("Reagieren, dann informieren", "Respond, then inform") },
+      { id: "Generator", label: BL("Generator", "Generator"), strategy: BL("Auf das Leben reagieren", "Respond to life") }
+    ];
+
+    const ZEIT_SIGNS = ZeitqualitaetCore?.ZODIAC || [];
+
+    function createZeitHDEngine(profile) {
+      const personal = new Set(profile.definedGates || []);
+      return {
+        gate_of(longitude) {
+          const a = HDEngine.longitudeToActivation(longitude);
+          return { gate: a.gate, line: a.line };
+        },
+        channel_of(gate) {
+          const ch = CHANNELS.find(c => c.a === gate || c.b === gate);
+          return ch ? ch.key : null;
+        },
+        center_of(gate) {
+          return gateCenter(gate);
+        },
+        natal_completion(transitGate) {
+          if (!profile.chartComputed) return { completes_channel: null, hangs: false };
+          const ch = CHANNELS.find(c => (c.a === transitGate || c.b === transitGate) && (personal.has(c.a) || personal.has(c.b)));
+          if (!ch) return { completes_channel: null, hangs: false };
+          const native = personal.has(ch.a) && personal.has(ch.b);
+          return {
+            completes_channel: native ? null : ch.key,
+            hangs: !native
+          };
+        }
+      };
+    }
+
+    function collectiveGatesForWindow(concordances) {
+      const gates = new Set();
+      concordances.forEach(c => {
+        (c.hd.activations || []).forEach(a => { if (a.gate) gates.add(a.gate); });
+      });
+      return [...gates].sort((a, b) => a - b);
+    }
+
+    function renderZeitTypeCards(collectiveGates) {
+      const gateText = collectiveGates.length
+        ? collectiveGates.map(g => `G${g}`).join(", ")
+        : T(BL("keine exakten Perfektionen im Fenster", "no exact perfections in window"));
+      return ZEIT_TYPES.map(t => `
+        <div class="zeit-card">
+          <strong>${T(t.label)}</strong>
+          <span class="zeit-layer-tag">${T(BL("grob / Kollektiv", "coarse / collective"))}</span>
+          ${T(t.strategy)}.<br>
+          <span style="color:var(--muted);font-size:.78rem">${T(BL("Heute aktive Tore (berechnet)", "Active gates today (computed)"))}: ${gateText}</span>
+          ${t.id === "Reflector" ? `<br><span style="color:var(--muted);font-size:.78rem">${T(BL("Alle Zentren offen = maximale Transit-Sensitivitaet.", "All centers open = maximum transit sensitivity."))}</span>` : ""}
+        </div>`).join("");
+    }
+
+    function renderZeitSignCards(concordances) {
+      return ZEIT_SIGNS.map(sign => {
+        const hits = [];
+        concordances.forEach(c => {
+          (c.astro.placements || []).forEach(p => {
+            if (p.sign === sign) hits.push(`${p.body} ${c.astro.aspect || ""}`.trim());
+          });
+        });
+        const body = hits.length
+          ? [...new Set(hits)].slice(0, 6).join(" · ")
+          : T(BL("keine exakten Transit-Treffer", "no exact transit hits"));
+        return `
+          <div class="zeit-card">
+            <strong>${sign}</strong>
+            <span class="zeit-layer-tag">${T(BL("grob / Kollektiv", "coarse / collective"))}</span>
+            ${body}
+          </div>`;
+      }).join("");
+    }
+
+    function renderConcordanceRows(concordances) {
+      if (!concordances.length) {
+        return `<div class="small-card">${T(BL("Keine Ephemeris-Events in diesem Fenster.", "No ephemeris events in this window."))}</div>`;
+      }
+      return concordances.slice(0, 50).map(c => {
+        const hdLines = (c.hd.activations || []).map(a =>
+          `${a.body}: G${a.gate}.${a.line}${a.channel ? ` (${a.channel})` : ""} · ${T(CENTER_LABELS[a.center] || a.center)}`
+        ).join("<br>");
+        const astroLines = (c.astro.placements || []).map(p =>
+          `${p.body}: ${p.sign} ${p.deg_in_sign.toFixed(1)}°`
+        ).join("<br>");
+        const label = c.astro.aspect
+          ? `${c.astro.aspect} (${c.astro.angle}°)`
+          : c.astro.phase
+            ? `${c.astro.phase === "new" ? T(BL("Neumond", "New moon")) : T(BL("Vollmond", "Full moon"))}`
+            : c.astro.ingress
+              ? `${T(BL("Ingress", "Ingress"))}: ${c.astro.ingress}`
+              : c.astro.station
+                ? `${T(BL("Station", "Station"))}: ${c.astro.station}`
+                : c.kind;
+        return `
+          <div class="concordance-row ${c.both_significant ? "match" : ""}">
+            <div class="concordance-meta">${label} · ${c.bodies.join(" / ")} · ${c.jd_iso?.slice(0, 16) || ""}</div>
+            <div><strong>HD</strong><br>${hdLines || "—"}</div>
+            <div><strong>Astro</strong><br>${astroLines || "—"}${c.both_significant ? `<br><span style="color:var(--accent)">${T(BL("Uebereinstimmung", "Concordance"))}</span>` : ""}</div>
+          </div>`;
+      }).join("");
+    }
+
+    function renderHeuteView(profile, date) {
+      if (!window.HDEngine?.hasEphemeris() || !window.ZeitqualitaetCore) {
+        return `<section class="panel warning">${T(BL("Swiss Ephemeris oder Zeitqualitaets-Kern nicht geladen.", "Swiss Ephemeris or time-quality core not loaded."))}</section>`;
+      }
+      const win = ZeitqualitaetCore.windowJds(date, zeitScope);
+      if (!win) return `<section class="panel warning">${T(BL("Ephemeris nicht bereit.", "Ephemeris not ready."))}</section>`;
+      const engine = createZeitHDEngine(profile);
+      let concordances = [];
+      try {
+        concordances = ZeitqualitaetCore.concordancesForWindow(
+          win.jdStart, win.jdEnd, engine, null, profile.id
+        );
+      } catch (err) {
+        return `<section class="panel warning">${T(BL("Berechnung fehlgeschlagen", "Calculation failed"))}: ${err.message}</section>`;
+      }
+      const collectiveGates = collectiveGatesForWindow(concordances);
+      const scopeLabel = zeitScope === "week"
+        ? T(BL("Woche", "Week"))
+        : zeitScope === "month" ? T(BL("Monat", "Month")) : T(BL("Tag", "Day"));
+      const ichBlock = profile.chartComputed
+        ? `<div class="zeit-card" style="margin-top:10px"><strong>${T(BL("Auswirkung auf mich", "Impact on me"))}</strong><span class="zeit-layer-tag">${T(BL("praezise / Ich", "precise / me"))}</span>${T(BL("Transit-zu-Natal aus Perfektions-Events mit deinem Chart.", "Transit-to-natal from perfection events against your chart."))}${concordances.some(c => c.hd.natal?.length) ? `<br>${concordances.filter(c => c.hd.natal?.some(n => n.completes_channel)).length} ${T(BL("Kanaele mit Natal-Bezug im Fenster", "channels with natal link in window"))}` : ""}</div>`
+        : `<div class="small-card" style="margin-top:10px">${T(BL("Chart laden fuer Ich-Schicht.", "Load chart for personal layer."))}</div>`;
+
+      return `
+        ${renderDateBar(date)}
+        <section class="panel">
+          <div class="zeit-toolbar">
+            <h2 style="margin:0;font-size:1.1rem">${T(BL("Zeitqualitaet", "Time quality"))} · ${scopeLabel}</h2>
+            <div class="zeit-scope" role="group" aria-label="${T(BL("Zeit-Umfang", "Time scope"))}">
+              <button type="button" class="btn ${zeitScope === "day" ? "active" : ""}" data-zeit-scope="day">${T(BL("Tag", "Day"))}</button>
+              <button type="button" class="btn ${zeitScope === "week" ? "active" : ""}" data-zeit-scope="week">${T(BL("Woche", "Week"))}</button>
+              <button type="button" class="btn ${zeitScope === "month" ? "active" : ""}" data-zeit-scope="month">${T(BL("Monat", "Month"))}</button>
+            </div>
+          </div>
+          <div class="zeit-split">
+            <div class="zeit-col">
+              <h3>${T(BL("Human Design", "Human Design"))}</h3>
+              <div class="zeit-layer-tag">${T(BL("Kollektiv-Feld", "Collective field"))}</div>
+              <div class="zeit-card" style="margin-bottom:10px">${T(BL("Aktive Tore aus exakten Perfektionen", "Active gates from exact perfections"))}: ${collectiveGates.map(g => `G${g}`).join(", ") || "—"}</div>
+              <div class="zeit-card-grid">${renderZeitTypeCards(collectiveGates)}</div>
+              ${ichBlock}
+            </div>
+            <div class="zeit-col">
+              <h3>${T(BL("Astrologie", "Astrology"))}</h3>
+              <div class="zeit-layer-tag">${T(BL("Kollektiv-Feld", "Collective field"))}</div>
+              <div class="zeit-card" style="margin-bottom:10px">${concordances.length} ${T(BL("Ephemeris-Events (Aspekte, Ingresse, Stationen, Lunationen)", "Ephemeris events (aspects, ingresses, stations, lunations)"))} (${scopeLabel.toLowerCase()})</div>
+              <div class="zeit-card-grid" style="grid-template-columns:repeat(auto-fill,minmax(140px,1fr))">${renderZeitSignCards(concordances)}</div>
+            </div>
+          </div>
+          <section class="concordance-panel">
+            <h3 style="font-size:.82rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)">${T(BL("Vergleichs-Layer / Konkordanz", "Comparison layer / concordance"))}</h3>
+            ${renderConcordanceRows(concordances)}
+          </section>
+        </section>`;
+    }
+
     function renderTabs() {
       const tabs = [
         { id: "daily", label: BL("Daily Map", "Daily Map") },
+        { id: "heute", label: BL("Heute", "Today") },
         { id: "penta", label: BL("Penta / Team", "Penta / Team") },
         { id: "input", label: BL("Eingabe", "Input") },
         { id: "admin", label: BL("Admin", "Admin") }
@@ -4658,9 +4922,12 @@
       const inputView = renderInputTab();
       const adminView = activeTab === "admin" ? renderAdminTab() : "";
 
+      const heuteView = renderHeuteView(profile, date);
+
       document.getElementById("app").innerHTML = `
         ${renderTabs()}
         <div class="tab-panel ${activeTab === "daily" ? "" : "hidden"}">${dailyView}</div>
+        <div class="tab-panel ${activeTab === "heute" ? "" : "hidden"}">${heuteView}</div>
         <div class="tab-panel ${activeTab === "penta" ? "" : "hidden"}">${pentaView}</div>
         <div class="tab-panel ${activeTab === "input" ? "" : "hidden"}">${inputView}</div>
         <div class="tab-panel ${activeTab === "admin" ? "" : "hidden"}">${adminView}</div>
@@ -4675,6 +4942,10 @@
       const model = day.display;
       document.querySelectorAll("[data-tab]").forEach(btn => btn.addEventListener("click", () => {
         activeTab = btn.dataset.tab;
+        renderApp();
+      }));
+      document.querySelectorAll("[data-zeit-scope]").forEach(btn => btn.addEventListener("click", () => {
+        zeitScope = btn.dataset.zeitScope;
         renderApp();
       }));
       const langBtn = document.getElementById("langBtn");
