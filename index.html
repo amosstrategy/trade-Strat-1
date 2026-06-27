@@ -1603,6 +1603,24 @@
       margin-bottom: 4px;
     }
 
+    .concordance-time {
+      display: block;
+      margin-top: 4px;
+      font-size: .7rem;
+      color: var(--accent);
+      line-height: 1.4;
+    }
+
+    .zeit-window-banner {
+      font-size: .78rem;
+      color: var(--muted);
+      margin: 0 0 12px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.02);
+    }
+
     .concordance-deutung {
       display: block;
       margin-top: 8px;
@@ -1658,7 +1676,7 @@
   <script type="module" src="hd-bootstrap.mjs?v=8"></script>
   <script src="hd-engine.js?v=8"></script>
   <script src="hd-logic.js?v=8"></script>
-  <script src="zeitqualitaet-core.js?v=8"></script>
+  <script src="zeitqualitaet-core.js?v=9"></script>
   <main class="app" id="app"></main>
 
   <script>
@@ -2520,6 +2538,7 @@
         hd: { event_key: c.hd.event_key, activations: c.hd.activations, natal_profiles: {} },
         astro: c.astro,
         both_significant: c.both_significant,
+        activity: c.activity || null,
         _persist: {
           saved_at: new Date().toISOString(),
           window_scope: meta.scope,
@@ -4832,14 +4851,102 @@
       };
     }
 
-    function renderConcordanceRows(concordances, profile) {
+    function formatDateTimeShort(iso) {
+      if (!iso) return "—";
+      const d = new Date(iso);
+      return d.toLocaleString(lang === "de" ? "de-DE" : "en-US", {
+        day: "numeric", month: "short", hour: "2-digit", minute: "2-digit"
+      });
+    }
+
+    function formatDurationDays(days) {
+      if (days <= 0) return "";
+      const hours = days * 24;
+      if (hours < 1) return T(BL(`~${Math.max(1, Math.round(hours * 60))} Min.`, `~${Math.max(1, Math.round(hours * 60))} min`));
+      if (hours < 48) return T(BL(`~${Math.round(hours)} Std.`, `~${Math.round(hours)} h`));
+      return T(BL(`~${days.toFixed(1)} Tage`, `~${days.toFixed(1)} days`));
+    }
+
+    function formatActivityRange(c) {
+      const a = c.activity;
+      if (!a) return formatDateTimeShort(c.jd_iso);
+      const from = formatDateTimeShort(a.iso_from);
+      const to = formatDateTimeShort(a.iso_to);
+      const peak = formatDateTimeShort(a.iso_peak);
+      const dur = formatDurationDays(a.duration_days);
+      if (Math.abs(a.jd_to - a.jd_from) < 0.0005) {
+        return T(BL(`Peak ${peak}`, `Peak ${peak}`));
+      }
+      const modeHint = {
+        orb: T(BL("Aspekt im Orb", "Aspect in orb")),
+        sign: T(BL("Planet im Zeichen", "Planet in sign")),
+        station: T(BL("Stations-Fenster", "Station window")),
+        lunation: T(BL("Lunations-Fenster", "Lunation window")),
+        instant: T(BL("Exakt", "Exact"))
+      }[a.mode] || "";
+      return T(BL(
+        `${modeHint}: ${from} – ${to}${dur ? ` (${dur})` : ""} · Peak ${peak}`,
+        `${modeHint}: ${from} – ${to}${dur ? ` (${dur})` : ""} · peak ${peak}`
+      ));
+    }
+
+    function formatScopeWindow(win) {
+      if (!win?.isoStart) return "";
+      const from = formatDateTimeShort(win.isoStart);
+      const to = formatDateTimeShort(win.isoEnd);
+      return T(BL(`Betrachtetes Fenster: ${from} – ${to} (UTC)`, `View window: ${from} – ${to} (UTC)`));
+    }
+
+    const SWE_BODY_NUM = {
+      Sun: 0, Moon: 1, Mercury: 2, Venus: 3, Mars: 4, Jupiter: 5, Saturn: 6,
+      Uranus: 7, Neptune: 8, Pluto: 9, TrueNode: 11, Chiron: 15
+    };
+
+    function hdGateLineWindow(bodyName, jdPeak, jdMin, jdMax) {
+      const bodyNum = SWE_BODY_NUM[bodyName];
+      if (bodyNum == null || !window.HDEphemeris?.lonSpeed) return null;
+      const keyAt = jd => {
+        const lon = HDEphemeris.lonSpeed(jd, bodyNum).longitude;
+        const act = HDEngine.longitudeToActivation(lon);
+        return `${act.gate}.${act.line}`;
+      };
+      const peakKey = keyAt(jdPeak);
+      let jdFrom = jdPeak;
+      let jdTo = jdPeak;
+      const step = bodyName === "Moon" ? 0.002 : bodyName === "Sun" ? 0.02 : 0.01;
+      for (let jd = jdPeak - step; jd >= jdMin; jd -= step) {
+        if (keyAt(jd) !== peakKey) break;
+        jdFrom = jd;
+      }
+      for (let jd = jdPeak + step; jd <= jdMax; jd += step) {
+        if (keyAt(jd) !== peakKey) break;
+        jdTo = jd;
+      }
+      const ms = jdUt => (jdUt - 2440587.5) * 86400000;
+      return {
+        jd_from: jdFrom,
+        jd_to: jdTo,
+        iso_from: new Date(ms(jdFrom)).toISOString(),
+        iso_to: new Date(ms(jdTo)).toISOString(),
+        duration_days: jdTo - jdFrom
+      };
+    }
+
+    function renderHdActivationLine(a, jdPeak, win) {
+      const base = `${a.body}: G${a.gate}.${a.line}${a.channel ? ` (${a.channel})` : ""} · ${T(CENTER_LABELS[a.center] || a.center)}`;
+      const gl = hdGateLineWindow(a.body, jdPeak, win.jdStart, win.jdEnd);
+      if (!gl) return base;
+      const dur = formatDurationDays(gl.duration_days);
+      return `${base}<span class="concordance-time">${T(BL("Tor/Linie aktiv", "Gate/line active"))}: ${formatDateTimeShort(gl.iso_from)} – ${formatDateTimeShort(gl.iso_to)}${dur ? ` · ${dur}` : ""}</span>`;
+    }
+
+    function renderConcordanceRows(concordances, profile, win) {
       if (!concordances.length) {
         return `<div class="small-card">${T(BL("Keine Ephemeris-Events in diesem Fenster.", "No ephemeris events in this window."))}</div>`;
       }
       return concordances.slice(0, 50).map(c => {
-        const hdLines = (c.hd.activations || []).map(a =>
-          `${a.body}: G${a.gate}.${a.line}${a.channel ? ` (${a.channel})` : ""} · ${T(CENTER_LABELS[a.center] || a.center)}`
-        ).join("<br>");
+        const jdPeak = c.activity?.jd_peak ?? c.jd_ut;
+        const hdLines = (c.hd.activations || []).map(a => renderHdActivationLine(a, jdPeak, win)).join("<br>");
         const astroLines = (c.astro.placements || []).map(p =>
           `${p.body}: ${p.sign} ${p.deg_in_sign.toFixed(1)}°`
         ).join("<br>");
@@ -4854,9 +4961,11 @@
                 : c.kind;
         const hdDeut = buildConcordanceHdInterpretation(c, profile);
         const astroDeut = buildConcordanceAstroInterpretation(c);
+        const timeRange = formatActivityRange(c);
         return `
           <div class="concordance-row ${c.both_significant ? "match" : ""}">
-            <div class="concordance-meta">${label} · ${c.bodies.join(" / ")} · ${c.jd_iso?.slice(0, 16) || ""}</div>
+            <div class="concordance-meta">${label} · ${c.bodies.join(" / ")}</div>
+            <div class="concordance-meta concordance-time" style="margin-top:0">${timeRange}</div>
             <div><strong>HD</strong><br>${hdLines || "—"}${renderConcordanceDeutung(hdDeut.short, hdDeut.detail)}</div>
             <div><strong>Astro</strong><br>${astroLines || "—"}${c.both_significant ? `<br><span style="color:var(--accent)">${T(BL("Uebereinstimmung", "Concordance"))}</span>` : ""}${renderConcordanceDeutung(astroDeut.short, astroDeut.detail)}</div>
           </div>`;
@@ -4903,6 +5012,7 @@
               <button type="button" class="btn ${zeitScope === "month" ? "active" : ""}" data-zeit-scope="month">${T(BL("Monat", "Month"))}</button>
             </div>
           </div>
+          <div class="zeit-window-banner">${formatScopeWindow(win)}</div>
           <div class="zeit-split">
             <div class="zeit-col">
               <h3>${T(BL("Human Design", "Human Design"))}</h3>
@@ -4921,7 +5031,7 @@
           <section class="concordance-panel">
             <h3 style="font-size:.82rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)">${T(BL("Vergleichs-Layer / Konkordanz", "Comparison layer / concordance"))}</h3>
             <div class="small-card" style="margin-bottom:10px;color:var(--muted);font-size:.78rem">${datasetCount} ${T(BL("Events im lokalen Konkordanz-Datensatz", "events in local concordance dataset"))}${addedRecords ? ` · +${addedRecords} ${T(BL("neu", "new"))}` : ""} · ${T(BL("Export unter Admin", "Export under Admin"))}</div>
-            ${renderConcordanceRows(concordances, profile)}
+            ${renderConcordanceRows(concordances, profile, win)}
           </section>
         </section>`;
     }

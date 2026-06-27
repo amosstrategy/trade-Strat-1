@@ -334,6 +334,112 @@
     return new Date(ms).toISOString();
   }
 
+  const ASPECT_ORB = {
+    conjunction: 1,
+    semisquare: 1,
+    sextile: 1.5,
+    square: 1.5,
+    trine: 1.5,
+    sesquiquadrate: 1,
+    opposition: 1.5
+  };
+
+  function bodyNumByName(name) {
+    return BODIES[name] ?? null;
+  }
+
+  function aspectWithinOrb(jd, b1, b2, angle, orb) {
+    const l1 = lonSpeed(b1, jd).longitude;
+    const l2 = lonSpeed(b2, jd).longitude;
+    return Math.abs(angSep(l1, l2) - angle) <= orb;
+  }
+
+  function expandWhile(testFn, jdPeak, jdMin, jdMax, step = 0.02) {
+    let jdFrom = jdPeak;
+    let jdTo = jdPeak;
+    for (let jd = jdPeak - step; jd >= jdMin; jd -= step) {
+      if (!testFn(jd)) break;
+      jdFrom = jd;
+    }
+    for (let jd = jdPeak + step; jd <= jdMax; jd += step) {
+      if (!testFn(jd)) break;
+      jdTo = jd;
+    }
+    return { jd_from: jdFrom, jd_to: jdTo };
+  }
+
+  function nextSignIngressJd(bodyNum, jdAfter, jdLimit) {
+    let jd = jdAfter + 0.02;
+    let idx0 = signIndex(lonSpeed(bodyNum, jdAfter + 0.001).longitude);
+    while (jd < jdLimit) {
+      const nxt = Math.min(jd + 0.25, jdLimit);
+      const idx1 = signIndex(lonSpeed(bodyNum, nxt).longitude);
+      if (idx0 !== idx1) {
+        const cusp = idx1 * 30;
+        const t = bisectionRoot(jdT => {
+          const lon = lonSpeed(bodyNum, jdT).longitude;
+          return ((lon - cusp + 540) % 360) - 180;
+        }, jd, nxt);
+        if (t != null) return t;
+      }
+      idx0 = idx1;
+      jd = nxt;
+    }
+    return jdLimit;
+  }
+
+  function activityWindowForEvent(event, jdStart, jdEnd) {
+    const peak = event.jd_ut;
+    let jdFrom = peak;
+    let jdTo = peak;
+    let mode = "instant";
+
+    if (event.kind === EventKind.ASPECT && event.bodies.length >= 2) {
+      const b1 = bodyNumByName(event.bodies[0].name);
+      const b2 = bodyNumByName(event.bodies[1].name);
+      const angle = event.detail.angle;
+      const orb = ASPECT_ORB[event.detail.aspect] ?? 1;
+      if (b1 != null && b2 != null && angle != null) {
+        const w = expandWhile(
+          jd => aspectWithinOrb(jd, b1, b2, angle, orb),
+          peak,
+          jdStart,
+          jdEnd
+        );
+        jdFrom = w.jd_from;
+        jdTo = w.jd_to;
+        mode = "orb";
+      }
+    } else if (event.kind === EventKind.INGRESS && event.bodies[0]) {
+      const bodyNum = bodyNumByName(event.bodies[0].name);
+      if (bodyNum != null) {
+        jdFrom = peak;
+        jdTo = nextSignIngressJd(bodyNum, peak, jdEnd);
+        mode = "sign";
+      }
+    } else if (event.kind === EventKind.STATION) {
+      jdFrom = Math.max(jdStart, peak - 0.5);
+      jdTo = Math.min(jdEnd, peak + 0.5);
+      mode = "station";
+    } else if (event.kind === EventKind.LUNATION) {
+      const half = event.detail.phase === "full" ? 1.5 : 1;
+      jdFrom = Math.max(jdStart, peak - half);
+      jdTo = Math.min(jdEnd, peak + half);
+      mode = "lunation";
+    }
+
+    return {
+      mode,
+      jd_from: jdFrom,
+      jd_to: jdTo,
+      jd_peak: peak,
+      iso_from: jdUtToIso(jdFrom),
+      iso_to: jdUtToIso(jdTo),
+      iso_peak: jdUtToIso(peak),
+      duration_days: Math.max(0, jdTo - jdFrom)
+    };
+  }
+
   function collectEventsForWindow(jdStart, jdEnd) {
     const merged = new Map();
     [
@@ -351,7 +457,8 @@
       const hdR = toHd(ev, engine, chartId);
       const asR = toAstro(ev, astro);
       const conc = buildConcordance(ev, hdR, asR);
-      return { ...conc, jd_iso: jdUtToIso(ev.jd_ut) };
+      const activity = activityWindowForEvent(ev, jdStart, jdEnd);
+      return { ...conc, jd_iso: jdUtToIso(ev.jd_ut), activity };
     });
   }
 
@@ -373,7 +480,14 @@
       start = new Date(Date.UTC(y, m, d, 0, 0, 0));
       end = new Date(start.getTime() + 86400000);
     }
-    return { jdStart: eph.utcToJulianDay(start), jdEnd: eph.utcToJulianDay(end) };
+    const jdStart = eph.utcToJulianDay(start);
+    const jdEnd = eph.utcToJulianDay(end);
+    return {
+      jdStart,
+      jdEnd,
+      isoStart: jdUtToIso(jdStart),
+      isoEnd: jdUtToIso(jdEnd)
+    };
   }
 
   global.ZeitqualitaetCore = {
@@ -393,6 +507,8 @@
     collectEventsForWindow,
     concordancesForWindow,
     windowJds,
-    jdUtToIso
+    jdUtToIso,
+    activityWindowForEvent,
+    ASPECT_ORB
   };
 })(typeof window !== "undefined" ? window : globalThis);
