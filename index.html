@@ -1621,6 +1621,38 @@
       background: rgba(255,255,255,.02);
     }
 
+    .zeit-type-select {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .zeit-type-select .btn {
+      font-size: .72rem;
+      padding: 5px 10px;
+    }
+
+    .zeit-type-focus {
+      border-color: rgba(132, 220, 198, .25);
+      background: rgba(132, 220, 198, .04);
+    }
+
+    .zeit-type-events {
+      margin-top: 10px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .zeit-type-event {
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.06);
+      background: rgba(255,255,255,.02);
+      font-size: .78rem;
+      line-height: 1.45;
+    }
+
     .concordance-deutung {
       display: block;
       margin-top: 8px;
@@ -1684,6 +1716,7 @@
     let lang = "de";
     let activeTab = "daily";
     let zeitScope = "day";
+    let zeitHdType = "";
     let showTransits = true;
     let selectedDimension = null;
     let selectedDateISO = "";
@@ -4390,6 +4423,215 @@
       { id: "Generator", label: BL("Generator", "Generator"), strategy: BL("Auf das Leben reagieren", "Respond to life") }
     ];
 
+    const ZEIT_TYPE_ALL = {
+      id: "",
+      label: BL("Gesamt", "Overall"),
+      tag: BL("Kollektiv ohne Typ-Filter", "Collective without type filter")
+    };
+
+    const ZEIT_TYPE_CENTER_WEIGHT = {
+      Reflector: { Head: 1.2, Ajna: 1.2, Throat: 1.2, G: 1.2, Ego: 1.2, Solar: 1.5, Spleen: 1.2, Sacral: 1.2, Root: 1.2 },
+      Projector: { G: 3, Throat: 2.5, Ajna: 2, Head: 1.5, Solar: 2, Spleen: 2, Ego: 1.5, Sacral: 0.4, Root: 0.8 },
+      Manifestor: { Throat: 3, Ego: 2.5, Solar: 2, Root: 2, G: 1.5, Sacral: 0.5, Ajna: 1, Head: 1 },
+      "Manifesting Generator": { Sacral: 3, Root: 2.5, Throat: 2.5, Solar: 1.5, G: 1.5, Spleen: 1.5, Ego: 1.5, Head: 1, Ajna: 1 },
+      Generator: { Sacral: 3, Root: 2.5, Solar: 1.5, Spleen: 2, G: 1.5, Throat: 1, Ego: 1, Head: 1, Ajna: 1 }
+    };
+
+    const ZEIT_TYPE_LENS = {
+      "": {
+        overview: BL(
+          "Gesamtauswirkung im Kollektiv-Feld — alle Typen atmen dasselbe Transit-Wetter, reiten es aber anders. Unten die fünf Strategie-Linsen zum Vergleich.",
+          "Overall impact in the collective field — all types breathe the same transit weather but ride it differently. Below, five strategy lenses for comparison."
+        )
+      },
+      Reflector: {
+        overview: BL(
+          "Für den Reflektor ist das Feld der Spiegel — alle neun Zentren nehmen mit, besonders der Mond. Kein festes Design, das filtert: du schmeckst die Woche/Lunarität des Raums zuerst.",
+          "For the Reflector the field is the mirror — all nine centers take it in, especially the Moon. No fixed design filters it: you taste the room's week/lunar quality first."
+        ),
+        ride: BL(
+          "Nicht sofort handeln, wenn der Raum laut ist. Ein Mond-Zyklus Abstand — oder mindestens eine Nacht Schlaf — bevor du dem kollektiven Stimmungsbild vertraust.",
+          "Don't act just because the room is loud. A lunar cycle's distance — or at least one night's sleep — before trusting the collective mood picture."
+        ),
+        trap: BL(
+          "Fremde Emotionen und Eile als eigene Wahrheit zu verkaufen — der Reflektor verstärkt, was da ist.",
+          "Selling others' emotions and urgency as your own truth — the Reflector amplifies what is there."
+        )
+      },
+      Projector: {
+        overview: BL(
+          "Projektoren leben nicht vom Sakral-Motor des Kollektivs — sie sehen das Feld und warten auf Einladung. Transit-Druck zum Initiieren oder Mitmachen fühlt sich oft fremd an.",
+          "Projectors don't run on the collective sacral motor — they see the field and wait for invitation. Transit pressure to initiate or keep up often feels foreign."
+        ),
+        ride: BL(
+          "Heute gilt: beobachten, führen wenn eingeladen — nicht mithalten, nur weil Generator-Energie im Raum vibriert. Anerkennung vor Aktion.",
+          "Today: observe, guide when invited — don't keep pace just because generator energy hums in the room. Recognition before action."
+        ),
+        trap: BL(
+          "Burnout durch Mithetzen ohne Einladung — das offene Sakral des Feldes ist nicht dein Motor.",
+          "Burnout from rushing along uninvited — the field's open sacral is not your motor."
+        )
+      },
+      Manifestor: {
+        overview: BL(
+          "Manifestoren haben eigenen Initiations-Impuls — das Kollektiv-Feld kann Wut oder Frieden triggern, wenn du informieren sollst, bevor du durchbrichst.",
+          "Manifestors carry their own initiation impulse — the collective field can trigger anger or peace when you're meant to inform before breaking through."
+        ),
+        ride: BL(
+          "Transit-Spannung will Bewegung — informiere die Betroffenen, dann handele. Kein stilles Durchmarschieren gegen den Strom des Raums.",
+          "Transit tension wants movement — inform those affected, then act. No silent marching against the room's current."
+        ),
+        trap: BL(
+          "Widerstand, wenn du plötzlich startest ohne Vorwarnung — oder du nimmst kollektive Wut als deine eigene.",
+          "Resistance when you start without warning — or you take collective anger as your own."
+        )
+      },
+      "Manifesting Generator": {
+        overview: BL(
+          "MG reagiert zuerst mit dem Sakral, dann schnell in Ausdruck — das Feld kann dich in Multi-Task-Modus ziehen, wenn viele Tore gleichzeitig feuern.",
+          "MG responds with the sacral first, then quickly into expression — the field can pull you into multitask mode when many gates fire at once."
+        ),
+        ride: BL(
+          "Erst Bauch-Ja, dann informieren und los — nicht umgekehrt. Wenn das Kollektiv hetzt, ist dein Job: reagieren, nicht alles mitnehmen.",
+          "Belly yes first, then inform and go — not the other way. When the collective rushes, your job is to respond, not take everything on."
+        ),
+        trap: BL(
+          "Frustration, wenn du aus Root-Druck des Raums startest ohne Sakral — oder du informierst nicht und wunderst dich über Widerstand.",
+          "Frustration when you start from the room's root pressure without sacral — or you don't inform and wonder about resistance."
+        )
+      },
+      Generator: {
+        overview: BL(
+          "Generatoren spüren kollektive Transits am Sakral — das Feld kann falsches Ja oder Nein vortäuschen, wenn Root-Druck und fremde Motoren laut sind.",
+          "Generators feel collective transits in the sacral — the field can fake yes or no when root pressure and foreign motors run loud."
+        ),
+        ride: BL(
+          "Warte auf das konkrete Angebot, nicht auf die allgemeine Hektik. Dein Körper antwortet — der Transit liefert nur das Wetter, nicht den Auftrag.",
+          "Wait for the concrete offer, not general hustle. Your body answers — the transit only delivers weather, not the assignment."
+        ),
+        trap: BL(
+          "Frustration durch Mithetzen ohne echtes Sakral-Ja — Generator-Energie aus dem Umfeld fühlt sich wie deine an.",
+          "Frustration from rushing without a real sacral yes — generator energy from the environment feels like yours."
+        )
+      }
+    };
+
+    function zeitTypeById(id) {
+      return ZEIT_TYPES.find(t => t.id === id) || null;
+    }
+
+    function scoreConcordanceForType(c, typeId) {
+      if (!typeId) return 1;
+      const weights = ZEIT_TYPE_CENTER_WEIGHT[typeId] || {};
+      let score = 0;
+      (c.hd.activations || []).forEach(a => {
+        score += weights[a.center] ?? 1;
+        if (typeId === "Reflector" && a.body === "Moon") score += 2;
+        if ((typeId === "Generator" || typeId === "Manifesting Generator") && a.center === "Sacral") score += 1;
+      });
+      return score;
+    }
+
+    function topConcordancesForType(concordances, typeId, limit = 5) {
+      if (!typeId) return concordances.slice(0, limit);
+      return [...concordances]
+        .sort((a, b) => scoreConcordanceForType(b, typeId) - scoreConcordanceForType(a, typeId))
+        .slice(0, limit);
+    }
+
+    function renderZeitTypeSelector() {
+      const allActive = !zeitHdType;
+      return `
+        <div class="zeit-type-select" role="group" aria-label="${T(BL("HD-Typ-Linse", "HD type lens"))}">
+          <button type="button" class="btn ${allActive ? "active" : ""}" data-zeit-hd-type="">${T(ZEIT_TYPE_ALL.label)}</button>
+          ${ZEIT_TYPES.map(t => `
+            <button type="button" class="btn ${zeitHdType === t.id ? "active" : ""}" data-zeit-hd-type="${t.id}">${T(t.label)}</button>`).join("")}
+        </div>`;
+    }
+
+    function renderZeitTypeEventTeaser(c, typeId, win) {
+      const jdPeak = c.activity?.jd_peak ?? c.jd_ut;
+      const gates = (c.hd.activations || []).map(a => `G${a.gate}.${a.line}`).join(", ");
+      const time = formatActivityRange(c);
+      const lens = typeId && ZEIT_TYPE_LENS[typeId]
+        ? T(BL(
+            `Typ-Linse: ${ZEIT_TYPE_LENS[typeId].ride.de.split(".")[0]}.`,
+            `Type lens: ${ZEIT_TYPE_LENS[typeId].ride.en.split(".")[0]}.`
+          ))
+        : "";
+      return `
+        <div class="zeit-type-event">
+          <strong>${c.bodies.join(" / ")}</strong> · ${gates || "—"}<br>
+          <span class="concordance-time">${time}</span>
+          ${lens ? `<br><span style="color:var(--muted)">${lens}</span>` : ""}
+        </div>`;
+    }
+
+    function renderZeitHdColumn(concordances, collectiveGates, win, profile) {
+      const gateText = collectiveGates.length
+        ? collectiveGates.map(g => `G${g}`).join(", ")
+        : "—";
+      const centers = new Set();
+      concordances.forEach(c => (c.hd.activations || []).forEach(a => { if (a.center) centers.add(a.center); }));
+      const centerList = fieldCentersOrdered([...centers]);
+      const fieldSummary = weaveFieldConditioning(centerList, 2);
+
+      if (!zeitHdType) {
+        return `
+          ${renderZeitTypeSelector()}
+          <div class="zeit-layer-tag">${T(ZEIT_TYPE_ALL.tag)}</div>
+          <div class="zeit-card" style="margin-bottom:10px">
+            <strong>${T(BL("Gesamtauswirkung", "Overall impact"))}</strong><br>
+            ${T(ZEIT_TYPE_LENS[""].overview)}<br>
+            <span style="color:var(--muted);font-size:.78rem;margin-top:6px;display:block">${T(BL("Aktive Tore (Perfektionen)", "Active gates (perfections)"))}: ${gateText}</span>
+            ${fieldSummary ? `<span style="color:var(--muted);font-size:.78rem;display:block;margin-top:4px">${fieldSummary}</span>` : ""}
+          </div>
+          <div class="zeit-card-grid">${ZEIT_TYPES.map(t => {
+            const lens = ZEIT_TYPE_LENS[t.id];
+            return `
+              <div class="zeit-card">
+                <strong>${T(t.label)}</strong>
+                <span class="zeit-layer-tag">${T(BL("Strategie-Linse", "Strategy lens"))}</span>
+                ${T(t.strategy)}.<br>
+                <span style="color:var(--muted);font-size:.78rem">${T(lens.overview)}</span>
+              </div>`;
+          }).join("")}</div>
+          <div class="zeit-type-events">
+            <div class="zeit-layer-tag">${T(BL("Top-Events im Fenster", "Top events in window"))}</div>
+            ${topConcordancesForType(concordances, "", 4).map(c => renderZeitTypeEventTeaser(c, "", win)).join("") || `<div class="small-card">—</div>`}
+          </div>`;
+      }
+
+      const t = zeitTypeById(zeitHdType);
+      const lens = ZEIT_TYPE_LENS[zeitHdType];
+      const topEvents = topConcordancesForType(concordances, zeitHdType, 6);
+
+      return `
+        ${renderZeitTypeSelector()}
+        <div class="zeit-card zeit-type-focus" style="margin-bottom:10px">
+          <strong>${T(t.label)}</strong>
+          <span class="zeit-layer-tag">${T(BL("Typ-Linse aktiv", "Type lens active"))}</span>
+          ${T(t.strategy)}.<br>
+          <span style="font-size:.84rem;line-height:1.5;margin-top:6px;display:block">${T(lens.overview)}</span>
+          <span style="color:var(--muted);font-size:.78rem;display:block;margin-top:8px"><em>${T(BL("So reiten", "How to ride"))}:</em> ${T(lens.ride)}</span>
+          <span style="color:var(--warn);font-size:.78rem;display:block;margin-top:4px"><em>${T(BL("Vorsicht", "Watch"))}:</em> ${T(lens.trap)}</span>
+          <span style="color:var(--muted);font-size:.78rem;margin-top:8px;display:block">${T(BL("Relevante Tore", "Relevant gates"))}: ${gateText}</span>
+        </div>
+        <div class="zeit-type-events">
+          <div class="zeit-layer-tag">${T(BL("Transits fuer diesen Typ (priorisiert)", "Transits for this type (prioritized)"))}</div>
+          ${topEvents.map(c => renderZeitTypeEventTeaser(c, zeitHdType, win)).join("") || `<div class="small-card">${T(BL("Keine Events im Fenster.", "No events in window."))}</div>`}
+        </div>`;
+    }
+
+    function typeLensHdSuffix(typeId) {
+      if (!typeId || !ZEIT_TYPE_LENS[typeId]) return "";
+      const t = zeitTypeById(typeId);
+      return " " + T(BL(
+        `(${T(t.label)}: ${ZEIT_TYPE_LENS[typeId].ride.de.split(".")[0]}.)`,
+        `(${T(t.label)}: ${ZEIT_TYPE_LENS[typeId].ride.en.split(".")[0]}.)`
+      ));
+    }
+
     const ZEIT_SIGNS = ZeitqualitaetCore?.ZODIAC || [];
 
     function createZeitHDEngine(profile) {
@@ -4425,20 +4667,6 @@
         (c.hd.activations || []).forEach(a => { if (a.gate) gates.add(a.gate); });
       });
       return [...gates].sort((a, b) => a - b);
-    }
-
-    function renderZeitTypeCards(collectiveGates) {
-      const gateText = collectiveGates.length
-        ? collectiveGates.map(g => `G${g}`).join(", ")
-        : T(BL("keine exakten Perfektionen im Fenster", "no exact perfections in window"));
-      return ZEIT_TYPES.map(t => `
-        <div class="zeit-card">
-          <strong>${T(t.label)}</strong>
-          <span class="zeit-layer-tag">${T(BL("grob / Kollektiv", "coarse / collective"))}</span>
-          ${T(t.strategy)}.<br>
-          <span style="color:var(--muted);font-size:.78rem">${T(BL("Heute aktive Tore (berechnet)", "Active gates today (computed)"))}: ${gateText}</span>
-          ${t.id === "Reflector" ? `<br><span style="color:var(--muted);font-size:.78rem">${T(BL("Alle Zentren offen = maximale Transit-Sensitivitaet.", "All centers open = maximum transit sensitivity."))}</span>` : ""}
-        </div>`).join("");
     }
 
     function renderZeitSignCards(concordances) {
@@ -4960,13 +5188,14 @@
                 ? `${T(BL("Station", "Station"))}: ${c.astro.station}`
                 : c.kind;
         const hdDeut = buildConcordanceHdInterpretation(c, profile);
+        const hdShort = hdDeut.short + typeLensHdSuffix(zeitHdType);
         const astroDeut = buildConcordanceAstroInterpretation(c);
         const timeRange = formatActivityRange(c);
         return `
           <div class="concordance-row ${c.both_significant ? "match" : ""}">
             <div class="concordance-meta">${label} · ${c.bodies.join(" / ")}</div>
             <div class="concordance-meta concordance-time" style="margin-top:0">${timeRange}</div>
-            <div><strong>HD</strong><br>${hdLines || "—"}${renderConcordanceDeutung(hdDeut.short, hdDeut.detail)}</div>
+            <div><strong>HD</strong><br>${hdLines || "—"}${renderConcordanceDeutung(hdShort, hdDeut.detail)}</div>
             <div><strong>Astro</strong><br>${astroLines || "—"}${c.both_significant ? `<br><span style="color:var(--accent)">${T(BL("Uebereinstimmung", "Concordance"))}</span>` : ""}${renderConcordanceDeutung(astroDeut.short, astroDeut.detail)}</div>
           </div>`;
       }).join("");
@@ -5016,9 +5245,7 @@
           <div class="zeit-split">
             <div class="zeit-col">
               <h3>${T(BL("Human Design", "Human Design"))}</h3>
-              <div class="zeit-layer-tag">${T(BL("Kollektiv-Feld", "Collective field"))}</div>
-              <div class="zeit-card" style="margin-bottom:10px">${T(BL("Aktive Tore aus exakten Perfektionen", "Active gates from exact perfections"))}: ${collectiveGates.map(g => `G${g}`).join(", ") || "—"}</div>
-              <div class="zeit-card-grid">${renderZeitTypeCards(collectiveGates)}</div>
+              ${renderZeitHdColumn(concordances, collectiveGates, win, profile)}
               ${ichBlock}
             </div>
             <div class="zeit-col">
@@ -5583,6 +5810,10 @@
       }));
       document.querySelectorAll("[data-zeit-scope]").forEach(btn => btn.addEventListener("click", () => {
         zeitScope = btn.dataset.zeitScope;
+        renderApp();
+      }));
+      document.querySelectorAll("[data-zeit-hd-type]").forEach(btn => btn.addEventListener("click", () => {
+        zeitHdType = btn.dataset.zeitHdType || "";
         renderApp();
       }));
       const langBtn = document.getElementById("langBtn");
