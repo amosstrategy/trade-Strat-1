@@ -1603,6 +1603,24 @@
       margin-bottom: 4px;
     }
 
+    .concordance-deutung {
+      display: block;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255,255,255,.06);
+      font-size: .76rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .concordance-deutung-tag {
+      font-size: .65rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-right: 6px;
+    }
+
     @media (max-width: 720px) {
       .concordance-row { grid-template-columns: 1fr; }
     }
@@ -2286,7 +2304,8 @@
       saturn: BL("Saturn", "Saturn"),
       uranus: BL("Uranus", "Uranus"),
       neptune: BL("Neptune", "Neptune"),
-      pluto: BL("Pluto", "Pluto")
+      pluto: BL("Pluto", "Pluto"),
+      chiron: BL("Chiron", "Chiron")
     };
 
     const AUTHORITY_LABELS = {
@@ -4400,7 +4419,129 @@
       }).join("");
     }
 
-    function renderConcordanceRows(concordances) {
+    const ZEIT_BODY_ID = {
+      Sun: "sun", Moon: "moon", Mercury: "mercury", Venus: "venus", Mars: "mars",
+      Jupiter: "jupiter", Saturn: "saturn", Uranus: "uranus", Neptune: "neptune", Pluto: "pluto",
+      TrueNode: "north_node", Chiron: "chiron"
+    };
+
+    const zeitBodyLabel = name => {
+      const id = ZEIT_BODY_ID[name];
+      return id && PLANET_LABELS[id] ? T(PLANET_LABELS[id]) : name;
+    };
+
+    const ASPECT_MEANINGS = {
+      conjunction: BL("Fusion — zwei Kraefte treffen sich im selben Punkt; Themen ueberlagern sich.", "Fusion — two forces meet at the same point; themes overlap."),
+      semisquare: BL("Reiz-Reibung (45°) — leichter Druck, der Anpassung verlangt.", "Irritation (45°) — light pressure demanding adjustment."),
+      sextile: BL("Oeffnung (60°) — Gelegenheit, wenn du aktiv zugreifst.", "Opening (60°) — opportunity when you engage actively."),
+      square: BL("Spannung (90°) — Reibung, die Handlung oder Klarheit erzwingt.", "Tension (90°) — friction that forces action or clarity."),
+      trine: BL("Fluss (120°) — leichtes Mitlaufen, aber nicht automatisch produktiv.", "Flow (120°) — easy momentum, not automatically productive."),
+      sesquiquadrate: BL("Unerloeste Reibung (135°) — Restspannung sucht Ausweg.", "Unresolved friction (135°) — leftover tension seeks release."),
+      opposition: BL("Polaritaet (180°) — Gegensaetze spiegeln sich; Balance durch Bewusstsein.", "Polarity (180°) — opposites mirror; balance through awareness.")
+    };
+
+    const SIGN_THEMES = {
+      Aries: BL("Initiative, Start, Durchbruch", "Initiative, start, breakthrough"),
+      Taurus: BL("Stabilitaet, Werte, Verkoerperung", "Stability, values, embodiment"),
+      Gemini: BL("Austausch, Neugier, Verknuepfung", "Exchange, curiosity, connection"),
+      Cancer: BL("Schutz, Zugehoerigkeit, Innenleben", "Protection, belonging, inner life"),
+      Leo: BL("Ausdruck, Sichtbarkeit, Herz", "Expression, visibility, heart"),
+      Virgo: BL("Ordnung, Verbesserung, Praxis", "Order, improvement, practice"),
+      Libra: BL("Beziehung, Ausgleich, Fairness", "Relationship, balance, fairness"),
+      Scorpio: BL("Tiefe, Transformation, Wahrheit", "Depth, transformation, truth"),
+      Sagittarius: BL("Sinn, Weite, Richtung", "Meaning, breadth, direction"),
+      Capricorn: BL("Struktur, Verantwortung, Ziel", "Structure, responsibility, goal"),
+      Aquarius: BL("Zukunft, System, Freiheit", "Future, system, freedom"),
+      Pisces: BL("Aufloesung, Mitgefuehl, Uebergang", "Dissolution, compassion, transition")
+    };
+
+    const STATION_MEANINGS = {
+      retrograde: BL("Rueckwaerts — Thema des Planeten wird ueberprueft, verzoegert, vertieft.", "Retrograde — the planet's theme is reviewed, delayed, deepened."),
+      direct: BL("Direkt — Thema des Planeten laeuft wieder nach aussen; Entscheidungen koennen leichter vorwaerts gehen.", "Direct — the planet's theme moves outward again; forward decisions get easier."),
+      station: BL("Stillstand — Wendepunkt; das Thema des Planeten kippt gerade.", "Station — turning point; the planet's theme is shifting.")
+    };
+
+    const LUNATION_MEANINGS = {
+      new: BL("Neumond — neuer Zyklus, Samen setzen; noch wenig sichtbar im Kollektiv.", "New moon — new cycle, planting seeds; still little visible collectively."),
+      full: BL("Vollmond — Kulmination; was laeuft, wird sichtbar und emotional laut.", "Full moon — culmination; what is running becomes visible and emotionally loud.")
+    };
+
+    function interpretConcordanceHd(c, profile) {
+      const lines = [];
+      (c.hd.activations || []).forEach(a => {
+        const planet = zeitBodyLabel(a.body);
+        const gateName = GATE_NAMES[a.gate] ? T(GATE_NAMES[a.gate]) : `G${a.gate}`;
+        const center = T(CENTER_LABELS[a.center] || a.center);
+        const info = GATE_INFO[a.gate];
+        const desc = info ? T(info.description) : "";
+        let text = `${planet} · G${a.gate}.${a.line} (${gateName}, ${center}): ${desc}`;
+        if (a.channel && CHANNEL_INFLUENCE[a.channel]) {
+          text += ` ${T(CHANNEL_INFLUENCE[a.channel])}`;
+        }
+        lines.push(text);
+      });
+      (c.hd.natal || []).forEach(n => {
+        if (!n.completes_channel) return;
+        const ch = CHANNELS.find(ch => ch.key === n.completes_channel);
+        if (!ch) return;
+        const effect = CHANNEL_INFLUENCE[ch.key];
+        lines.push(effect
+          ? T(BL(
+              `Ich-Schicht: Transit komplettiert ${ch.key} — ${effect.de}`,
+              `Personal layer: transit completes ${ch.key} — ${effect.en}`
+            ))
+          : T(BL(
+              `Ich-Schicht: Transit komplettiert temporaer Kanal ${ch.key}.`,
+              `Personal layer: transit temporarily completes channel ${ch.key}.`
+            )));
+      });
+      return lines.length
+        ? lines.join(" ")
+        : T(BL("Keine HD-Aktivierung (z. B. Chiron-only).", "No HD activation (e.g. Chiron-only)."));
+    }
+
+    function interpretConcordanceAstro(c) {
+      if (c.astro.aspect && c.bodies.length >= 2) {
+        const asp = ASPECT_MEANINGS[c.astro.aspect];
+        const p1 = zeitBodyLabel(c.bodies[0]);
+        const p2 = zeitBodyLabel(c.bodies[1]);
+        const base = asp
+          ? T(BL(`${p1} ${c.astro.aspect} ${p2}: ${asp.de}`, `${p1} ${c.astro.aspect} ${p2}: ${asp.en}`))
+          : T(BL(`${p1} und ${p2} in exaktem ${c.astro.angle}°-Aspekt.`, `${p1} and ${p2} in exact ${c.astro.angle}° aspect.`));
+        const signs = (c.astro.placements || []).map(p => `${p.body} ${T(SIGN_THEMES[p.sign] || BL(p.sign, p.sign))}`).join(" · ");
+        return signs ? `${base} (${signs})` : base;
+      }
+      if (c.astro.phase) {
+        const phaseLabel = c.astro.phase === "new" ? T(BL("Neumond", "New moon")) : T(BL("Vollmond", "Full moon"));
+        const meaning = T(LUNATION_MEANINGS[c.astro.phase]);
+        const sign = c.astro.placements?.[1]?.sign || c.astro.placements?.[0]?.sign;
+        const theme = sign && SIGN_THEMES[sign] ? T(SIGN_THEMES[sign]) : "";
+        return theme ? `${phaseLabel}: ${meaning} ${T(BL("in", "in"))} ${sign} (${theme}).` : `${phaseLabel}: ${meaning}`;
+      }
+      if (c.astro.ingress) {
+        const body = zeitBodyLabel(c.bodies[0] || "");
+        const toSign = c.astro.placements?.[0]?.sign;
+        const theme = toSign && SIGN_THEMES[toSign] ? T(SIGN_THEMES[toSign]) : "";
+        return theme
+          ? T(BL(
+              `${body} wechselt ins Kollektiv-Thema ${toSign}: ${theme}.`,
+              `${body} shifts into collective ${toSign} theme: ${theme}.`
+            ))
+          : T(BL(`${body} wechselt das Zeichen — neues Kollektiv-Thema.`, `${body} changes sign — new collective theme.`));
+      }
+      if (c.astro.station) {
+        const body = zeitBodyLabel(c.bodies[0] || "");
+        const dir = STATION_MEANINGS[c.astro.station] || STATION_MEANINGS.station;
+        const sign = c.astro.placements?.[0]?.sign;
+        const theme = sign && SIGN_THEMES[sign] ? T(SIGN_THEMES[sign]) : "";
+        return theme
+          ? `${body} (${sign}, ${theme}): ${T(dir)}`
+          : `${body}: ${T(dir)}`;
+      }
+      return T(BL("Exakte Ephemeris-Geometrie — Deutung folgt dem Event-Typ.", "Exact ephemeris geometry — interpretation follows event type."));
+    }
+
+    function renderConcordanceRows(concordances, profile) {
       if (!concordances.length) {
         return `<div class="small-card">${T(BL("Keine Ephemeris-Events in diesem Fenster.", "No ephemeris events in this window."))}</div>`;
       }
@@ -4420,11 +4561,13 @@
               : c.astro.station
                 ? `${T(BL("Station", "Station"))}: ${c.astro.station}`
                 : c.kind;
+        const hdInterp = interpretConcordanceHd(c, profile);
+        const astroInterp = interpretConcordanceAstro(c);
         return `
           <div class="concordance-row ${c.both_significant ? "match" : ""}">
             <div class="concordance-meta">${label} · ${c.bodies.join(" / ")} · ${c.jd_iso?.slice(0, 16) || ""}</div>
-            <div><strong>HD</strong><br>${hdLines || "—"}</div>
-            <div><strong>Astro</strong><br>${astroLines || "—"}${c.both_significant ? `<br><span style="color:var(--accent)">${T(BL("Uebereinstimmung", "Concordance"))}</span>` : ""}</div>
+            <div><strong>HD</strong><br>${hdLines || "—"}<span class="concordance-deutung"><span class="concordance-deutung-tag">${T(BL("Deutung", "Interpretation"))}</span>${hdInterp}</span></div>
+            <div><strong>Astro</strong><br>${astroLines || "—"}${c.both_significant ? `<br><span style="color:var(--accent)">${T(BL("Uebereinstimmung", "Concordance"))}</span>` : ""}<span class="concordance-deutung"><span class="concordance-deutung-tag">${T(BL("Deutung", "Interpretation"))}</span>${astroInterp}</span></div>
           </div>`;
       }).join("");
     }
@@ -4487,7 +4630,7 @@
           <section class="concordance-panel">
             <h3 style="font-size:.82rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)">${T(BL("Vergleichs-Layer / Konkordanz", "Comparison layer / concordance"))}</h3>
             <div class="small-card" style="margin-bottom:10px;color:var(--muted);font-size:.78rem">${datasetCount} ${T(BL("Events im lokalen Konkordanz-Datensatz", "events in local concordance dataset"))}${addedRecords ? ` · +${addedRecords} ${T(BL("neu", "new"))}` : ""} · ${T(BL("Export unter Admin", "Export under Admin"))}</div>
-            ${renderConcordanceRows(concordances)}
+            ${renderConcordanceRows(concordances, profile)}
           </section>
         </section>`;
     }
