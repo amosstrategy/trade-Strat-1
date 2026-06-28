@@ -1,7 +1,7 @@
 from pathlib import Path
 
 root = Path(__file__).parent
-html_path = root / "index.html"
+html_path = root / "app" / "index.html"
 svg_path = root / "chart-template.svg"
 html = html_path.read_text(encoding="utf-8")
 svg = svg_path.read_text(encoding="utf-8").strip()

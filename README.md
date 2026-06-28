@@ -6,11 +6,17 @@ Eine lokale Single-File-App, die fuer Personen, Teams und die Marke Paradise Ven
 
 Nach dem Merge in `main` wird die App automatisch ueber GitHub Pages veroeffentlicht:
 
+**Custom domain (landing / readings):**
+
+https://paradise.ventures/
+
+**Daily Energy Map app:**
+
+https://paradise.ventures/app/
+
+GitHub Pages fallback:
+
 https://amosstrategy.github.io/trade-Strat-1/
-
-**Landing page (readings & about):**
-
-https://amosstrategy.github.io/trade-Strat-1/landing.html
 
 Du brauchst dann nichts zu installieren und keinen Code zu oeffnen. Einfach den Link im Browser aufrufen.
 
