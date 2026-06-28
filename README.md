@@ -8,6 +8,10 @@ Nach dem Merge in `main` wird die App automatisch ueber GitHub Pages veroeffentl
 
 https://amosstrategy.github.io/trade-Strat-1/
 
+**Landing page (readings & about):**
+
+https://amosstrategy.github.io/trade-Strat-1/landing.html
+
 Du brauchst dann nichts zu installieren und keinen Code zu oeffnen. Einfach den Link im Browser aufrufen.
 
 ## App bedienen

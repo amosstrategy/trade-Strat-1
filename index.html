@@ -6343,7 +6343,7 @@
         <div class="tab-panel ${activeTab === "penta" ? "" : "hidden"}">${pentaView}</div>
         <div class="tab-panel ${activeTab === "input" ? "" : "hidden"}">${inputView}</div>
         <div class="tab-panel ${activeTab === "admin" ? "" : "hidden"}">${adminView}</div>
-        <p class="footer">${T(BL("Profil-Datenbank v2 (hd-profile-db-v2) · Engine v4 · Chart nur bei «Berechnen & Speichern».", "Profile database v2 (hd-profile-db-v2) · Engine v4 · Chart only on «Calculate & save»."))}</p>
+        <p class="footer">${T(BL("Profil-Datenbank v2 (hd-profile-db-v2) · Engine v4 · Chart nur bei «Berechnen & Speichern».", "Profile database v2 (hd-profile-db-v2) · Engine v4 · Chart only on «Calculate & save»."))} · <a href="landing.html" style="color:var(--accent)">${T(BL("Readings & About", "Readings & About"))}</a></p>
       `;
 
       bindEvents(profile, day);
