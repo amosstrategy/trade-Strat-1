@@ -387,11 +387,7 @@
     "book.quote": BL("Eine Zukunft, in der <em>wir alle aufblühen</em> — kein Pendel zwischen A und B.", "A future where <em>we all thrive</em> — not pendulum between A and B."),
     "book.sub": BL("Schreib mir, was dich gerade am meisten bewegt — deine groesste Frage oder Situation. Gemeinsam finden wir einen Weg, der zu dir passt.", "Tell me what's weighing on you most — your biggest question or the situation you're in. We'll find a way through it together."),
     "footer.line": BL("SAMADHI · PARADISE VENTURES · KOH PHANGAN · ", "SAMADHI · PARADISE VENTURES · KOH PHANGAN · "),
-    "footer.map": BL("Daily Energy Map", "Daily Energy Map"),
-    "wa.prefill": BL(
-      "Hallo Samadhi — ich interessiere mich fuer ein Human-Design-Reading.%0A%0AGeburtsdatum:%0AGeburtszeit:%0AGeburtsort:%0A%0APaket: (88 / 240 / 400 USD)",
-      "Hi Samadhi — I'm interested in a Human Design reading.%0A%0ABirth date:%0ABirth time:%0ABirth place:%0A%0APackage: ($88 / $240 / $400)"
-    )
+    "footer.map": BL("Daily Energy Map", "Daily Energy Map")
   };
 
   let lang = localStorage.getItem("landing-lang") || (navigator.language.startsWith("de") ? "de" : "en");
@@ -402,7 +398,7 @@
   }
 
   function waUrl() {
-    return "https://wa.me/" + WA + "?text=" + T("wa.prefill");
+    return "https://wa.me/" + WA;
   }
 
   function applyLang() {
