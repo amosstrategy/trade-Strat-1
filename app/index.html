@@ -1559,11 +1559,35 @@
     .oejts-bar { height: 8px; border-radius: 999px; background: rgba(255,255,255,.08); margin: 8px 0; overflow: hidden; display: flex; }
     .oejts-bar > span:first-child { background: var(--cyber-cyan); }
     .oejts-bar > span:last-child { background: var(--accent); flex: 1; }
+    .global-profile-bar { margin: 0 0 14px; padding: 12px 16px; }
+    .global-profile-grid { display: grid; grid-template-columns: minmax(200px, 280px) 1fr; gap: 14px; align-items: end; }
+    .global-profile-name { font-size: 1.05rem; font-weight: 600; color: var(--bone); margin-bottom: 6px; }
+    .profile-lens-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .lens-badge { font-size: .78rem; padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.03); color: var(--muted); }
+    .lens-badge strong { color: var(--accent); margin-right: 4px; font-weight: 600; }
+    .lens-badge.lens-hd { border-color: rgba(168,85,247,.25); }
+    .lens-badge.lens-jung { border-color: rgba(0,245,255,.2); }
+    .oejts-profile-panel { margin-bottom: 14px; }
+    .oejts-profile-form { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end; margin-bottom: 10px; }
+    .oejts-profile-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .oejts-profile-status { margin-top: 0; }
     .oejts-hd-compare { margin-top: 16px; border-top: 1px solid rgba(255,255,255,.08); padding-top: 14px; }
+    .oejts-deutung { margin: 10px 0 0; font-size: .8rem; color: var(--bone); line-height: 1.55; }
+    .oejts-deutung em { color: var(--muted); font-style: normal; }
+    .oejts-deutung-panel { margin: 20px 0 0; border: 1px solid rgba(0,245,255,.1); border-radius: 16px; padding: 16px 18px; background: rgba(0,245,255,.03); }
+    .oejts-deutung-panel h3 { margin: 0 0 12px; font-size: .95rem; color: var(--cyber-cyan); letter-spacing: .04em; }
+    .oejts-deutung-block { margin-bottom: 14px; }
+    .oejts-deutung-block:last-child { margin-bottom: 0; }
+    .oejts-deutung-block strong { display: block; font-size: .78rem; color: var(--accent); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .06em; }
+    .oejts-deutung-block p { margin: 0; font-size: .82rem; color: var(--bone); line-height: 1.55; }
+    .oejts-chart-notes { margin: 12px 0 0; padding-left: 1.1em; font-size: .8rem; color: var(--muted); line-height: 1.5; }
+    .oejts-chart-notes li { margin-bottom: 6px; }
     @media (max-width: 720px) {
       .oejts-scale { grid-template-columns: 1fr; }
       .oejts-pole.left, .oejts-pole.right { text-align: left; }
       .oejts-dim-grid { grid-template-columns: 1fr; }
+      .global-profile-grid { grid-template-columns: 1fr; }
+      .oejts-profile-form { grid-template-columns: 1fr; }
     }
 
     .member-toggle {
@@ -2208,6 +2232,7 @@
   <script src="hd-logic.js?v=8"></script>
   <script src="zeitqualitaet-core.js?v=9"></script>
   <script src="oejts-core.js?v=1"></script>
+  <script src="oejts-interpret.js?v=1"></script>
   <main class="app" id="app"></main>
 
   <script>
@@ -2271,10 +2296,55 @@
       catch { return fallback; }
     };
     const saveJSON = (key, value) => localStorage.setItem(key, JSON.stringify(value));
-    let oejtsAnswers = (loadJSON(STORAGE_KEYS.oejts, {}) || {}).answers || {};
+    let oejtsAnswers = {};
     let oejtsQIndex = 0;
-    let oejtsStep = OEJTS.isTestComplete(oejtsAnswers) ? "results" : "intro";
-    const saveOejts = () => saveJSON(STORAGE_KEYS.oejts, { answers: oejtsAnswers, savedAt: new Date().toISOString() });
+    let oejtsStep = "intro";
+    const getOejtsAnswersForProfile = id => (id === activeProfile ? oejtsAnswers : (ProfileStore.getOejts(id)?.answers || {}));
+    const flushOejtsSession = (profileId = activeProfile) => {
+      ProfileStore.saveOejts(profileId, { answers: { ...oejtsAnswers }, step: oejtsStep });
+    };
+    const loadOejtsSession = profileId => {
+      const data = ProfileStore.getOejts(profileId);
+      oejtsAnswers = data?.answers ? { ...data.answers } : {};
+      oejtsStep = data?.step || (OEJTS.isTestComplete(oejtsAnswers) ? "results" : "intro");
+      oejtsQIndex = 0;
+    };
+    const migrateGlobalOejts = () => {
+      const legacy = loadJSON(STORAGE_KEYS.oejts, null);
+      if (!legacy?.answers || !Object.keys(legacy.answers).length) return;
+      const existing = ProfileStore.getOejts(activeProfile);
+      if (!existing?.answers || !Object.keys(existing.answers).length) {
+        ProfileStore.saveOejts(activeProfile, {
+          answers: legacy.answers,
+          step: OEJTS.isTestComplete(legacy.answers) ? "results" : "intro"
+        });
+      }
+      localStorage.removeItem(STORAGE_KEYS.oejts);
+    };
+    const profileHdSummary = display => {
+      if (!display) return BL("—", "—");
+      if (display.chartComputed) return display.subtitle;
+      if (display.chartStale) return BL("veraltet", "stale");
+      if (display.hasBirthData) return BL("Geburtsdaten", "birth data");
+      return BL("—", "—");
+    };
+    const profileJungSummary = id => {
+      const answers = getOejtsAnswersForProfile(id);
+      const count = OEJTS.answeredCount(answers);
+      if (OEJTS.isTestComplete(answers)) {
+        const type = OEJTS.generateResult(answers).type;
+        return BL(type, type);
+      }
+      if (count > 0) return BL(`${count}/32`, `${count}/32`);
+      return BL("—", "—");
+    };
+    const profileSelectOptions = selectedId => Object.values(getAllProfiles())
+      .sort((a, b) => String(a.name || a.id).localeCompare(String(b.name || b.id)))
+      .map(p => {
+        const hd = T(profileHdSummary(p));
+        const jung = T(profileJungSummary(p.id));
+        return `<option value="${p.id}" ${p.id === selectedId ? "selected" : ""}>${p.name} · HD: ${hd} · Jung: ${jung}</option>`;
+      }).join("");
     const pentaOn = loadJSON(STORAGE_KEYS.penta, { daniel: true, patrick: true, paradise: true });
     const savePentaOn = () => saveJSON(STORAGE_KEYS.penta, pentaOn);
     const PENTA_MAX = 5;
@@ -2971,10 +3041,12 @@
               ${records.map(record => {
                 const p = profiles[record.id] || record;
                 const chartOk = p.chartComputed;
+                const hd = T(profileHdSummary(p));
+                const jung = T(profileJungSummary(p.id));
                 return `
                   <label class="member-toggle">
                     <input type="checkbox" data-member="${p.id}" ${pentaOn[p.id] ? "checked" : ""}>
-                    <span>${p.name || p.id}${chartOk ? "" : ` · ${T(BL("kein Chart", "no chart"))}`}</span>
+                    <span>${p.name || p.id} · HD: ${hd} · Jung: ${jung}${chartOk ? "" : ` · ${T(BL("kein Chart", "no chart"))}`}</span>
                   </label>`;
               }).join("")}
             </div>
@@ -6069,13 +6141,16 @@
       </div>`;
     }
 
-    function renderOejtsDimensionCard(dimKey, result) {
+    function renderOejtsDimensionCard(dimKey, result, deutungBL) {
       const meta = OEJTS.DIMENSION_META[dimKey];
       const pref = result.preferences[dimKey];
       const pct = result.percentages;
       const leftPct = pct[meta.left];
       const rightPct = pct[meta.right];
       const conf = result.confidence[dimKey];
+      const deutung = deutungBL
+        ? `<p class="oejts-deutung">${T(deutungBL).replace(/\((HD:[^)]+)\)/g, "<em>($1)</em>")}</p>`
+        : "";
       return `<div class="oejts-dim-card">
         <strong>${T(meta.leftLabel)} ↔ ${T(meta.rightLabel)}</strong>
         <div style="margin:6px 0;font-size:.88rem;color:var(--bone)">${pref} · ${OEJTS.confidenceLabel(conf.level, lang)}</div>
@@ -6088,7 +6163,63 @@
           <span>${meta.right} ${rightPct}%</span>
         </div>
         <p style="margin:8px 0 0;font-size:.78rem;color:var(--muted);line-height:1.45">${T(pref === meta.left ? meta.leftHint : meta.rightHint)}</p>
+        ${deutung}
       </div>`;
+    }
+
+    function renderOejtsDeutungBlock(titleBL, textBL) {
+      const text = T(textBL).replace(/\((HD:[^)]+)\)/g, "<em>($1)</em>");
+      return `<div class="oejts-deutung-block">
+        <strong>${T(titleBL)}</strong>
+        <p>${text}</p>
+      </div>`;
+    }
+
+    function renderGlobalProfileBar(profile) {
+      const hd = T(profileHdSummary(profile));
+      const jung = T(profileJungSummary(profile.id));
+      return `
+        <section class="panel global-profile-bar">
+          <div class="global-profile-grid">
+            <div class="field global-profile-select">
+              <label for="profileSelect">${T(BL("Profil", "Profile"))}</label>
+              <select id="profileSelect" class="profile-select" aria-label="${T(BL("Profil waehlen", "Select profile"))}">
+                ${profileSelectOptions(profile.id)}
+              </select>
+            </div>
+            <div class="global-profile-meta">
+              <div class="global-profile-name">${profile.name}</div>
+              <div class="profile-lens-row">
+                <span class="lens-badge lens-hd"><strong>HD</strong> ${hd}</span>
+                <span class="lens-badge lens-jung"><strong>Jung</strong> ${jung}</span>
+              </div>
+            </div>
+          </div>
+        </section>`;
+    }
+
+    function renderOejtsProfilePanel(profile) {
+      return `
+        <section class="panel oejts-profile-panel">
+          <h3 style="margin:0 0 10px;font-size:.95rem;color:var(--cyber-cyan)">${T(BL("Profil fuer Jung-Test", "Profile for Jung test"))}</h3>
+          <form id="oejtsProfileForm" class="oejts-profile-form">
+            <div class="field">
+              <label for="oejtsProfileName">${T(BL("Name", "Name"))}</label>
+              <input id="oejtsProfileName" type="text" value="${(profile.name || "").replace(/"/g, "&quot;")}" required>
+            </div>
+            <div class="oejts-profile-actions">
+              <button type="submit" class="btn-primary">${T(BL("Speichern", "Save"))}</button>
+              <button type="button" id="oejtsNewProfile">${T(BL("Neues Profil", "New profile"))}</button>
+            </div>
+          </form>
+          <div class="small-card oejts-profile-status">
+            <strong>${profile.name}</strong><br>
+            <span class="profile-lens-row" style="margin-top:8px">
+              <span class="lens-badge lens-hd"><strong>HD</strong> ${T(profileHdSummary(profile))}</span>
+              <span class="lens-badge lens-jung"><strong>Jung</strong> ${T(profileJungSummary(profile.id))}</span>
+            </span>
+          </div>
+        </section>`;
     }
 
     function renderOejtsTab(profile) {
@@ -6097,13 +6228,13 @@
       const progress = Math.round((answered / total) * 100);
 
       if (oejtsStep === "intro") {
-        return `<section class="panel">
+        return `${renderOejtsProfilePanel(profile)}<section class="panel">
           <h2>${T(BL("Jung-Typ · OEJTS", "Jung type · OEJTS"))}</h2>
           <p class="oejts-intro">${T(BL(
             "Open Extended Jungian Type Scales (OEJTS 1.2) — offene Alternative zu klassischen Jung/MBTI-Fragebögen. 32 bipolar bewertete Items, vier Dimensionen: Extraversion/Introversion, Sensing/Intuition, Feeling/Thinking, Judging/Perceiving. Kein Insights-Evaluator — eigenständige Open-Source-Engine.",
             "Open Extended Jungian Type Scales (OEJTS 1.2) — open alternative to classic Jung/MBTI questionnaires. 32 bipolar items, four dimensions: Extraversion/Introversion, Sensing/Intuition, Feeling/Thinking, Judging/Perceiving. Not the Insights evaluator — standalone open-source engine."
           ))}</p>
-          <div class="small-card">${T(BL("Dauer ca. 8–12 Minuten · Antworten werden lokal gespeichert", "About 8–12 minutes · Answers saved locally"))}</div>
+          <div class="small-card">${T(BL("Dauer ca. 8–12 Minuten · Antworten werden pro Profil lokal gespeichert", "About 8–12 minutes · Answers saved locally per profile"))}</div>
           <div class="oejts-nav">
             <button type="button" class="btn-primary" id="oejtsStart">${T(BL("Test starten", "Start test"))}</button>
             ${answered ? `<button type="button" id="oejtsContinue">${T(BL(`Fortsetzen (${answered}/${total})`, `Continue (${answered}/${total})`))}</button>` : ""}
@@ -6116,7 +6247,7 @@
       if (oejtsStep === "quiz") {
         const q = OEJTS.sortedQuestions[oejtsQIndex];
         const selected = oejtsAnswers[q.id];
-        return `<section class="panel">
+        return `${renderOejtsProfilePanel(profile)}<section class="panel">
           <h2>${T(BL("Frage", "Question"))} ${oejtsQIndex + 1} / ${total}</h2>
           <div class="oejts-progress"><span style="width:${Math.round(((oejtsQIndex + (selected ? 1 : 0)) / total) * 100)}%"></span></div>
           <div class="oejts-qcard">
@@ -6139,27 +6270,53 @@
 
       const result = OEJTS.generateResult(oejtsAnswers);
       const typeDesc = OEJTS.getTypeDescription(result.type);
+      const record = getProfileRecord(activeProfile);
+      const hdSnap = OEJTSInterpret.buildHdSnapshot(profile, record);
+      const allCenters = ["Head", "Ajna", "Throat", "G", "Ego", "Spleen", "Solar", "Sacral", "Root"];
+      const display = profile?.chartComputed ? {
+        typeLabel: T(profile.subtitle),
+        authorityLabel: T(profile.authority),
+        strategyLabel: T(profile.strategy),
+        definedCentersLabels: (hdSnap.definedCenters || []).map(c => T(CENTER_LABELS[c] || BL(c, c))),
+        openCentersLabels: allCenters.filter(c => !(hdSnap.definedCenters || []).includes(c)).map(c => T(CENTER_LABELS[c] || BL(c, c)))
+      } : null;
+      const interp = OEJTSInterpret.buildInterpretation(result, hdSnap, display);
       const hdLine = profile?.chartComputed && profile?.subtitle
         ? `${profile.name}: ${T(profile.subtitle)} · ${T(profile.authority)}`
         : T(BL("HD-Chart unter Eingabe speichern fuer Vergleich.", "Save HD chart under Input for comparison."));
+      const chartNotesHtml = interp.chartNotes.length
+        ? `<ul class="oejts-chart-notes">${interp.chartNotes.map(n => `<li>${T(n)}</li>`).join("")}</ul>`
+        : "";
+      const typeHdNote = interp.typeHdParallel
+        ? `<p style="margin:10px 0 0;font-size:.82rem;color:var(--muted);line-height:1.48">${T(interp.typeHdParallel)}</p>`
+        : "";
 
-      return `<section class="panel">
+      return `${renderOejtsProfilePanel(profile)}<section class="panel">
         <h2>${T(BL("Dein Jung-Typ (OEJTS)", "Your Jung type (OEJTS)"))}</h2>
         <div class="oejts-type-hero">${result.type}</div>
         <p style="color:var(--muted);line-height:1.55;max-width:62ch">${T(typeDesc)}</p>
+        <p style="margin-top:8px;font-size:.82rem;color:var(--bone);line-height:1.5;max-width:62ch">${T(interp.typeFunctions)}</p>
         <p style="margin-top:8px;font-size:.85rem;color:var(--accent)">${T(BL("Klarheitsindex", "Clarity index"))}: ${result.confidence.clarityIndex}%</p>
         <div class="oejts-dim-grid">
-          ${renderOejtsDimensionCard("EI", result)}
-          ${renderOejtsDimensionCard("SN", result)}
-          ${renderOejtsDimensionCard("TF", result)}
-          ${renderOejtsDimensionCard("JP", result)}
+          ${renderOejtsDimensionCard("EI", result, interp.dimensionDeutung.EI)}
+          ${renderOejtsDimensionCard("SN", result, interp.dimensionDeutung.SN)}
+          ${renderOejtsDimensionCard("TF", result, interp.dimensionDeutung.TF)}
+          ${renderOejtsDimensionCard("JP", result, interp.dimensionDeutung.JP)}
+        </div>
+        <div class="oejts-deutung-panel">
+          <h3>${T(BL("Deutung — Jung mit HD-Parallelen", "Interpretation — Jung with HD parallels"))}</h3>
+          ${renderOejtsDeutungBlock(BL("Kommunikation", "Communication"), interp.communication)}
+          ${renderOejtsDeutungBlock(BL("Entscheiden & Tempo", "Deciding & pace"), interp.decision)}
+          ${renderOejtsDeutungBlock(BL("Lernen & Wahrnehmen", "Learning & perception"), interp.learning)}
         </div>
         <div class="small-card oejts-hd-compare">
           <strong>${T(BL("Human Design (parallel)", "Human Design (parallel)"))}</strong><br>
           <span style="color:var(--muted);font-size:.88rem">${hdLine}</span>
+          ${chartNotesHtml}
+          ${typeHdNote}
           <p style="margin:10px 0 0;font-size:.82rem;color:var(--muted);line-height:1.48">${T(BL(
-            "Jung-Typ und HD-Typ messen verschiedene Ebenen — kein 1:1-Mapping. Beide Lens zusammen geben ein reicheres Bild fuer Kommunikation und Team.",
-            "Jung type and HD type measure different layers — not a 1:1 mapping. Both lenses together give a richer picture for communication and team."
+            "Jung-Typ und HD-Typ messen verschiedene Ebenen — kein 1:1-Mapping. HD-Hinweise in Klammern sind Anker zum Vergleichen, nicht Regeln.",
+            "Jung type and HD type measure different layers — not a 1:1 mapping. HD hints in parentheses are anchors for comparison, not rules."
           ))}</p>
         </div>
         <div class="oejts-nav">
@@ -6242,17 +6399,10 @@
     }
 
     function renderProfileStrip(profile, day, date) {
-      const allProfiles = getAllProfiles();
       return `
         <section class="panel profile-strip compact-top">
           <div class="profile-card">
             <div class="form-grid">
-              <div class="field">
-                <label for="profileSelect">${T(BL("Person / Marke", "Person / brand"))}</label>
-                <select id="profileSelect" class="profile-select" aria-label="Profile">
-                  ${Object.values(allProfiles).map(p => `<option value="${p.id}" ${p.id === profile.id ? "selected" : ""}>${p.name}${p.chartComputed ? " ✓" : ""}</option>`).join("")}
-                </select>
-              </div>
               <div class="field">
                 <label for="profileDatePicker">${T(BL("Transit-Datum", "Transit date"))}</label>
                 <input type="date" id="profileDatePicker" class="profile-select" value="${isoDate(date)}" min="1920-01-01" max="2099-12-31">
@@ -6506,7 +6656,7 @@
         <section class="panel">
           <h2>${T(BL("Eingabe & Geburtsdaten", "Input & birth data"))}</h2>
           <p style="color:var(--muted);line-height:1.5;margin-bottom:16px">${T(BL("Daten werden nur bei «Berechnen & Speichern» in der Profil-Datenbank gespeichert — nie automatisch beim Laden.", "Data is only saved to the profile database when you click «Calculate & save» — never automatically on load."))}</p>
-          <p style="color:var(--muted);line-height:1.5;margin-bottom:16px">${T(BL(`Aktives Profil: ${profile.name} — auf der Daily Map oben wechseln.`, `Active profile: ${profile.name} — switch on the Daily Map above.`))}</p>
+          <p style="color:var(--muted);line-height:1.5;margin-bottom:16px">${T(BL("Profil oben waehlen. HD-Daten hier eingeben und speichern.", "Select profile above. Enter and save HD data here."))}</p>
           ${!window.HDEngine?.hasEphemeris() ? `<div class="small-card warning">${T(BL("Swiss Ephemeris wird geladen…", "Loading Swiss Ephemeris…"))}</div>` : ""}
           ${profile.chartStale ? `<div class="small-card warning">${T(BL("Gespeichertes Chart ist veraltet. Bitte «Vorschau» pruefen und «Berechnen & Speichern» klicken.", "Saved chart is outdated. Check «Preview» and click «Calculate & save»."))}</div>` : ""}
           <form id="profileForm">
@@ -6714,6 +6864,7 @@
 
       document.getElementById("app").innerHTML = `
         ${renderTabs()}
+        ${renderGlobalProfileBar(profile)}
         <div class="tab-panel ${activeTab === "daily" ? "" : "hidden"}">${dailyView}</div>
         <div class="tab-panel ${activeTab === "heute" ? "" : "hidden"}">${heuteView}</div>
         <div class="tab-panel ${activeTab === "penta" ? "" : "hidden"}">${pentaView}</div>
@@ -6782,7 +6933,12 @@
       if (todayBtn) todayBtn.addEventListener("click", () => { selectedDateISO = isoDate(today()); renderApp(); });
 
       const profileSelect = document.getElementById("profileSelect");
-      if (profileSelect) profileSelect.addEventListener("change", e => { activeProfile = e.target.value; renderApp(); });
+      if (profileSelect) profileSelect.addEventListener("change", e => {
+        flushOejtsSession(activeProfile);
+        activeProfile = e.target.value;
+        loadOejtsSession(activeProfile);
+        renderApp();
+      });
 
       document.querySelectorAll("[data-member]").forEach(node => node.addEventListener("change", event => {
         const id = event.target.dataset.member;
@@ -6806,9 +6962,33 @@
 
       document.querySelectorAll("[data-oejts-answer]").forEach(input => input.addEventListener("change", e => {
         oejtsAnswers[Number(e.target.dataset.oejtsAnswer)] = Number(e.target.value);
-        saveOejts();
+        flushOejtsSession();
         renderApp();
       }));
+
+      const oejtsProfileForm = document.getElementById("oejtsProfileForm");
+      if (oejtsProfileForm) oejtsProfileForm.addEventListener("submit", e => {
+        e.preventDefault();
+        const name = document.getElementById("oejtsProfileName").value.trim();
+        if (!name) return;
+        flushOejtsSession();
+        ProfileStore.updateMeta(activeProfile, { name });
+        renderApp();
+      });
+      const oejtsNewProfileBtn = document.getElementById("oejtsNewProfile");
+      if (oejtsNewProfileBtn) oejtsNewProfileBtn.addEventListener("click", () => {
+        flushOejtsSession(activeProfile);
+        const id = `custom-${Date.now()}`;
+        ProfileStore.addCustomPerson(id, T(BL("Neues Profil", "New profile")), BL("", ""));
+        pentaOn[id] = false;
+        savePentaOn();
+        activeProfile = id;
+        oejtsAnswers = {};
+        oejtsStep = "intro";
+        oejtsQIndex = 0;
+        ProfileStore.saveOejts(id, { answers: {}, step: "intro" });
+        renderApp();
+      });
 
       const oejtsStart = document.getElementById("oejtsStart");
       if (oejtsStart) oejtsStart.addEventListener("click", () => {
@@ -6841,20 +7021,21 @@
         }
         if (oejtsQIndex >= OEJTS.TOTAL - 1) {
           oejtsStep = OEJTS.isTestComplete(oejtsAnswers) ? "results" : "intro";
+          flushOejtsSession();
         } else {
           oejtsQIndex += 1;
         }
         renderApp();
       });
       const oejtsQuit = document.getElementById("oejtsQuit");
-      if (oejtsQuit) oejtsQuit.addEventListener("click", () => { oejtsStep = "intro"; renderApp(); });
+      if (oejtsQuit) oejtsQuit.addEventListener("click", () => { oejtsStep = "intro"; flushOejtsSession(); renderApp(); });
       const oejtsRetake = document.getElementById("oejtsRetake");
       if (oejtsRetake) oejtsRetake.addEventListener("click", () => {
-        if (!confirm(T(BL("Alle OEJTS-Antworten loeschen und neu starten?", "Delete all OEJTS answers and restart?")))) return;
+        if (!confirm(T(BL("Alle OEJTS-Antworten fuer dieses Profil loeschen und neu starten?", "Delete all OEJTS answers for this profile and restart?")))) return;
         oejtsAnswers = {};
         oejtsQIndex = 0;
         oejtsStep = "intro";
-        saveOejts();
+        flushOejtsSession();
         renderApp();
       });
       const oejtsReview = document.getElementById("oejtsReview");
@@ -6881,7 +7062,9 @@
           }
           const openBtn = event.target.closest("[data-admin-open]");
           if (openBtn) {
+            flushOejtsSession(activeProfile);
             activeProfile = openBtn.dataset.adminOpen;
+            loadOejtsSession(activeProfile);
             adminEditingId = null;
             activeTab = "input";
             renderApp();
@@ -6892,7 +7075,10 @@
             const id = clearBtn.dataset.adminClear;
             if (!confirm(T(BL(`Geburtsdaten und Chart von «${id}» loeschen?`, `Delete birth data and chart for «${id}»?`)))) return;
             ProfileStore.clearPerson(id, PROFILES);
-            if (activeProfile === id) adminEditingId = null;
+            if (activeProfile === id) {
+              adminEditingId = null;
+              loadOejtsSession(id);
+            }
             renderApp();
             return;
           }
@@ -6901,7 +7087,11 @@
             const id = deleteBtn.dataset.adminDelete;
             if (!confirm(T(BL(`Profil «${id}» endgueltig loeschen?`, `Permanently delete profile «${id}»?`)))) return;
             ProfileStore.clearPerson(id, PROFILES);
-            if (activeProfile === id) activeProfile = "daniel";
+            if (activeProfile === id) {
+              flushOejtsSession(activeProfile);
+              activeProfile = "daniel";
+              loadOejtsSession("daniel");
+            }
             adminEditingId = null;
             renderApp();
             return;
@@ -7025,6 +7215,7 @@
           savePentaOn();
           activeProfile = "daniel";
           adminEditingId = null;
+          loadOejtsSession("daniel");
           renderApp();
         });
       }
@@ -7116,6 +7307,7 @@
 
       const newProfileBtn = document.getElementById("newProfileBtn");
       if (newProfileBtn) newProfileBtn.addEventListener("click", () => {
+        flushOejtsSession(activeProfile);
         const id = `custom-${Date.now()}`;
         const name = T(BL("Neues Profil", "New profile"));
         const tone = BL("", "");
@@ -7123,6 +7315,7 @@
         pentaOn[id] = false;
         savePentaOn();
         activeProfile = id;
+        loadOejtsSession(id);
         activeTab = "input";
         renderApp();
       });
@@ -7130,8 +7323,10 @@
       const deleteProfileBtn = document.getElementById("deleteProfileBtn");
       if (deleteProfileBtn) deleteProfileBtn.addEventListener("click", () => {
         if (PROFILES[activeProfile]) return;
+        flushOejtsSession(activeProfile);
         ProfileStore.clearPerson(activeProfile, PROFILES);
         activeProfile = "daniel";
+        loadOejtsSession("daniel");
         renderApp();
       });
 
@@ -7168,6 +7363,8 @@
       }
       try {
         ProfileStore.migrateBirthOnly(PROFILES);
+        migrateGlobalOejts();
+        loadOejtsSession(activeProfile);
         ensurePentaRegistry();
         renderApp();
       } catch (err) {
