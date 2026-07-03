@@ -1448,6 +1448,124 @@
       margin-bottom: 12px;
     }
 
+    .penta-picker {
+      margin-bottom: 16px;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 16px;
+      background: rgba(255,255,255,.03);
+      overflow: hidden;
+    }
+
+    .penta-picker-summary {
+      cursor: pointer;
+      padding: 14px 18px;
+      font-weight: 600;
+      font-size: .95rem;
+      color: var(--bone);
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .penta-picker-summary::-webkit-details-marker { display: none; }
+
+    .penta-picker-summary::before {
+      content: "▸";
+      color: var(--accent);
+      transition: transform .15s ease;
+    }
+
+    .penta-picker[open] .penta-picker-summary::before { transform: rotate(90deg); }
+
+    .penta-picker-body {
+      padding: 0 18px 16px;
+      border-top: 1px solid rgba(255,255,255,.06);
+    }
+
+    .penta-picker-hint {
+      color: var(--muted);
+      font-size: .85rem;
+      line-height: 1.5;
+      margin: 12px 0;
+    }
+
+    .penta-member-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 8px;
+    }
+
+    .penta-pairs-fold {
+      margin: 18px 0;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      padding: 0 14px 14px;
+    }
+
+    .penta-pairs-fold summary {
+      cursor: pointer;
+      padding: 14px 4px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .pair-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .pair-card {
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      padding: 14px;
+      background: rgba(255,255,255,.025);
+    }
+
+    .pair-card h4 {
+      margin: 0 0 10px;
+      font-size: .92rem;
+      color: var(--accent);
+    }
+
+    .pair-stat {
+      font-size: .84rem;
+      color: var(--muted);
+      line-height: 1.55;
+      margin: 4px 0;
+    }
+
+    .oejts-intro { color: var(--muted); line-height: 1.55; margin-bottom: 16px; max-width: 68ch; }
+    .oejts-attrib { font-family: var(--mono); font-size: .68rem; color: rgba(167,177,194,.55); margin-top: 14px; line-height: 1.5; }
+    .oejts-progress { height: 4px; background: rgba(255,255,255,.08); border-radius: 999px; margin: 12px 0 18px; overflow: hidden; }
+    .oejts-progress > span { display: block; height: 100%; background: linear-gradient(90deg, var(--cyber-cyan), var(--accent)); box-shadow: 0 0 12px rgba(0,245,255,.45); transition: width .2s ease; }
+    .oejts-qcard { border: 1px solid rgba(0,245,255,.12); border-radius: 16px; padding: 18px; background: rgba(255,255,255,.03); }
+    .oejts-qtitle { font-size: 1rem; font-weight: 600; margin-bottom: 14px; color: var(--bone); }
+    .oejts-scale { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: center; margin-bottom: 10px; }
+    .oejts-pole { font-size: .82rem; color: var(--muted); line-height: 1.4; }
+    .oejts-pole.left { text-align: right; color: var(--cyber-cyan); }
+    .oejts-pole.right { text-align: left; color: var(--accent); }
+    .oejts-likert { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+    .oejts-likert label { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; min-width: 42px; }
+    .oejts-likert input { accent-color: var(--cyber-cyan); }
+    .oejts-likert span { font-size: .65rem; color: var(--muted); }
+    .oejts-nav { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+    .oejts-type-hero { font-family: var(--display, Georgia, serif); font-size: clamp(2.2rem, 6vw, 3.4rem); letter-spacing: .12em; color: var(--cyber-cyan); text-shadow: 0 0 18px rgba(0,245,255,.35); margin: 8px 0; }
+    .oejts-dim-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 16px 0; }
+    .oejts-dim-card { border: 1px solid rgba(255,255,255,.08); border-radius: 14px; padding: 14px; background: rgba(255,255,255,.025); }
+    .oejts-dim-card strong { color: var(--accent); }
+    .oejts-bar { height: 8px; border-radius: 999px; background: rgba(255,255,255,.08); margin: 8px 0; overflow: hidden; display: flex; }
+    .oejts-bar > span:first-child { background: var(--cyber-cyan); }
+    .oejts-bar > span:last-child { background: var(--accent); flex: 1; }
+    .oejts-hd-compare { margin-top: 16px; border-top: 1px solid rgba(255,255,255,.08); padding-top: 14px; }
+    @media (max-width: 720px) {
+      .oejts-scale { grid-template-columns: 1fr; }
+      .oejts-pole.left, .oejts-pole.right { text-align: left; }
+      .oejts-dim-grid { grid-template-columns: 1fr; }
+    }
+
     .member-toggle {
       display: flex;
       gap: 8px;
@@ -2089,6 +2207,7 @@
   <script src="hd-engine.js?v=8"></script>
   <script src="hd-logic.js?v=8"></script>
   <script src="zeitqualitaet-core.js?v=9"></script>
+  <script src="oejts-core.js?v=1"></script>
   <main class="app" id="app"></main>
 
   <script>
@@ -2109,7 +2228,8 @@
       overrides: "hd-profile-overrides-v1",
       profileDb: "hd-profile-db-v2",
       penta: "hd-penta-members-v1",
-      concordance: "hd-concordance-v1"
+      concordance: "hd-concordance-v1",
+      oejts: "hd-oejts-v1"
     };
 
     const T = value => typeof value === "string" ? value : (value[lang] || value.de);
@@ -2151,8 +2271,13 @@
       catch { return fallback; }
     };
     const saveJSON = (key, value) => localStorage.setItem(key, JSON.stringify(value));
+    let oejtsAnswers = (loadJSON(STORAGE_KEYS.oejts, {}) || {}).answers || {};
+    let oejtsQIndex = 0;
+    let oejtsStep = OEJTS.isTestComplete(oejtsAnswers) ? "results" : "intro";
+    const saveOejts = () => saveJSON(STORAGE_KEYS.oejts, { answers: oejtsAnswers, savedAt: new Date().toISOString() });
     const pentaOn = loadJSON(STORAGE_KEYS.penta, { daniel: true, patrick: true, paradise: true });
     const savePentaOn = () => saveJSON(STORAGE_KEYS.penta, pentaOn);
+    const PENTA_MAX = 5;
     const ProfileStore = HDLogic.createProfileStore({ loadJSON, saveJSON });
     const listProfileRecords = defaults => {
       if (typeof ProfileStore.listRecords === "function") return ProfileStore.listRecords(defaults);
@@ -2560,6 +2685,20 @@
 
     const getAllProfiles = () => ProfileStore.getAllDisplay(PROFILES);
     const getProfileRecord = id => ProfileStore.getRecord(id, PROFILES);
+
+    function ensurePentaRegistry() {
+      listProfileRecords(PROFILES).forEach(record => {
+        if (!(record.id in pentaOn)) pentaOn[record.id] = false;
+      });
+    }
+
+    function getSelectedPentaMembers() {
+      ensurePentaRegistry();
+      const profiles = getAllProfiles();
+      return listProfileRecords(PROFILES)
+        .map(record => profiles[record.id])
+        .filter(profile => profile && pentaOn[profile.id]);
+    }
     const deriveDefinedCenters = (gates, channels = CHANNELS) => HDEngine.definedCentersFromGates(gates, channels);
 
     const PENTA_CORE_CENTERS = ["Sacral", "G", "Throat"];
@@ -2735,6 +2874,112 @@
       return `<div class="penta-contributors">${contributors.map(row =>
         `${row.name}: G${row.gates.join(", G")}`
       ).join(" · ")}</div>`;
+    }
+
+    function analyzePair(a, b) {
+      const gatesA = new Set(a.definedGates || []);
+      const gatesB = new Set(b.definedGates || []);
+      const sharedGates = [...gatesA].filter(g => gatesB.has(g)).sort((x, y) => x - y);
+      const onlyA = [...gatesA].filter(g => !gatesB.has(g)).sort((x, y) => x - y);
+      const onlyB = [...gatesB].filter(g => !gatesA.has(g)).sort((x, y) => x - y);
+      const pool = new Set([...gatesA, ...gatesB]);
+      const electromagnetic = CHANNELS.filter(ch => {
+        const aA = gatesA.has(ch.a);
+        const aB = gatesA.has(ch.b);
+        const bA = gatesB.has(ch.a);
+        const bB = gatesB.has(ch.b);
+        return (aA && bB && !bA && !aB) || (bA && aB && !aA && !aB);
+      });
+      const sharedNative = CHANNELS.filter(ch => gatesA.has(ch.a) && gatesA.has(ch.b) && gatesB.has(ch.a) && gatesB.has(ch.b));
+      const pentaTogether = PENTA_SPINE_CHANNELS.filter(ch => pentaChannelComplete(pool, ch));
+      const centersA = new Set(a.definedCenters || []);
+      const centersB = new Set(b.definedCenters || []);
+      const sharedCenters = [...centersA].filter(c => centersB.has(c));
+      const uniqueCenters = [...new Set([...centersA, ...centersB])];
+      return {
+        sharedGates,
+        onlyA,
+        onlyB,
+        electromagnetic,
+        sharedNative,
+        pentaTogether,
+        sharedCenters,
+        uniqueCenters
+      };
+    }
+
+    function renderPairCard(a, b, compact) {
+      if (!a.chartComputed || !b.chartComputed) {
+        return `<div class="pair-card">
+          <h4>${a.name} ↔ ${b.name}</h4>
+          <p class="pair-stat">${T(BL("Beide Charts muessen unter Eingabe gespeichert sein.", "Both charts must be saved under Input."))}</p>
+        </div>`;
+      }
+      const pair = analyzePair(a, b);
+      const gateLine = gates => gates.length ? `G${gates.join(", G")}` : "—";
+      return `<div class="pair-card">
+        <h4>${a.name} ↔ ${b.name}</h4>
+        <p class="pair-stat"><strong>${T(BL("Gemeinsame Tore", "Shared gates"))}</strong> (${pair.sharedGates.length}): ${gateLine(pair.sharedGates)}</p>
+        <p class="pair-stat"><strong>${T(BL("Elektromagnetisch", "Electromagnetic"))}</strong> (${pair.electromagnetic.length}): ${pair.electromagnetic.length ? pair.electromagnetic.map(ch => `${ch.a}-${ch.b}`).join(", ") : "—"}</p>
+        <p class="pair-stat"><strong>${T(BL("Gemeinsame Kanaele", "Shared channels"))}</strong> (${pair.sharedNative.length}): ${pair.sharedNative.length ? pair.sharedNative.map(ch => `${ch.a}-${ch.b}`).join(", ") : "—"}</p>
+        <p class="pair-stat"><strong>${T(BL("Penta-Wirbel zusammen", "Penta spine together"))}</strong> (${pair.pentaTogether.length}): ${pair.pentaTogether.length ? pair.pentaTogether.map(ch => `${ch.a}-${ch.b}`).join(", ") : "—"}</p>
+        ${compact ? "" : `
+          <p class="pair-stat"><strong>${a.name}</strong> ${T(BL("nur", "only"))}: ${gateLine(pair.onlyA)}</p>
+          <p class="pair-stat"><strong>${b.name}</strong> ${T(BL("nur", "only"))}: ${gateLine(pair.onlyB)}</p>
+          <p class="pair-stat"><strong>${T(BL("Zentren im Duo", "Centers in duo"))}</strong>: ${pair.uniqueCenters.map(c => T(CENTER_LABELS[c])).join(" · ")}</p>`}
+      </div>`;
+    }
+
+    function renderAllPairComparisons(members) {
+      const pairs = [];
+      for (let i = 0; i < members.length; i++) {
+        for (let j = i + 1; j < members.length; j++) pairs.push([members[i], members[j]]);
+      }
+      if (!pairs.length) return "";
+      return `
+        <details class="penta-pairs-fold">
+          <summary>${T(BL(`Alle Paar-Vergleiche (${pairs.length})`, `All pair comparisons (${pairs.length})`))}</summary>
+          <div class="pair-grid">
+            ${pairs.map(([a, b]) => renderPairCard(a, b, true)).join("")}
+          </div>
+        </details>`;
+    }
+
+    function renderPentaMemberPicker() {
+      ensurePentaRegistry();
+      const members = getSelectedPentaMembers();
+      const records = listProfileRecords(PROFILES);
+      const profiles = getAllProfiles();
+      const modeHint = members.length === 2
+        ? T(BL("Paar-Vergleich", "Pair comparison"))
+        : members.length >= 3
+          ? T(BL("Penta-Analyse", "Penta analysis"))
+          : members.length === 1
+            ? T(BL("noch 1 Person waehlen", "select 1 more person"))
+            : T(BL("2–5 Personen waehlen", "select 2–5 people"));
+      return `
+        <details class="penta-picker">
+          <summary class="penta-picker-summary">
+            ${T(BL("Mitglieder", "Members"))}: ${members.length}/${PENTA_MAX} · ${modeHint}
+          </summary>
+          <div class="penta-picker-body">
+            <p class="penta-picker-hint">${T(BL(
+              "2 Personen = 1:1-Vergleich. 3–5 Personen = Penta-Feld. Namen nur hier sichtbar (KYC). Charts unter Eingabe speichern.",
+              "2 people = 1:1 comparison. 3–5 people = Penta field. Names visible only here (KYC). Save charts under Input."
+            ))}</p>
+            <div class="penta-member-list">
+              ${records.map(record => {
+                const p = profiles[record.id] || record;
+                const chartOk = p.chartComputed;
+                return `
+                  <label class="member-toggle">
+                    <input type="checkbox" data-member="${p.id}" ${pentaOn[p.id] ? "checked" : ""}>
+                    <span>${p.name || p.id}${chartOk ? "" : ` · ${T(BL("kein Chart", "no chart"))}`}</span>
+                  </label>`;
+              }).join("")}
+            </div>
+          </div>
+        </details>`;
     }
 
     const PLANET_ICONS = {
@@ -5811,11 +6056,126 @@
         ${renderZeitUnifiedView(concordances, collectiveGates, win, profile, datasetCount, addedRecords, scopeLabel, formatScopeWindow)}`;
     }
 
+    function renderOejtsLikert(q, selected) {
+      const labels = [
+        BL("1", "1"), BL("2", "2"), BL("3", "3"), BL("4", "4"), BL("5", "5")
+      ];
+      return `<div class="oejts-likert" role="radiogroup" aria-label="${T(q.title)}">
+        ${[1, 2, 3, 4, 5].map(v => `
+          <label>
+            <input type="radio" name="oejts-q-${q.id}" value="${v}" data-oejts-answer="${q.id}" ${Number(selected) === v ? "checked" : ""}>
+            <span>${T(labels[v - 1])}</span>
+          </label>`).join("")}
+      </div>`;
+    }
+
+    function renderOejtsDimensionCard(dimKey, result) {
+      const meta = OEJTS.DIMENSION_META[dimKey];
+      const pref = result.preferences[dimKey];
+      const pct = result.percentages;
+      const leftPct = pct[meta.left];
+      const rightPct = pct[meta.right];
+      const conf = result.confidence[dimKey];
+      return `<div class="oejts-dim-card">
+        <strong>${T(meta.leftLabel)} ↔ ${T(meta.rightLabel)}</strong>
+        <div style="margin:6px 0;font-size:.88rem;color:var(--bone)">${pref} · ${OEJTS.confidenceLabel(conf.level, lang)}</div>
+        <div class="oejts-bar" title="${meta.left} ${leftPct}% / ${meta.right} ${rightPct}%">
+          <span style="width:${leftPct}%"></span>
+          <span style="width:${rightPct}%"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:.75rem;color:var(--muted)">
+          <span>${meta.left} ${leftPct}%</span>
+          <span>${meta.right} ${rightPct}%</span>
+        </div>
+        <p style="margin:8px 0 0;font-size:.78rem;color:var(--muted);line-height:1.45">${T(pref === meta.left ? meta.leftHint : meta.rightHint)}</p>
+      </div>`;
+    }
+
+    function renderOejtsTab(profile) {
+      const total = OEJTS.TOTAL;
+      const answered = OEJTS.answeredCount(oejtsAnswers);
+      const progress = Math.round((answered / total) * 100);
+
+      if (oejtsStep === "intro") {
+        return `<section class="panel">
+          <h2>${T(BL("Jung-Typ · OEJTS", "Jung type · OEJTS"))}</h2>
+          <p class="oejts-intro">${T(BL(
+            "Open Extended Jungian Type Scales (OEJTS 1.2) — offene Alternative zu klassischen Jung/MBTI-Fragebögen. 32 bipolar bewertete Items, vier Dimensionen: Extraversion/Introversion, Sensing/Intuition, Feeling/Thinking, Judging/Perceiving. Kein Insights-Evaluator — eigenständige Open-Source-Engine.",
+            "Open Extended Jungian Type Scales (OEJTS 1.2) — open alternative to classic Jung/MBTI questionnaires. 32 bipolar items, four dimensions: Extraversion/Introversion, Sensing/Intuition, Feeling/Thinking, Judging/Perceiving. Not the Insights evaluator — standalone open-source engine."
+          ))}</p>
+          <div class="small-card">${T(BL("Dauer ca. 8–12 Minuten · Antworten werden lokal gespeichert", "About 8–12 minutes · Answers saved locally"))}</div>
+          <div class="oejts-nav">
+            <button type="button" class="btn-primary" id="oejtsStart">${T(BL("Test starten", "Start test"))}</button>
+            ${answered ? `<button type="button" id="oejtsContinue">${T(BL(`Fortsetzen (${answered}/${total})`, `Continue (${answered}/${total})`))}</button>` : ""}
+            ${OEJTS.isTestComplete(oejtsAnswers) ? `<button type="button" id="oejtsShowResults">${T(BL("Ergebnis anzeigen", "Show results"))}</button>` : ""}
+          </div>
+          <p class="oejts-attrib">${OEJTS.ATTRIBUTION}</p>
+        </section>`;
+      }
+
+      if (oejtsStep === "quiz") {
+        const q = OEJTS.sortedQuestions[oejtsQIndex];
+        const selected = oejtsAnswers[q.id];
+        return `<section class="panel">
+          <h2>${T(BL("Frage", "Question"))} ${oejtsQIndex + 1} / ${total}</h2>
+          <div class="oejts-progress"><span style="width:${Math.round(((oejtsQIndex + (selected ? 1 : 0)) / total) * 100)}%"></span></div>
+          <div class="oejts-qcard">
+            <div class="oejts-qtitle">${T(q.title)}</div>
+            <div class="oejts-scale">
+              <div class="oejts-pole left">${T(q.left)}</div>
+              ${renderOejtsLikert(q, selected)}
+              <div class="oejts-pole right">${T(q.right)}</div>
+            </div>
+            <p style="font-size:.78rem;color:var(--muted);text-align:center">${T(BL("1 = links · 5 = rechts", "1 = left · 5 = right"))}</p>
+          </div>
+          <div class="oejts-nav">
+            <button type="button" id="oejtsPrev" ${oejtsQIndex === 0 ? "disabled" : ""}>←</button>
+            <button type="button" id="oejtsNext">${oejtsQIndex >= total - 1 ? T(BL("Auswerten", "Score")) : T(BL("Weiter", "Next"))}</button>
+            <button type="button" id="oejtsQuit">${T(BL("Pause", "Pause"))}</button>
+          </div>
+          <p class="oejts-attrib">${OEJTS.ATTRIBUTION}</p>
+        </section>`;
+      }
+
+      const result = OEJTS.generateResult(oejtsAnswers);
+      const typeDesc = OEJTS.getTypeDescription(result.type);
+      const hdLine = profile?.chartComputed && profile?.subtitle
+        ? `${profile.name}: ${T(profile.subtitle)} · ${T(profile.authority)}`
+        : T(BL("HD-Chart unter Eingabe speichern fuer Vergleich.", "Save HD chart under Input for comparison."));
+
+      return `<section class="panel">
+        <h2>${T(BL("Dein Jung-Typ (OEJTS)", "Your Jung type (OEJTS)"))}</h2>
+        <div class="oejts-type-hero">${result.type}</div>
+        <p style="color:var(--muted);line-height:1.55;max-width:62ch">${T(typeDesc)}</p>
+        <p style="margin-top:8px;font-size:.85rem;color:var(--accent)">${T(BL("Klarheitsindex", "Clarity index"))}: ${result.confidence.clarityIndex}%</p>
+        <div class="oejts-dim-grid">
+          ${renderOejtsDimensionCard("EI", result)}
+          ${renderOejtsDimensionCard("SN", result)}
+          ${renderOejtsDimensionCard("TF", result)}
+          ${renderOejtsDimensionCard("JP", result)}
+        </div>
+        <div class="small-card oejts-hd-compare">
+          <strong>${T(BL("Human Design (parallel)", "Human Design (parallel)"))}</strong><br>
+          <span style="color:var(--muted);font-size:.88rem">${hdLine}</span>
+          <p style="margin:10px 0 0;font-size:.82rem;color:var(--muted);line-height:1.48">${T(BL(
+            "Jung-Typ und HD-Typ messen verschiedene Ebenen — kein 1:1-Mapping. Beide Lens zusammen geben ein reicheres Bild fuer Kommunikation und Team.",
+            "Jung type and HD type measure different layers — not a 1:1 mapping. Both lenses together give a richer picture for communication and team."
+          ))}</p>
+        </div>
+        <div class="oejts-nav">
+          <button type="button" id="oejtsRetake">${T(BL("Neu starten", "Retake"))}</button>
+          <button type="button" id="oejtsReview">${T(BL("Antworten pruefen", "Review answers"))}</button>
+        </div>
+        <p class="oejts-attrib">${OEJTS.ATTRIBUTION}</p>
+      </section>`;
+    }
+
     function renderTabs() {
       const tabs = [
         { id: "daily", label: BL("Daily Map", "Daily Map") },
         { id: "heute", label: BL("Heute", "Today") },
         { id: "penta", label: BL("Penta / Team", "Penta / Team") },
+        { id: "jung", label: BL("Jung / OEJTS", "Jung / OEJTS") },
         { id: "input", label: BL("Eingabe", "Input") },
         { id: "admin", label: BL("Admin", "Admin") }
       ];
@@ -6065,11 +6425,14 @@
           <div class="admin-section">
             <h3 style="font-size:.85rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin:0 0 8px">${T(BL("Penta-Mitglieder", "Penta members"))}</h3>
             <div class="penta-members">
-              ${Object.values(profiles).map(p => `
+              ${listProfileRecords(PROFILES).map(p => {
+                const display = profiles[p.id] || p;
+                return `
                 <label class="member-toggle">
                   <input type="checkbox" data-admin-penta="${p.id}" ${pentaOn[p.id] ? "checked" : ""}>
-                  <span>${p.name}</span>
-                </label>`).join("")}
+                  <span>${display.name || p.id}</span>
+                </label>`;
+              }).join("")}
             </div>
           </div>
 
@@ -6197,11 +6560,12 @@
     }
 
     function renderPentaPage(date) {
-      const members = Object.values(getAllProfiles()).filter(profile => pentaOn[profile.id]);
-      const penta = analyzePenta(members);
-      const gatePool = penta.gatePool;
-      const activeInfluences = penta.influences.filter(row => row.gates.length);
-      const inactiveInfluences = penta.influences.filter(row => !row.gates.length);
+      const members = getSelectedPentaMembers();
+      const penta = members.length >= 3 ? analyzePenta(members) : null;
+      const gatePool = penta?.gatePool || new Set(members.flatMap(m => m.definedGates || []));
+      const activeInfluences = penta ? penta.influences.filter(row => row.gates.length) : [];
+      const inactiveInfluences = penta ? penta.influences.filter(row => !row.gates.length) : [];
+      const missingCharts = members.filter(m => !m.chartComputed);
 
       return `
         <section class="panel">
@@ -6210,18 +6574,24 @@
             "Nach Ra Uru Hu: Die Penta ist eine transpersonale Aura fuer 3–5 Personen. Mechanisch relevant sind nur Sakral, G-Zentrum und Kehle — sechs Kanaele entlang der Wirbelsaeule. Alles andere kommt von Einzelnen als Einfluss ins Feld.",
             "Per Ra Uru Hu: the Penta is a transpersonal aura for 3–5 people. Mechanically relevant are only Sacral, G Center, and Throat — six channels along the spine. Everything else enters the field as individual influence."
           ))}</p>
-          <div class="penta-members">
-            ${Object.values(getAllProfiles()).map(p => `
-              <label class="member-toggle">
-                <input type="checkbox" data-member="${p.id}" ${pentaOn[p.id] ? "checked" : ""}>
-                <span>${p.name}</span>
-              </label>`).join("")}
-          </div>
+          ${renderPentaMemberPicker()}
+          ${missingCharts.length ? `<div class="small-card warning">${T(BL(
+            "Ohne gespeichertes Chart fehlen Tore im Vergleich:",
+            "Without a saved chart, gates are missing from comparison:"
+          ))} ${missingCharts.map(m => m.name).join(", ")}</div>` : ""}
+          ${members.length === 0 ? `<div class="small-card">${T(BL("Waehle 2 Personen fuer 1:1 oder 3–5 fuer Penta.", "Select 2 people for 1:1 or 3–5 for Penta."))}</div>` : ""}
+          ${members.length === 1 ? `<div class="small-card">${T(BL("Noch eine Person waehlen fuer den Vergleich.", "Select one more person to compare."))}</div>` : ""}
+          ${members.length === 2 ? `
+            <h2>${T(BL("Paar-Vergleich (1:1)", "Pair comparison (1:1)"))}</h2>
+            <div class="pair-grid">${renderPairCard(members[0], members[1], false)}</div>
+          ` : ""}
+          ${members.length >= 3 ? renderAllPairComparisons(members) : ""}
           <div class="small-card">
             <strong>${T(BL("Gate-Pool", "Gate pool"))}</strong><br>
             ${members.length ? [...gatePool].sort((a, b) => a - b).join(", ") : T(BL("Kein Mitglied aktiv.", "No member active."))}
           </div>
 
+          ${members.length >= 3 && penta ? `
           <h2>${T(BL("Penta-Kern — 3 Zentren (Ra)", "Penta core — 3 centers (Ra)"))}</h2>
           <div class="penta-core-grid">
             ${penta.coreCenters.map(row => `
@@ -6276,6 +6646,10 @@
               <strong>${T(BL("Nicht im Pool", "Not in pool"))}</strong>:
               ${inactiveInfluences.map(row => T(CENTER_LABELS[row.center])).join(" · ")}
             </div>` : ""}
+          ` : members.length === 2 ? `<div class="small-card" style="margin-top:12px">${T(BL(
+            "Fuer die volle Penta-Analyse (3–5 Personen) eine dritte Person hinzufuegen.",
+            "Add a third person for full Penta analysis (3–5 people)."
+          ))}</div>` : ""}
         </section>`;
     }
 
@@ -6331,6 +6705,8 @@
           ${renderPentaPage(date)}
         </section>`;
 
+      const jungView = renderOejtsTab(profile);
+
       const inputView = renderInputTab();
       const adminView = activeTab === "admin" ? renderAdminTab() : "";
 
@@ -6341,6 +6717,7 @@
         <div class="tab-panel ${activeTab === "daily" ? "" : "hidden"}">${dailyView}</div>
         <div class="tab-panel ${activeTab === "heute" ? "" : "hidden"}">${heuteView}</div>
         <div class="tab-panel ${activeTab === "penta" ? "" : "hidden"}">${pentaView}</div>
+        <div class="tab-panel ${activeTab === "jung" ? "" : "hidden"}">${jungView}</div>
         <div class="tab-panel ${activeTab === "input" ? "" : "hidden"}">${inputView}</div>
         <div class="tab-panel ${activeTab === "admin" ? "" : "hidden"}">${adminView}</div>
         <p class="footer">${T(BL("Profil-Datenbank v2 (hd-profile-db-v2) · Engine v4 · Chart nur bei «Berechnen & Speichern».", "Profile database v2 (hd-profile-db-v2) · Engine v4 · Chart only on «Calculate & save»."))} · <a href="../" style="color:var(--accent)">${T(BL("Readings & About", "Readings & About"))}</a></p>
@@ -6408,10 +6785,84 @@
       if (profileSelect) profileSelect.addEventListener("change", e => { activeProfile = e.target.value; renderApp(); });
 
       document.querySelectorAll("[data-member]").forEach(node => node.addEventListener("change", event => {
-        pentaOn[event.target.dataset.member] = event.target.checked;
+        const id = event.target.dataset.member;
+        if (event.target.checked) {
+          const count = Object.keys(pentaOn).filter(k => pentaOn[k] && k !== id).length;
+          if (count >= PENTA_MAX) {
+            event.target.checked = false;
+            alert(T(BL(`Maximal ${PENTA_MAX} Mitglieder.`, `Maximum ${PENTA_MAX} members.`)));
+            return;
+          }
+        }
+        pentaOn[id] = event.target.checked;
         savePentaOn();
         renderApp();
       }));
+
+      const firstUnansweredOejtsIndex = () => {
+        const idx = OEJTS.sortedQuestions.findIndex(q => !(oejtsAnswers[q.id] >= 1 && oejtsAnswers[q.id] <= 5));
+        return idx === -1 ? OEJTS.TOTAL - 1 : idx;
+      };
+
+      document.querySelectorAll("[data-oejts-answer]").forEach(input => input.addEventListener("change", e => {
+        oejtsAnswers[Number(e.target.dataset.oejtsAnswer)] = Number(e.target.value);
+        saveOejts();
+        renderApp();
+      }));
+
+      const oejtsStart = document.getElementById("oejtsStart");
+      if (oejtsStart) oejtsStart.addEventListener("click", () => {
+        oejtsStep = "quiz";
+        oejtsQIndex = 0;
+        renderApp();
+      });
+      const oejtsContinue = document.getElementById("oejtsContinue");
+      if (oejtsContinue) oejtsContinue.addEventListener("click", () => {
+        oejtsStep = "quiz";
+        oejtsQIndex = firstUnansweredOejtsIndex();
+        renderApp();
+      });
+      const oejtsShowResults = document.getElementById("oejtsShowResults");
+      if (oejtsShowResults) oejtsShowResults.addEventListener("click", () => {
+        oejtsStep = "results";
+        renderApp();
+      });
+      const oejtsPrev = document.getElementById("oejtsPrev");
+      if (oejtsPrev) oejtsPrev.addEventListener("click", () => {
+        oejtsQIndex = Math.max(0, oejtsQIndex - 1);
+        renderApp();
+      });
+      const oejtsNext = document.getElementById("oejtsNext");
+      if (oejtsNext) oejtsNext.addEventListener("click", () => {
+        const q = OEJTS.sortedQuestions[oejtsQIndex];
+        if (!(oejtsAnswers[q.id] >= 1 && oejtsAnswers[q.id] <= 5)) {
+          alert(T(BL("Bitte eine Antwort waehlen.", "Please select an answer.")));
+          return;
+        }
+        if (oejtsQIndex >= OEJTS.TOTAL - 1) {
+          oejtsStep = OEJTS.isTestComplete(oejtsAnswers) ? "results" : "intro";
+        } else {
+          oejtsQIndex += 1;
+        }
+        renderApp();
+      });
+      const oejtsQuit = document.getElementById("oejtsQuit");
+      if (oejtsQuit) oejtsQuit.addEventListener("click", () => { oejtsStep = "intro"; renderApp(); });
+      const oejtsRetake = document.getElementById("oejtsRetake");
+      if (oejtsRetake) oejtsRetake.addEventListener("click", () => {
+        if (!confirm(T(BL("Alle OEJTS-Antworten loeschen und neu starten?", "Delete all OEJTS answers and restart?")))) return;
+        oejtsAnswers = {};
+        oejtsQIndex = 0;
+        oejtsStep = "intro";
+        saveOejts();
+        renderApp();
+      });
+      const oejtsReview = document.getElementById("oejtsReview");
+      if (oejtsReview) oejtsReview.addEventListener("click", () => {
+        oejtsStep = "quiz";
+        oejtsQIndex = 0;
+        renderApp();
+      });
 
       const adminPanel = document.getElementById("adminPanel");
       if (adminPanel) {
@@ -6486,8 +6937,18 @@
         adminPanel.addEventListener("change", event => {
           const pentaInput = event.target.closest("[data-admin-penta]");
           if (pentaInput) {
-            pentaOn[pentaInput.dataset.adminPenta] = pentaInput.checked;
+            const id = pentaInput.dataset.adminPenta;
+            if (pentaInput.checked) {
+              const count = Object.keys(pentaOn).filter(k => pentaOn[k] && k !== id).length;
+              if (count >= PENTA_MAX) {
+                pentaInput.checked = false;
+                alert(T(BL(`Maximal ${PENTA_MAX} Mitglieder.`, `Maximum ${PENTA_MAX} members.`)));
+                return;
+              }
+            }
+            pentaOn[id] = pentaInput.checked;
             savePentaOn();
+            renderApp();
           }
         });
 
@@ -6659,6 +7120,8 @@
         const name = T(BL("Neues Profil", "New profile"));
         const tone = BL("", "");
         ProfileStore.addCustomPerson(id, name, tone);
+        pentaOn[id] = false;
+        savePentaOn();
         activeProfile = id;
         activeTab = "input";
         renderApp();
@@ -6705,6 +7168,7 @@
       }
       try {
         ProfileStore.migrateBirthOnly(PROFILES);
+        ensurePentaRegistry();
         renderApp();
       } catch (err) {
         const msg = err?.message || String(err);
