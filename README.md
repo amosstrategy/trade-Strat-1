@@ -2,52 +2,47 @@
 
 Eine lokale Single-File-App, die fuer Personen, Teams und die Marke Paradise Ventures taeglich beantwortet: Wann ist heute der beste Moment fuer was - und warum?
 
-## App oeffnen
+## Live-URLs (GitHub Pages)
 
-Nach dem Merge in `main` wird die App automatisch ueber GitHub Pages veroeffentlicht:
-
-**Custom domain (landing / readings):**
-
-https://paradise.ventures/
-
-**Daily Energy Map app:**
-
-https://paradise.ventures/app/
-
-GitHub Pages fallback:
+**Landing / Readings:**
 
 https://amosstrategy.github.io/trade-Strat-1/
 
-Du brauchst dann nichts zu installieren und keinen Code zu oeffnen. Einfach den Link im Browser aufrufen.
+**Daily Energy Map (HD-App inkl. Jung/OEJTS):**
+
+https://amosstrategy.github.io/trade-Strat-1/app/
+
+Nach jedem Push auf `main` deployt GitHub Actions automatisch (ca. 1–2 Min.).
+
+> **Hinweis:** `paradise.ventures` zeigt aktuell auf GoDaddy (alter Site-Builder) — nicht auf dieses Repo. Bis ein neuer Host steht, die GitHub-Links oben nutzen.
 
 ## App bedienen
 
-1. Profil auswaehlen: Daniel, Patrick oder Paradise Ventures.
-2. Mit `Heute`, `Zurueck` und `Weiter` durch die Tage gehen.
-3. Mit `EN` / `DE` die Sprache wechseln.
-4. Im Bodygraph ein Tor oder Zentrum anklicken, um die Erklaerung zu sehen.
-5. Im Penta-Bereich Team-Mitglieder an- oder abwaehlen.
+1. Profil oben waehlen (in jedem Tab).
+2. HD-Chart unter **Eingabe** speichern, Jung-Test unter **Jung / OEJTS**.
+3. Mit `Heute`, `Zurueck` und `Weiter` durch die Tage gehen.
+4. Mit `EN` / `DE` die Sprache wechseln.
+5. Im Bodygraph ein Tor oder Zentrum anklicken.
+6. Im Penta-Bereich Team-Mitglieder an- oder abwaehlen.
 
-## Falls der Live-Link noch nicht aktiv ist
+## Lokal oeffnen
 
-Der Link funktioniert erst, nachdem der Pull Request gemerged wurde und GitHub Pages einmal durchgelaufen ist. Bis dahin gibt es zwei einfache Alternativen:
+```bash
+cd trade-Strat-1
+python -m http.server 8765
+```
 
-1. In GitHub die Datei `index.html` herunterladen.
-2. Die heruntergeladene Datei doppelklicken.
+Dann: http://localhost:8765/app/
 
-Die App oeffnet sich dann lokal im Browser.
-
-Die App laeuft komplett offline: kein Server, kein Backend, keine Datenbank, keine externen Libraries und kein Build-Step.
+Swiss Ephemeris laeuft im Browser — nicht per Doppelklick auf `index.html` oeffnen (`file://` blockiert WASM).
 
 ## Deployment
 
-Die Datei `.github/workflows/pages.yml` veroeffentlicht die App automatisch auf GitHub Pages, sobald Aenderungen auf `main` landen. Die Website besteht nur aus der Datei `index.html`.
+`.github/workflows/pages.yml` veroeffentlicht den gesamten Ordner auf GitHub Pages bei Push auf `main`.
 
 ## Enthaltene Bereiche
 
-- lineare Transit-Berechnung fuer Sonne, Erde, Mond, Merkur, Venus, Mars, Jupiter, Saturn und Chiron
-- vollstaendiges 69.120-Segment-Mandala auf Gate-, Line-, Color-, Tone- und Base-Ebene
-- 6 Scores: Energie, Intuition, Ausdruck, Klarheit, Flow und Ernaehrung
-- programmatisch gezeichneter SVG-Bodygraph mit interaktiven Gates und Zentren
-- DE/EN-Umschaltung ueber Bilingual-Textbausteine
-- dynamische Penta-/Team-Engine fuer Daniel, Patrick und Paradise Ventures
+- Swiss Ephemeris Bodygraph (Engine v4)
+- Daily Map, Heute/Zeitqualitaet, Penta/Team, Jung/OEJTS
+- Profil-Datenbank (HD + Jung pro Person, localStorage)
+- DE/EN-Umschaltung
