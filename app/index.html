@@ -3863,8 +3863,10 @@
     return chartSvgTemplate;
   }
 
-  function mountBodygraph(day) {
-    const host = document.getElementById("bodygraphHost");
+  function mountBodygraph(day, hostId, detailBoxId) {
+    const host = hostId
+      ? document.getElementById(hostId)
+      : document.querySelector(".tab-panel:not(.hidden) .bodygraph-host");
     if (!host) return;
     if (!day.profile.chartComputed) {
       host.innerHTML = `<div class="small-card warning">${T(BL("Bodygraph wird angezeigt, sobald Geburtsdaten gespeichert sind.", "Bodygraph appears once birth data is saved."))}</div>`;
@@ -3880,7 +3882,7 @@
         svg.setAttribute("role", "img");
         svg.setAttribute("aria-label", day.showTransits ? "Bodygraph with transits" : "Bodygraph");
         hydrateBodygraph(svg, day);
-        bindBodygraphEvents(day, host);
+        bindBodygraphEvents(day, host, detailBoxId);
       }
     } catch {
       host.innerHTML = `<div class="small-card">${T(BL("Bodygraph konnte nicht geladen werden.", "Bodygraph could not be loaded."))}</div>`;
@@ -3914,13 +3916,17 @@
     return CENTER_DESCRIPTIONS[center];
   }
 
-  function bindBodygraphEvents(day, host) {
+  function bindBodygraphEvents(day, host, detailBoxId) {
     const profile = day.profile;
     const model = day.display;
+    const detailEl = detailBoxId
+      ? document.getElementById(detailBoxId)
+      : host.parentElement?.querySelector(".detail-box");
+    if (!detailEl) return;
     host.querySelectorAll("[id^='Gate']").forEach(node => {
       node.addEventListener("click", event => {
         const gate = gateFromEventTarget(event.target);
-        if (gate) document.getElementById("detailBox").innerHTML = detailForGate(profile, day, gate);
+        if (gate) detailEl.innerHTML = detailForGate(profile, day, gate);
       });
     });
     Object.values(CENTER_SVG_ID).forEach(svgId => {
@@ -3930,7 +3936,7 @@
         const center = Object.entries(CENTER_SVG_ID).find(([, id]) => id === svgId)[0];
         const defined = profile.definedCenters.includes(center);
         const profileNote = centerNoteForProfile(profile, center);
-        document.getElementById("detailBox").innerHTML = `<strong>${T(CENTER_LABELS[center])}</strong><br>${T(profileNote)}<br><span>${defined ? T(BL("In deinem Chart definiert.", "Defined in your chart.")) : T(BL("In deinem Chart offen.", "Open in your chart."))}</span>`;
+        detailEl.innerHTML = `<strong>${T(CENTER_LABELS[center])}</strong><br>${T(profileNote)}<br><span>${defined ? T(BL("In deinem Chart definiert.", "Defined in your chart.")) : T(BL("In deinem Chart offen.", "Open in your chart."))}</span>`;
       });
     });
   }
@@ -5210,8 +5216,12 @@
         </section>`;
     }
 
-    function renderBodygraph() {
-      return `<div id="bodygraphHost" class="bodygraph-host"></div>`;
+    function renderBodygraph(hostId = "bodygraphHost") {
+      return `<div id="${hostId}" class="bodygraph-host"></div>`;
+    }
+
+    function renderDetailBox(boxId, profile) {
+      return `<div class="detail-box" id="${boxId}"><strong>${T(BL("Klicke ein Tor oder Zentrum.", "Click a gate or center."))}</strong><br>${T(profile.tone)}</div>`;
     }
 
     function detailForGate(profile, day, gate) {
@@ -6217,9 +6227,9 @@
           </div>
           <section class="panel bodygraph-wrap">
             <h2>${T(BL("Live Bodygraph", "Live bodygraph"))}</h2>
-            ${renderBodygraph()}
+            ${renderBodygraph("bodygraphHostWeather")}
             <div class="chips">${bodygraphChips}</div>
-            <div class="detail-box" id="detailBox"><strong>${T(BL("Klicke ein Tor oder Zentrum.", "Click a gate or center."))}</strong><br>${T(profile.tone)}</div>
+            ${renderDetailBox("bodygraphDetailWeather", profile)}
           </section>
           ${renderUnifiedFocusPanel(profile, day, model)}
         </section>
@@ -6256,6 +6266,7 @@
     function renderResultView(profile, day, date) {
       const chart = day.chart;
       const model = day.display;
+      const baseline = computeChartScores(profile, chart);
       const bodygraphChips = `<span class="chip">${T(BL("Violett: Persoenlichkeit", "Purple: personality"))}</span>
         <span class="chip">${T(BL("Tuerkis: Design", "Teal: design"))}</span>
         <span class="chip">${T(BL("Kanaele: dein festes Design", "Channels: your fixed design"))}</span>`;
@@ -6281,21 +6292,21 @@
             </div>
           </div>
         </section>
-        <div class="result-grid">
+        ${renderProfileStrip(profile, day, date)}
+        <section class="map-grid">
+          <div class="map-sidebar-col">
+            ${renderScoreSidebar(model, baseline, false, profile)}
+          </div>
           <section class="panel bodygraph-wrap">
             <h2>${T(BL("Dein Bodygraph", "Your bodygraph"))}</h2>
-            ${renderBodygraph()}
+            ${renderBodygraph("bodygraphHostResult")}
             <div class="chips">${bodygraphChips}</div>
-            <div class="detail-box" id="detailBox"><strong>${T(BL("Klicke ein Tor oder Zentrum.", "Click a gate or center."))}</strong><br>${T(profile.tone)}</div>
+            ${renderDetailBox("bodygraphDetailResult", profile)}
           </section>
-          <div>
-            ${renderChartReadingCards(profile, chart)}
-            <section class="panel" style="margin-top:18px">
-              <h3 style="margin:0 0 10px;font-size:1rem">${T(BL("Offene Zentren", "Open centers"))}</h3>
-              ${renderOpenCentersBlock(profile, day)}
-            </section>
-          </div>
-        </div>
+          ${renderChartFocusPanel(profile, day, model)}
+        </section>
+        ${renderChartReadingCards(profile, chart)}
+        ${renderProfileExtras(profile, day, date)}
         <div class="flow-cta-row" style="margin-top:18px">
           <button type="button" class="btn-text" data-tab="weather">→ ${T(BL("Wetter fuer heute", "Today's weather"))}</button>
           <button type="button" class="btn-text" data-tab="penta">→ ${T(BL("Penta / Team", "Penta / team"))}</button>
@@ -7011,8 +7022,8 @@
       `;
 
       bindEvents(profile, dayWeather);
-      if (activeTab === "weather") mountBodygraph(dayWeather);
-      if (activeTab === "result") mountBodygraph(dayResult);
+      if (activeTab === "weather") mountBodygraph(dayWeather, "bodygraphHostWeather", "bodygraphDetailWeather");
+      if (activeTab === "result") mountBodygraph(dayResult, "bodygraphHostResult", "bodygraphDetailResult");
     }
 
     function bindEvents(profile, day) {
