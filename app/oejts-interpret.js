@@ -136,13 +136,54 @@
     return null;
   }
 
+  const AUTHORITY_KEYS = ["Emotional", "Sacral", "Splenic", "Ego Projected", "Self Projected", "Mental", "Lunar"];
+  const STRATEGY_KEYS = ["To Respond", "Wait for Invitation", "Inform", "Wait Lunar Cycle"];
+
+  function deriveAuthorityKey(centers) {
+    const set = new Set(centers || []);
+    if (set.has("Solar")) return "Emotional";
+    if (set.has("Sacral")) return "Sacral";
+    if (set.has("Spleen")) return "Splenic";
+    if (set.has("Ego")) return "Ego Projected";
+    if (set.has("G")) return "Self Projected";
+    if (set.has("Ajna") || set.has("Head")) return "Mental";
+    return centers?.length ? "Lunar" : "";
+  }
+
+  function normalizeAuthorityKey(value, centers) {
+    if (typeof value === "string" && AUTHORITY_KEYS.includes(value)) return value;
+    if (value && typeof value === "object") {
+      const blob = `${value.de || ""} ${value.en || ""}`.toLowerCase();
+      if (blob.includes("emotional") || blob.includes("emotionale")) return "Emotional";
+      if (blob.includes("sakral") || blob.includes("sacral")) return "Sacral";
+      if (blob.includes("milz") || blob.includes("spleen") || blob.includes("splenic")) return "Splenic";
+      if (blob.includes("ego")) return "Ego Projected";
+      if (blob.includes("selbst") || blob.includes("self projected")) return "Self Projected";
+      if (blob.includes("mental")) return "Mental";
+      if (blob.includes("lunar")) return "Lunar";
+    }
+    return deriveAuthorityKey(centers);
+  }
+
+  function normalizeStrategyKey(value) {
+    if (typeof value === "string" && STRATEGY_KEYS.includes(value)) return value;
+    if (value && typeof value === "object") {
+      const blob = `${value.de || ""} ${value.en || ""}`.toLowerCase();
+      if (blob.includes("reag") || blob.includes("respond") || blob.includes("sakral")) return "To Respond";
+      if (blob.includes("einladung") || blob.includes("invitation")) return "Wait for Invitation";
+      if (blob.includes("inform")) return "Inform";
+      if (blob.includes("mond") || blob.includes("lunar")) return "Wait Lunar Cycle";
+    }
+    return typeof value === "string" ? value : "";
+  }
+
   function parallelTF(pref, hd) {
     if (!hd?.hasChart) return null;
-    const auth = hd.authority || "";
+    const auth = normalizeAuthorityKey(hd.authority, hd.definedCenters);
     if (pref === "F") {
       if (auth === "Emotional")
         return BL("HD: emotionale Autoritaet — ganze Welle abwarten", "HD: emotional authority — wait the full wave");
-      if (hasCenter(hd, "Solar") && !auth.includes("Emotional"))
+      if (hasCenter(hd, "Solar") && auth !== "Emotional")
         return BL("HD: Solarplexus definiert — Stimmungsfeld faerbt Entscheidungen", "HD: defined Solar Plexus — mood field colors decisions");
       if (auth === "Sacral")
         return BL("HD: Sakral-Autoritaet — koerperliches «uh-huh/uhn-uhn», wertet ueber Resonanz", "HD: sacral authority — bodily uh-huh/uhn-uhn, values via resonance");
@@ -164,7 +205,7 @@
 
   function parallelJP(pref, hd) {
     if (!hd?.hasChart) return null;
-    const strat = hd.strategy || "";
+    const strat = normalizeStrategyKey(hd.strategy);
     const t = hdType(hd);
     if (pref === "J") {
       if (strat === "Inform")
@@ -230,9 +271,9 @@
       pairs.push(BL("N + Kopf/Ajna definiert", "N + defined Head/Ajna"));
     if (type[1] === "S" && (hasCenter(hd, "Sacral") || hasCenter(hd, "Spleen")))
       pairs.push(BL("S + Sakral/Milz", "S + Sacral/Spleen"));
-    if (type[2] === "F" && hd.authority === "Emotional")
+    if (type[2] === "F" && normalizeAuthorityKey(hd.authority, hd.definedCenters) === "Emotional")
       pairs.push(BL("F + emotionale Autoritaet", "F + emotional authority"));
-    if (type[2] === "T" && (hd.authority === "Splenic" || hasCenter(hd, "Ajna")))
+    if (type[2] === "T" && (normalizeAuthorityKey(hd.authority, hd.definedCenters) === "Splenic" || hasCenter(hd, "Ajna")))
       pairs.push(BL("T + Milz/Ajna", "T + Splenic/Ajna"));
     if (type[3] === "J" && (hd.strategy === "Inform" || hd.strategy === "To Respond"))
       pairs.push(BL("J + klare Strategie (Inform/Respond)", "J + clear strategy (Inform/Respond)"));
@@ -327,15 +368,16 @@
   function buildHdSnapshot(profile, record) {
     if (!profile?.chartComputed || !record?.chart) return { hasChart: false };
     const c = record.chart;
+    const definedCenters = [...(c.definedCenters || profile.definedCenters || [])];
     return {
       hasChart: true,
-      type: c.type || "",
-      authority: c.authority || "",
-      strategy: c.strategy || "",
-      profile: c.profile || profile.profileKey || "",
+      type: c.typeKey || c.type || "",
+      authority: c.authorityKey || normalizeAuthorityKey(c.authority, definedCenters),
+      strategy: c.strategyKey || normalizeStrategyKey(c.strategy),
+      profile: c.profile || c.profileKey || profile.profileKey || "",
       personalityLine: c.personalityLine || profile.personalityLine,
       designLine: c.designLine || profile.designLine,
-      definedCenters: [...(c.definedCenters || profile.definedCenters || [])],
+      definedCenters,
       definedGates: c.definedGates || profile.definedGates || []
     };
   }

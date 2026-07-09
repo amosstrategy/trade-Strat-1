@@ -2280,7 +2280,7 @@
   <script src="hd-logic.js?v=8"></script>
   <script src="zeitqualitaet-core.js?v=9"></script>
   <script src="oejts-core.js?v=1"></script>
-  <script src="oejts-interpret.js?v=1"></script>
+  <script src="oejts-interpret.js?v=2"></script>
   <main class="app" id="app"></main>
 
   <script>
@@ -3210,6 +3210,9 @@
         subtitle: profileSubtitleFromResult(result),
         authority,
         strategy,
+        authorityKey: result.authority,
+        strategyKey: result.strategy,
+        typeKey: result.type,
         profileKey: result.profile,
         personalityLine: result.personalityLine || result.personality?.sun?.line,
         designLine: result.designLine || result.design?.sun?.line,
@@ -6992,7 +6995,7 @@
           ${renderPentaPage(date)}
         </section>
         ${renderFlowCtas("penta")}`;
-      const jungView = renderOejtsTab(profile);
+      const jungView = activeTab === "jung" ? renderOejtsTab(profile) : "";
       const adminView = activeTab === "admin" && showAdmin ? renderAdminTab() : "";
 
       document.getElementById("app").innerHTML = `
