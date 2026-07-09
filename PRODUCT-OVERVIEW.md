@@ -1,5 +1,7 @@
 # Product Overview — What We Have, Where It Overlaps, Where We Go
 
+**Status:** Implemented in app (branch `cursor/product-overview-simplify-f180`). Tabs are now **Wetter → Dein Chart → Eingabe → Penta → Jung**; Admin at `?admin=1`. Profile DB keys unchanged (`hd-profile-db-v2`).
+
 **Goal (your brief):** One publishable product. Calculation engine must work. Then a clear results field with explanations. From there, look into **Penta** (team field — “Panthers” in speech). Above everything: **transits** as a Human Design “weather forecast.”
 
 **Scope of this doc:** Inventory of the current repo (`trade-Strat-1`), overlap map, target IA, and what we still need. Notion/Figma were not reachable from this environment (auth only in desktop Cursor), so this is based on the live codebase and README.

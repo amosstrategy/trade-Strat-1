@@ -19,11 +19,15 @@ Nach jedem Push auf `main` deployt GitHub Actions automatisch (ca. 1–2 Min.).
 ## App bedienen
 
 1. Profil oben waehlen (in jedem Tab).
-2. HD-Chart unter **Eingabe** speichern, Jung-Test unter **Jung / OEJTS**.
-3. Mit `Heute`, `Zurueck` und `Weiter` durch die Tage gehen.
-4. Mit `EN` / `DE` die Sprache wechseln.
-5. Im Bodygraph ein Tor oder Zentrum anklicken.
-6. Im Penta-Bereich Team-Mitglieder an- oder abwaehlen.
+2. HD-Chart unter **Eingabe** speichern, Jung-Test unter **Jung**.
+3. **Wetter** zeigt kollektives Transit-Wetter oben und deine persoenliche Tages-Lesung unten.
+4. **Dein Chart** zeigt Bodygraph und Erklaerungen zu deinem festen Design.
+5. Mit `Heute`, `Zurueck` und `Weiter` durch die Tage gehen (Wetter / Penta).
+6. Mit `EN` / `DE` die Sprache wechseln.
+7. Im Bodygraph ein Tor oder Zentrum anklicken.
+8. Im Penta-Bereich Team-Mitglieder an- oder abwaehlen.
+
+Admin-Konsole (nur lokal): `/app/?admin=1`
 
 ## Lokal oeffnen
 
@@ -43,6 +47,6 @@ Swiss Ephemeris laeuft im Browser — nicht per Doppelklick auf `index.html` oef
 ## Enthaltene Bereiche
 
 - Swiss Ephemeris Bodygraph (Engine v4)
-- Daily Map, Heute/Zeitqualitaet, Penta/Team, Jung/OEJTS
-- Profil-Datenbank (HD + Jung pro Person, localStorage)
+- Wetter (Zeitqualitaet + persoenliche Tages-Lesung), Penta/Team, Jung/OEJTS
+- Profil-Datenbank (HD + Jung pro Person, localStorage — unveraendert bei Updates)
 - DE/EN-Umschaltung

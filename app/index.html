@@ -179,6 +179,54 @@
     .tab-panel { display: block; }
     .tab-panel.hidden { display: none; }
 
+    .weather-section-label {
+      font-size: .72rem;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 700;
+      margin: 0 0 12px;
+    }
+
+    .weather-collective {
+      margin-bottom: 22px;
+      padding-top: 4px;
+      border-bottom: 1px dashed rgba(132,220,198,.18);
+      padding-bottom: 22px;
+    }
+
+    .weather-personal { margin-top: 4px; }
+
+    .flow-cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 16px 0 4px;
+    }
+
+    .flow-cta-row .btn-text {
+      font-size: .88rem;
+      font-weight: 600;
+      color: var(--accent);
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: minmax(280px, 1fr) minmax(300px, 1.1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    @media (max-width: 900px) {
+      .result-grid { grid-template-columns: 1fr; }
+    }
+
     .reading-cards {
       display: grid;
       gap: 12px;
@@ -2237,8 +2285,25 @@
 
   <script>
     const BL = (de, en) => ({ de, en });
+    const TAB_IDS = new Set(["weather", "result", "chart", "penta", "jung", "admin"]);
+    const LEGACY_TAB_MAP = { daily: "weather", heute: "weather", input: "chart" };
+    const showAdmin = new URLSearchParams(location.search).get("admin") === "1";
+    const normalizeTabId = id => LEGACY_TAB_MAP[id] || id;
+    const readTabFromHash = () => {
+      const raw = (location.hash || "").replace(/^#/, "");
+      if (!raw) return null;
+      const tab = normalizeTabId(raw);
+      if (tab === "admin" && !showAdmin) return null;
+      return TAB_IDS.has(tab) ? tab : null;
+    };
+    const setActiveTab = tab => {
+      activeTab = normalizeTabId(tab);
+      if (activeTab === "admin" && !showAdmin) activeTab = "weather";
+      const hash = activeTab === "weather" ? "" : `#${activeTab}`;
+      if (location.hash !== hash) history.replaceState(null, "", `${location.pathname}${location.search}${hash}`);
+    };
     let lang = "de";
-    let activeTab = "daily";
+    let activeTab = readTabFromHash() || "weather";
     let zeitScope = "day";
     let zeitHdType = "";
     let showTransits = true;
@@ -6097,7 +6162,7 @@
       return `${base}<span class="concordance-time">${T(BL("Tor/Linie aktiv", "Gate/line active"))}: ${formatDateTimeShort(gl.iso_from)} – ${formatDateTimeShort(gl.iso_to)}${dur ? ` · ${dur}` : ""}</span>`;
     }
 
-    function renderHeuteView(profile, date) {
+    function renderHeuteContent(profile, date) {
       if (!window.HDEngine?.hasEphemeris() || !window.ZeitqualitaetCore) {
         return `<section class="panel warning">${T(BL("Swiss Ephemeris oder Zeitqualitaets-Kern nicht geladen.", "Swiss Ephemeris or time-quality core not loaded."))}</section>`;
       }
@@ -6123,9 +6188,116 @@
         ? T(BL("Woche", "Week"))
         : zeitScope === "month" ? T(BL("Monat", "Month")) : T(BL("Tag", "Day"));
 
+      return renderZeitUnifiedView(concordances, collectiveGates, win, profile, datasetCount, addedRecords, scopeLabel, formatScopeWindow);
+    }
+
+    function renderFlowCtas(current) {
+      const items = [
+        { id: "weather", label: BL("Wetter", "Weather") },
+        { id: "result", label: BL("Dein Chart", "Your chart") },
+        { id: "chart", label: BL("Eingabe", "Input") },
+        { id: "penta", label: BL("Penta", "Penta") }
+      ].filter(item => item.id !== current);
+      return `<div class="flow-cta-row">${items.map(item => `<button type="button" class="btn-text" data-tab="${item.id}">→ ${T(item.label)}</button>`).join("")}</div>`;
+    }
+
+    function renderWeatherView(profile, day, date, model, baseline) {
+      const bodygraphChips = `<span class="chip">${T(BL("Violett: Chart", "Purple: chart"))}</span>
+        <span class="chip">${T(BL("Tuerkis: Transit", "Teal: transit"))}</span>
+        <span class="chip">${T(BL("Beide Haelften: Chart + Transit", "Both halves: chart + transit"))}</span>`;
+      const personalBlock = profile.chartComputed ? `
+        ${renderDayOverviewStrip(profile, day, model)}
+        <section class="map-grid">
+          <div class="map-sidebar-col">
+            ${renderProfileStrip(profile, day, date)}
+            ${renderScoreSidebar(model, baseline, true, profile)}
+          </div>
+          <section class="panel bodygraph-wrap">
+            <h2>${T(BL("Live Bodygraph", "Live bodygraph"))}</h2>
+            ${renderBodygraph()}
+            <div class="chips">${bodygraphChips}</div>
+            <div class="detail-box" id="detailBox"><strong>${T(BL("Klicke ein Tor oder Zentrum.", "Click a gate or center."))}</strong><br>${T(profile.tone)}</div>
+          </section>
+          ${renderUnifiedFocusPanel(profile, day, model)}
+        </section>
+        ${renderTransitInfluencePanel(profile, model)}`
+        : `<section class="panel warning" style="margin-top:14px">
+            <p style="margin:0 0 12px;line-height:1.5">${T(BL("Fuer die persoenliche Tages-Lesung brauchst du ein gespeichertes Chart. Deine bisherigen Daten bleiben in der Profil-Datenbank.", "For the personal daily reading you need a saved chart. Your existing data stays in the profile database."))}</p>
+            <button type="button" class="btn primary" data-tab="chart">${T(BL("Chart berechnen", "Calculate chart"))}</button>
+          </section>`;
+
       return `
+        <section class="hero compact-top">
+          <div class="hero-card compact-top-card">
+            <div class="hero-top-row">
+              <div class="hero-copy">
+                <div class="eyebrow">${T(BL("HD-Wetter", "HD weather"))}</div>
+                <h1>${T(BL("Transit-Wetter & dein Tag", "Transit weather & your day"))}</h1>
+                <p class="lead">${T(BL("Oben: kollektives Feld. Unten: wie es dein Chart heute beruehrt.", "Top: collective field. Below: how it touches your chart today."))}</p>
+              </div>
+            </div>
+          </div>
+        </section>
         ${renderDateBar(date)}
-        ${renderZeitUnifiedView(concordances, collectiveGates, win, profile, datasetCount, addedRecords, scopeLabel, formatScopeWindow)}`;
+        <section class="weather-collective">
+          <div class="weather-section-label">${T(BL("Kollektives Wetter", "Collective weather"))}</div>
+          ${renderHeuteContent(profile, date)}
+        </section>
+        <section class="weather-personal">
+          <div class="weather-section-label">${T(BL("Dein Tag", "Your day"))}</div>
+          ${personalBlock}
+        </section>
+        ${renderFlowCtas("weather")}`;
+    }
+
+    function renderResultView(profile, day, date) {
+      const chart = day.chart;
+      const model = day.display;
+      const bodygraphChips = `<span class="chip">${T(BL("Violett: Persoenlichkeit", "Purple: personality"))}</span>
+        <span class="chip">${T(BL("Tuerkis: Design", "Teal: design"))}</span>
+        <span class="chip">${T(BL("Kanaele: dein festes Design", "Channels: your fixed design"))}</span>`;
+
+      if (!profile.chartComputed) {
+        return `
+          <section class="panel warning">
+            <h2 style="margin-top:0">${T(BL("Noch kein Chart", "No chart yet"))}</h2>
+            <p style="line-height:1.5;margin:0 0 14px">${T(BL("Geburtsdaten eingeben und speichern — bestehende Profile und Jung-Antworten bleiben erhalten.", "Enter and save birth data — existing profiles and Jung answers are preserved."))}</p>
+            <button type="button" class="btn primary" data-tab="chart">${T(BL("Zur Eingabe", "Go to input"))}</button>
+          </section>`;
+      }
+
+      return `
+        <section class="hero compact-top">
+          <div class="hero-card compact-top-card">
+            <div class="hero-top-row">
+              <div class="hero-copy">
+                <div class="eyebrow">${T(BL("Dein Design", "Your design"))}</div>
+                <h1>${profile.name}</h1>
+                <p class="lead">${T(profile.subtitle)} · ${T(profile.authority)} · ${T(profile.strategy)}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+        <div class="result-grid">
+          <section class="panel bodygraph-wrap">
+            <h2>${T(BL("Dein Bodygraph", "Your bodygraph"))}</h2>
+            ${renderBodygraph()}
+            <div class="chips">${bodygraphChips}</div>
+            <div class="detail-box" id="detailBox"><strong>${T(BL("Klicke ein Tor oder Zentrum.", "Click a gate or center."))}</strong><br>${T(profile.tone)}</div>
+          </section>
+          <div>
+            ${renderChartReadingCards(profile, chart)}
+            <section class="panel" style="margin-top:18px">
+              <h3 style="margin:0 0 10px;font-size:1rem">${T(BL("Offene Zentren", "Open centers"))}</h3>
+              ${renderOpenCentersBlock(profile, day)}
+            </section>
+          </div>
+        </div>
+        <div class="flow-cta-row" style="margin-top:18px">
+          <button type="button" class="btn-text" data-tab="weather">→ ${T(BL("Wetter fuer heute", "Today's weather"))}</button>
+          <button type="button" class="btn-text" data-tab="penta">→ ${T(BL("Penta / Team", "Penta / team"))}</button>
+          <button type="button" class="btn-text" data-tab="chart">→ ${T(BL("Geburtsdaten bearbeiten", "Edit birth data"))}</button>
+        </div>`;
     }
 
     function renderOejtsLikert(q, selected) {
@@ -6329,13 +6501,13 @@
 
     function renderTabs() {
       const tabs = [
-        { id: "daily", label: BL("Daily Map", "Daily Map") },
-        { id: "heute", label: BL("Heute", "Today") },
-        { id: "penta", label: BL("Penta / Team", "Penta / Team") },
-        { id: "jung", label: BL("Jung / OEJTS", "Jung / OEJTS") },
-        { id: "input", label: BL("Eingabe", "Input") },
-        { id: "admin", label: BL("Admin", "Admin") }
+        { id: "weather", label: BL("Wetter", "Weather") },
+        { id: "result", label: BL("Dein Chart", "Your chart") },
+        { id: "chart", label: BL("Eingabe", "Input") },
+        { id: "penta", label: BL("Penta", "Penta") },
+        { id: "jung", label: BL("Jung", "Jung") }
       ];
+      if (showAdmin) tabs.push({ id: "admin", label: BL("Admin", "Admin") });
       return `<nav class="tabs" aria-label="Navigation">${tabs.map(tab => `<button type="button" class="tab-btn ${activeTab === tab.id ? "active" : ""}" data-tab="${tab.id}">${T(tab.label)}</button>`).join("")}</nav>`;
     }
 
@@ -6611,12 +6783,12 @@
 
           <div class="admin-section">
             <h3 style="font-size:.85rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin:0 0 8px">${T(BL("Konkordanz-Datensatz", "Concordance dataset"))}</h3>
-            <p style="color:var(--muted);line-height:1.5;margin:0 0 10px;font-size:.85rem">${T(BL("Strukturierte Ephemeris-Events aus dem Heute-Reiter — eine Zeile pro Event fuer Fusions-/Training-Export.", "Structured ephemeris events from the Today tab — one row per event for fusion/training export."))}</p>
+            <p style="color:var(--muted);line-height:1.5;margin:0 0 10px;font-size:.85rem">${T(BL("Strukturierte Ephemeris-Events aus dem Wetter-Reiter — eine Zeile pro Event fuer Fusions-/Training-Export.", "Structured ephemeris events from the Weather tab — one row per event for fusion/training export."))}</p>
             <div class="toolbar" style="margin-bottom:12px">
               <button type="button" id="adminExportConcordance">${T(BL("Konkordanz exportieren", "Export concordance"))}</button>
               <button type="button" class="danger" id="adminClearConcordance">${T(BL("Datensatz leeren", "Clear dataset"))}</button>
             </div>
-            ${concordanceCount ? `<div class="small-card">${concordanceCount} ${T(BL("Events gespeichert", "events stored"))}</div>` : `<div class="small-card">${T(BL("Noch leer — Heute-Reiter oeffnen zum Sammeln.", "Empty — open Today tab to collect."))}</div>`}
+            ${concordanceCount ? `<div class="small-card">${concordanceCount} ${T(BL("Events gespeichert", "events stored"))}</div>` : `<div class="small-card">${T(BL("Noch leer — Wetter-Reiter oeffnen zum Sammeln.", "Empty — open Weather tab to collect."))}</div>`}
           </div>
 
           <div class="admin-section">
@@ -6699,12 +6871,9 @@
           <div id="chartPreviewBox" class="small-card" style="margin-top:16px;${computed || meta.birthDate ? "" : "display:none"}">
             ${resultBox || `<span style="color:var(--muted)">${T(BL("Noch nicht berechnet.", "Not calculated yet."))}</span>`}
           </div>
-          <div class="small-card" style="margin-top:16px">
-            <strong>${T(BL("Transit-Cache", "Transit cache"))}</strong><br>
-            ${Object.keys(loadTransitCache()).length} ${T(BL("gespeicherte Tage", "saved days"))}
-            <div class="toolbar" style="margin-top:10px">
-              <button type="button" id="clearTransitCacheBtn">${T(BL("Transit-Cache leeren", "Clear transit cache"))}</button>
-            </div>
+          <div class="small-card" style="margin-top:16px;line-height:1.5">
+            <strong>${T(BL("Daten bleiben lokal", "Data stays local"))}</strong><br>
+            ${T(BL("Charts und Jung-Antworten werden in der Profil-Datenbank (hd-profile-db-v2) gespeichert — nur bei «Berechnen & Speichern» bzw. im Jung-Test.", "Charts and Jung answers are stored in the profile database (hd-profile-db-v2) — only when you click «Calculate & save» or during the Jung test."))}
           </div>
         </section>`;
     }
@@ -6808,80 +6977,45 @@
       const profiles = getAllProfiles();
       const profile = profiles[activeProfile] || PROFILES.daniel;
       const date = currentDate();
-      const day = buildModel(profile, date, showTransits);
-      const model = day.display;
-      const baseline = profile.chartComputed ? computeChartScores(profile, day.chart) : null;
-      const bodygraphChips = showTransits
-        ? `<span class="chip">${T(BL("Violett: Chart", "Purple: chart"))}</span>
-              <span class="chip">${T(BL("Tuerkis: Transit", "Teal: transit"))}</span>
-              <span class="chip">${T(BL("Beide Haelften: Chart + Transit", "Both halves: chart + transit"))}</span>`
-        : `<span class="chip">${T(BL("Violett: Persoenlichkeit", "Purple: personality"))}</span>
-              <span class="chip">${T(BL("Tuerkis: Design", "Teal: design"))}</span>
-              <span class="chip">${T(BL("Kanaele: dein festes Design", "Channels: your fixed design"))}</span>`;
+      const dayWeather = buildModel(profile, date, true);
+      const dayResult = buildModel(profile, date, false);
+      const model = dayWeather.display;
+      const baseline = profile.chartComputed ? computeChartScores(profile, dayWeather.chart) : null;
       document.documentElement.lang = lang;
 
-      const dailyView = `
-        <section class="hero compact-top">
-          <div class="hero-card compact-top-card">
-            <div class="hero-top-row">
-              <div class="hero-copy">
-                <div class="eyebrow">${T(BL("Daily Energy Map", "Daily Energy Map"))}</div>
-                <h1>${T(BL("Wann ist der beste Moment fuer was?", "When is the best moment for what?"))}</h1>
-                <p class="lead">${T(BL("Score links, Chart Mitte, Tages-Fokus rechts — Bereich anklicken fuer Filter.", "Score left, chart center, day focus right — click a field to filter."))}</p>
-              </div>
-            </div>
-          </div>
-        </section>
-        ${renderDateBar(date)}
-        ${renderDayOverviewStrip(profile, day, model)}
-        <section class="map-grid">
-          <div class="map-sidebar-col">
-            ${renderProfileStrip(profile, day, date)}
-            ${renderScoreSidebar(model, baseline, showTransits, profile)}
-          </div>
-          <section class="panel bodygraph-wrap">
-            <h2>${showTransits ? T(BL("Live Bodygraph", "Live bodygraph")) : T(BL("Dein Bodygraph", "Your bodygraph"))}</h2>
-            ${renderBodygraph()}
-            <div class="chips">${bodygraphChips}</div>
-            <div class="detail-box" id="detailBox"><strong>${T(BL("Klicke ein Tor oder Zentrum.", "Click a gate or center."))}</strong><br>${T(profile.tone)}</div>
-          </section>
-          ${renderUnifiedFocusPanel(profile, day, model)}
-        </section>
-        ${renderProfileExtras(profile, day, date)}`;
-
+      const weatherView = renderWeatherView(profile, dayWeather, date, model, baseline);
+      const resultView = renderResultView(profile, dayResult, date);
+      const chartView = renderInputTab();
       const pentaView = `
         ${renderDateBar(date)}
         <section class="grid" style="grid-template-columns:1fr">
           ${renderPentaPage(date)}
-        </section>`;
-
+        </section>
+        ${renderFlowCtas("penta")}`;
       const jungView = renderOejtsTab(profile);
-
-      const inputView = renderInputTab();
-      const adminView = activeTab === "admin" ? renderAdminTab() : "";
-
-      const heuteView = renderHeuteView(profile, date);
+      const adminView = activeTab === "admin" && showAdmin ? renderAdminTab() : "";
 
       document.getElementById("app").innerHTML = `
         ${renderTabs()}
         ${renderGlobalProfileBar(profile)}
-        <div class="tab-panel ${activeTab === "daily" ? "" : "hidden"}">${dailyView}</div>
-        <div class="tab-panel ${activeTab === "heute" ? "" : "hidden"}">${heuteView}</div>
+        <div class="tab-panel ${activeTab === "weather" ? "" : "hidden"}">${weatherView}</div>
+        <div class="tab-panel ${activeTab === "result" ? "" : "hidden"}">${resultView}</div>
+        <div class="tab-panel ${activeTab === "chart" ? "" : "hidden"}">${chartView}</div>
         <div class="tab-panel ${activeTab === "penta" ? "" : "hidden"}">${pentaView}</div>
         <div class="tab-panel ${activeTab === "jung" ? "" : "hidden"}">${jungView}</div>
-        <div class="tab-panel ${activeTab === "input" ? "" : "hidden"}">${inputView}</div>
         <div class="tab-panel ${activeTab === "admin" ? "" : "hidden"}">${adminView}</div>
-        <p class="footer">${T(BL("Profil-Datenbank v2 (hd-profile-db-v2) · Engine v4 · Chart nur bei «Berechnen & Speichern».", "Profile database v2 (hd-profile-db-v2) · Engine v4 · Chart only on «Calculate & save»."))} · <a href="../" style="color:var(--accent)">${T(BL("Readings & About", "Readings & About"))}</a></p>
+        <p class="footer">${T(BL("Profil-Datenbank v2 (hd-profile-db-v2) · Engine v4 · Chart nur bei «Berechnen & Speichern».", "Profile database v2 (hd-profile-db-v2) · Engine v4 · Chart only on «Calculate & save»."))} · <a href="../" style="color:var(--accent)">${T(BL("Readings & About", "Readings & About"))}</a>${showAdmin ? "" : ` · <a href="?admin=1" style="color:var(--muted)">${T(BL("Admin", "Admin"))}</a>`}</p>
       `;
 
-      bindEvents(profile, day);
-      if (activeTab === "daily") mountBodygraph(day);
+      bindEvents(profile, dayWeather);
+      if (activeTab === "weather") mountBodygraph(dayWeather);
+      if (activeTab === "result") mountBodygraph(dayResult);
     }
 
     function bindEvents(profile, day) {
       const model = day.display;
       document.querySelectorAll("[data-tab]").forEach(btn => btn.addEventListener("click", () => {
-        activeTab = btn.dataset.tab;
+        setActiveTab(btn.dataset.tab);
         renderApp();
       }));
       document.querySelectorAll("[data-zeit-scope]").forEach(btn => btn.addEventListener("click", () => {
@@ -7066,7 +7200,7 @@
             activeProfile = openBtn.dataset.adminOpen;
             loadOejtsSession(activeProfile);
             adminEditingId = null;
-            activeTab = "input";
+            setActiveTab("chart");
             renderApp();
             return;
           }
@@ -7295,7 +7429,7 @@
           name,
           tone
         });
-        activeTab = "daily";
+        setActiveTab("result");
         renderApp();
       });
 
@@ -7316,7 +7450,7 @@
         savePentaOn();
         activeProfile = id;
         loadOejtsSession(id);
-        activeTab = "input";
+        setActiveTab("chart");
         renderApp();
       });
 
@@ -7366,10 +7500,14 @@
         migrateGlobalOejts();
         loadOejtsSession(activeProfile);
         ensurePentaRegistry();
+        if (!readTabFromHash()) {
+          const p = getAllProfiles()[activeProfile] || PROFILES.daniel;
+          activeTab = p?.chartComputed ? "weather" : "chart";
+        }
         renderApp();
       } catch (err) {
         const msg = err?.message || String(err);
-        document.getElementById("app").innerHTML = `<section class="panel warning" style="margin:40px auto;max-width:560px"><h2>${lang === "de" ? "Fehler beim Laden" : "Load error"}</h2><p style="margin-top:12px">${msg}</p><p style="color:var(--muted);margin-top:12px">${lang === "de" ? "Seite neu laden oder Transit-Cache unter Eingabe leeren." : "Reload the page or clear the transit cache under Input."}</p></section>`;
+        document.getElementById("app").innerHTML = `<section class="panel warning" style="margin:40px auto;max-width:560px"><h2>${lang === "de" ? "Fehler beim Laden" : "Load error"}</h2><p style="margin-top:12px">${msg}</p><p style="color:var(--muted);margin-top:12px">${lang === "de" ? "Seite neu laden oder unter Admin den Transit-Cache leeren (?admin=1)." : "Reload the page or clear the transit cache under Admin (?admin=1)."}</p></section>`;
         console.error(err);
       }
     }
