@@ -14,7 +14,14 @@ https://amosstrategy.github.io/trade-Strat-1/app/
 
 Nach jedem Push auf `main` deployt GitHub Actions automatisch (ca. 1–2 Min.).
 
-> **Hinweis:** `paradise.ventures` zeigt aktuell auf GoDaddy (alter Site-Builder) — nicht auf dieses Repo. Bis ein neuer Host steht, die GitHub-Links oben nutzen.
+> **Domain:** `CNAME` → `paradise.ventures` ist im Repo. DNS bei GoDaddy auf GitHub Pages zeigen lassen (oder Custom Domain in Repo-Settings), dann gilt die Hauptdomain.
+
+**Wissens-/SEO-Schicht (Hintergrund, Landing/App unverändert):**
+
+- DE: https://paradise.ventures/wissen/ (bzw. GitHub-URL + `/wissen/`)
+- EN: https://paradise.ventures/en/knowledge/
+- `llms.txt`, `sitemap.xml`, `robots.txt` — für KI-Suche und Google
+- Rechtliches: `/impressum.html`, `/datenschutz.html`, `/haftungsausschluss.html` (+ EN)
 
 ## App bedienen
 

@@ -1,0 +1,34 @@
+# paradise.ventures — Human Design knowledge & tools by Daniel Klotz / Paradise Ventures
+User-agent: *
+Allow: /
+Allow: /wissen/
+Allow: /en/knowledge/
+Allow: /app/
+
+# AI crawlers — knowledge layer is explicitly published for retrieval
+User-agent: GPTBot
+Allow: /wissen/
+Allow: /en/knowledge/
+Allow: /llms.txt
+Allow: /sitemap.xml
+
+User-agent: ChatGPT-User
+Allow: /wissen/
+Allow: /en/knowledge/
+Allow: /llms.txt
+
+User-agent: Claude-Web
+Allow: /wissen/
+Allow: /en/knowledge/
+Allow: /llms.txt
+
+User-agent: PerplexityBot
+Allow: /wissen/
+Allow: /en/knowledge/
+Allow: /llms.txt
+
+User-agent: Google-Extended
+Allow: /wissen/
+Allow: /en/knowledge/
+
+Sitemap: https://paradise.ventures/sitemap.xml

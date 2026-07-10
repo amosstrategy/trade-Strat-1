@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://paradise.ventures/wissen/</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://paradise.ventures/wissen/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://paradise.ventures/en/knowledge/"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://paradise.ventures/en/knowledge/</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://paradise.ventures/wissen/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://paradise.ventures/en/knowledge/"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://paradise.ventures/wissen/forschung/</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://paradise.ventures/wissen/forschung/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://paradise.ventures/en/knowledge/research/"/>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://paradise.ventures/en/knowledge/research/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://paradise.ventures/wissen/methodik/</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://paradise.ventures/wissen/methodik/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://paradise.ventures/en/knowledge/methodology/"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://paradise.ventures/en/knowledge/methodology/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://paradise.ventures/wissen/emotion-als-sensor/</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://paradise.ventures/wissen/emotion-als-sensor/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://paradise.ventures/en/knowledge/emotion-as-sensor/"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://paradise.ventures/en/knowledge/emotion-as-sensor/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://paradise.ventures/wissen/typ-erkennung/</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://paradise.ventures/wissen/typ-erkennung/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://paradise.ventures/en/knowledge/type-recognition/"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://paradise.ventures/en/knowledge/type-recognition/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://paradise.ventures/wissen/zeitqualitaet/</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://paradise.ventures/wissen/zeitqualitaet/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://paradise.ventures/en/knowledge/collective-weather/"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://paradise.ventures/en/knowledge/collective-weather/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://paradise.ventures/wissen/glossar/</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://paradise.ventures/wissen/glossar/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://paradise.ventures/en/knowledge/glossary/"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://paradise.ventures/en/knowledge/glossary/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <url>
+    <loc>https://paradise.ventures/wissen/beratung/</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://paradise.ventures/wissen/beratung/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://paradise.ventures/en/knowledge/coaching/"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://paradise.ventures/en/knowledge/coaching/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://paradise.ventures/app/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://paradise.ventures/impressum.html</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://paradise.ventures/datenschutz.html</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://paradise.ventures/haftungsausschluss.html</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://paradise.ventures/en/imprint.html</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://paradise.ventures/en/privacy.html</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://paradise.ventures/en/disclaimer.html</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+</urlset>

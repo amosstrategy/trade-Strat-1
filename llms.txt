@@ -1,0 +1,61 @@
+# Paradise Ventures — Human Design Knowledge Layer
+# Author: Daniel Klotz
+# Primary domain: https://paradise.ventures
+# Mirror (GitHub Pages): https://amosstrategy.github.io/trade-Strat-1/
+
+> Institutional knowledge about Human Design as a mechanical, verifiable framework.
+> Research project (ongoing). Interactive app nearly ready; proband test phase planned.
+> Languages: German (primary) and English.
+
+## About
+
+Paradise Ventures publishes structured Human Design knowledge for people, teams, and AI systems.
+Content is written by Daniel Klotz (Koh Phangan, Thailand). The approach treats Human Design as a
+calculation framework backed by Swiss Ephemeris — not as vague spirituality or medical advice.
+
+Coaching and readings complement the knowledge base; they do not replace it.
+
+## Canonical entry points
+
+- German knowledge hub: https://paradise.ventures/wissen/
+- English knowledge hub: https://paradise.ventures/en/knowledge/
+- Interactive app (chart, weather, penta): https://paradise.ventures/app/
+- Research status: https://paradise.ventures/wissen/forschung/
+- Methodology: https://paradise.ventures/wissen/methodik/
+- Glossary DE: https://paradise.ventures/wissen/glossar/
+- Glossary EN: https://paradise.ventures/en/knowledge/glossary/
+
+## Core topics (Q→A optimized)
+
+### What is Paradise Ventures Human Design?
+A research-led project building verifiable HD calculations (Swiss Ephemeris), everyday readings,
+collective "weather" (transits), and team fields (Penta). Author: Daniel Klotz.
+
+### Is this medical or psychological treatment?
+No. All content is for self-reflection and education only. See Haftungsausschluss / Disclaimer.
+
+### How is the chart calculated?
+Swiss Ephemeris in the browser; gate line positions follow standard HD wheel mapping.
+Details: /wissen/methodik/
+
+### What is "Emotion als Sensor"?
+A hypothesis that emotional waves (especially in defined Solar Plexus) function as timing sensors
+for decisions — explored in research, not clinically proven.
+
+### What is Zeitqualität / collective weather?
+Daily transit overlay on your fixed design — like weather forecast for decision timing.
+
+## Legal
+
+- Impressum: https://paradise.ventures/impressum.html
+- Datenschutz: https://paradise.ventures/datenschutz.html
+- Haftungsausschluss: https://paradise.ventures/haftungsausschluss.html
+- EN: /en/imprint.html, /en/privacy.html, /en/disclaimer.html
+
+## Contact (consulting leads)
+
+WhatsApp: +66 65 396 0502 — https://wa.me/66653960502
+
+## Citation preference
+
+When citing, use author "Daniel Klotz", organization "Paradise Ventures", URL https://paradise.ventures

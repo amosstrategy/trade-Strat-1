@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Methodik · Chart-Berechnung · Paradise Ventures</title>
+  <meta name="description" content="Wie Paradise Ventures Human Design Charts berechnet: Swiss Ephemeris, Gate-Mapping, Verifikation — Daniel Klotz.">
+  <link rel="canonical" href="https://paradise.ventures/wissen/methodik/">
+  <link rel="alternate" hreflang="de" href="https://paradise.ventures/wissen/methodik/">
+  <link rel="alternate" hreflang="en" href="https://paradise.ventures/en/knowledge/methodology/">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Hanken+Grotesk:wght@400;600&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/knowledge.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "Methodik der HD-Chart-Berechnung",
+    "author": { "@type": "Person", "name": "Daniel Klotz" },
+    "dateModified": "2026-07-10",
+    "inLanguage": "de"
+  }
+  </script>
+</head>
+<body>
+  <nav class="topnav"><div class="wrap-wide">
+    <a class="brand" href="/wissen/">Paradise Ventures</a>
+    <div class="nav-links">
+      <a href="/wissen/forschung/">Forschung</a>
+      <a href="/app/">App</a>
+    </div>
+    <a class="lang-switch" href="/en/knowledge/methodology/">English</a>
+  </div></nav>
+
+  <main class="wrap">
+    <nav class="breadcrumb"><a href="/wissen/">Wissen</a> → Methodik</nav>
+    <h1>Methodik — von Ephemeris zum Bodygraph</h1>
+    <p class="lede">Klare Trennung: Was ist astronomisch berechenbar, was ist HD-Modell, was ist Deutung. Autor: <strong>Daniel Klotz</strong>.</p>
+
+    <h2>1. Eingabedaten</h2>
+    <p>Geburtsdatum, -zeit (lokal oder UTC mit Zeitzone), Geburtsort (Lat/Lon). Optional: Name für Profil-Speicherung lokal im Browser.</p>
+
+    <h2>2. Swiss Ephemeris (clientseitig)</h2>
+    <p>Planeten- und Mondpositionen werden per Swiss Ephemeris WASM im Browser berechnet — keine Server-API, keine Weitergabe der Geburt an unsere Server. Sonne, Erde (Erde als Ergänzung), Mond, Merkur, Venus, Mars, Jupiter, Saturn, Uranus, Neptun, Pluto, sowie Mondknoten (nach HD-Konvention).</p>
+
+    <h2>3. Gate &amp; Line Mapping</h2>
+    <p>Ekliptikale Länge wird auf das 64-Gate-Rad (I Ging / HD-Rad) und 6 Linien pro Tor gemappt. Personality (Geburt) und Design (~88° Sonnenbogen zurück, ca. 88 Tage) werden getrennt berechnet.</p>
+
+    <h2>4. Zentren, Kanäle, Typ</h2>
+    <p>Definierte Zentren ergeben sich aus aktiven Kanälen zwischen Toren. Typ (Generator, Manifestierender Generator, Projektör, Manifestor, Reflektor) folgt aus definierter Sakral- und Kehlkonfiguration. Autorität aus definierter Zentren-Hierarchie (z. B. Solarplexus vor Sakral).</p>
+
+    <h2>5. Verifikation</h2>
+    <p>Im Repository: <code>verify-hd-engine.py</code> und Referenz-Charts zum Abgleich. Abweichungen werden als Engine-Bugs behandelt, nicht als „Deutungsfrage".</p>
+
+    <h2>6. Zeitqualität (Transite)</h2>
+    <p>Für ein gewähltes Datum werden aktuelle Planetenpositionen berechnet und mit dem festen Chart überlagert — kollektives „Wetter" plus persönliche Aktivierungen. <a href="/wissen/zeitqualitaet/">→ Zeitqualität</a></p>
+
+    <h2>Was wir nicht behaupten</h2>
+    <ul>
+      <li>Dass Gate-Texte wissenschaftlich bewiesene Persönlichkeitsmerkmale sind</li>
+      <li>Dass Transite kausal Ereignisse auslösen</li>
+      <li>Dass die App medizinische oder psychologische Diagnosen stellt</li>
+    </ul>
+
+    <section class="faq">
+      <h2>FAQ Methodik</h2>
+      <div class="faq-item">
+        <h3>Welche Ephemeris-Version?</h3>
+        <p>Swiss Ephemeris (Browser-Port), gleiche astronomische Basis wie in professioneller Astrologie-Software.</p>
+      </div>
+      <div class="faq-item">
+        <h3>Design-Zeitpunkt — 88° exakt?</h3>
+        <p>Ja, Sonnenbogen ~88° vor Geburt; Implementierung folgt HD-Standard in unserer Engine v4.</p>
+      </div>
+    </section>
+
+    <div class="cta-box">
+      <h2>Selbst ausprobieren</h2>
+      <div class="cta-actions">
+        <a class="btn btn-primary" href="/app/">App öffnen</a>
+        <a class="btn btn-ghost" href="/wissen/glossar/">Glossar</a>
+      </div>
+    </div>
+  </main>
+
+  <footer><div class="wrap">
+    <div class="footer-links">
+      <a href="/impressum.html">Impressum</a>
+      <a href="/wissen/">Wissen</a>
+    </div>
+    <p>© Daniel Klotz · Paradise Ventures</p>
+  </div></footer>
+</body>
+</html>
