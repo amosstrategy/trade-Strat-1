@@ -108,6 +108,9 @@
       const q = IPIP.questions[qIndex];
       const selected = answers[q.num];
       const labels = IPIP.choiceLabels(lang);
+      const firstOpenIdx = IPIP.questions.findIndex(item => !(answers[item.num] >= 1 && answers[item.num] <= 5));
+      const lastIdx = firstOpenIdx >= 0 ? firstOpenIdx : total - 1;
+      const showJump = lastIdx > qIndex;
       return `${profilePanel}<section class="panel">
         <h2>${T(BL("Frage", "Question"))} ${qIndex + 1} / ${total}</h2>
         <div class="oejts-progress"><span style="width:${Math.round(((qIndex + (selected ? 1 : 0)) / total) * 100)}%"></span></div>
@@ -119,6 +122,7 @@
         <div class="oejts-nav">
           <button type="button" id="ipipPrev" ${qIndex === 0 ? "disabled" : ""}>←</button>
           <button type="button" id="ipipNext">${qIndex >= total - 1 ? T(BL("Auswerten", "Score")) : T(BL("Weiter", "Next"))}</button>
+          ${showJump ? `<button type="button" id="ipipJumpLast">${T(BL(`Zur letzten Frage (${lastIdx + 1})`, `Jump to latest (${lastIdx + 1})`))} ⇥</button>` : ""}
           <button type="button" id="ipipQuit">${T(BL("Pause", "Pause"))}</button>
         </div>
         <p class="oejts-attrib">${IPIP.ATTRIBUTION}</p>
@@ -205,6 +209,11 @@
 
     click("ipipStart", () => { setStep("quiz"); setQIndex(0); rerender(); });
     click("ipipContinue", () => { setStep("quiz"); setQIndex(firstUnanswered()); rerender(); });
+    click("ipipJumpLast", () => {
+      const idx = IPIP.questions.findIndex(q => !(answers[q.num] >= 1 && answers[q.num] <= 5));
+      setQIndex(idx >= 0 ? idx : IPIP.TOTAL - 1);
+      rerender();
+    });
     click("ipipShowResults", () => { setStep("results"); rerender(); });
     click("ipipPrev", () => { setQIndex(Math.max(0, qIndex - 1)); rerender(); });
     click("ipipNext", () => {
