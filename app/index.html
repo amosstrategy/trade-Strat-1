@@ -1618,7 +1618,16 @@
     .lens-badge.lens-b5 { border-color: rgba(201,162,75,.25); }
     .ipip-facet-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
     .ipip-facet-card { border: 1px solid rgba(255,255,255,.06); border-radius: 10px; padding: 10px; font-size: .78rem; color: var(--muted); }
-    .ipip-facet-card strong { display: block; color: var(--bone); font-size: .8rem; margin-bottom: 4px; }
+    .ipip-facet-card summary { cursor: pointer; list-style: none; display: flex; flex-direction: column; gap: 2px; }
+    .ipip-facet-card summary::-webkit-details-marker { display: none; }
+    .ipip-facet-card .ipip-facet-hint { font-size: .65rem; color: var(--cyber-cyan); opacity: .7; margin-top: 2px; }
+    .ipip-facet-card strong { display: block; color: var(--bone); font-size: .8rem; margin-bottom: 2px; }
+    .ipip-facet-explain { margin: 8px 0 0; padding-top: 8px; border-top: 1px dashed rgba(255,255,255,.1); color: var(--bone); line-height: 1.5; font-size: .76rem; }
+    .ipip-legend { border: 1px solid rgba(0,245,255,.15); border-radius: 12px; padding: 12px 14px; margin: 14px 0; background: rgba(0,245,255,.03); }
+    .ipip-legend summary { cursor: pointer; color: var(--cyber-cyan); font-size: .85rem; }
+    .ipip-legend-body { margin-top: 10px; }
+    .ipip-legend-body p { font-size: .8rem; color: var(--muted); line-height: 1.55; margin: 0 0 10px; }
+    .ipip-legend-body strong { color: var(--bone); }
     @media (max-width: 640px) { .ipip-facet-grid { grid-template-columns: 1fr; } }
     .oejts-profile-panel { margin-bottom: 14px; }
     .oejts-profile-form { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end; margin-bottom: 10px; }
@@ -2288,8 +2297,8 @@
   <script src="oejts-interpret.js?v=2"></script>
   <script src="ipip-data.js?v=1"></script>
   <script src="ipip-core.js?v=1"></script>
-  <script src="ipip-interpret.js?v=1"></script>
-  <script src="ipip-ui.js?v=2"></script>
+  <script src="ipip-interpret.js?v=2"></script>
+  <script src="ipip-ui.js?v=3"></script>
   <main class="app" id="app"></main>
 
   <script>

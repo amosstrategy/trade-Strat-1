@@ -46,6 +46,12 @@ for decisions — explored in research, not clinically proven.
 Johnson IPIP-NEO-120 (Public Domain, full 120 items, 30 facets — no short form) in /app/ tab «Big Five».
 HD feature vector + export for proband research — exploratory, not validated mapping.
 Scoring and export require all 120 answers.
+
+### How do I read my Big Five results (mean, percentile, facets)?
+Mean = average of 1–5 answers (reverse-keyed items flipped). Percentile ≈ placement against
+Johnson internet norms (>600k) — a placement, not a grade. 30 facets are the real resolution;
+no Big Five types exist, no score is "better". Plain-language guide:
+/wissen/big-five-auswertung/ (EN: /en/knowledge/big-five-results/)
 Details: /wissen/forschung/big-five/
 
 ### What is Zeitqualität / collective weather?

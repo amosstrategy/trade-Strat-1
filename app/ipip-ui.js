@@ -35,16 +35,35 @@
 
   function renderFacetGrid(domain, result, lang, T) {
     const meta = IPIP.domainMeta(domain);
-    let html = `<details class="ipip-facet-details" style="margin-top:10px"><summary style="cursor:pointer;color:var(--cyber-cyan);font-size:.82rem">${T(BL("30 Facetten anzeigen", "Show 30 facets"))} — ${meta[lang] || meta.de}</summary><div class="ipip-facet-grid">`;
+    let html = `<details class="ipip-facet-details" style="margin-top:10px"><summary style="cursor:pointer;color:var(--cyber-cyan);font-size:.82rem">${T(BL("6 Facetten anzeigen", "Show 6 facets"))} — ${meta[lang] || meta.de}</summary><div class="ipip-facet-grid">`;
     for (let f = 1; f <= 6; f++) {
       const fd = result.facets[domain][f];
       const name = IPIP.facetName(domain, f, lang);
-      html += `<div class="ipip-facet-card">
-        <strong>${name}</strong>
-        <span>${fd.average}/5 · ~${fd.percentile}%</span>
-      </div>`;
+      const explain = IPIPInterpret.FACET_EXPLAIN?.[domain]?.[f];
+      html += `<details class="ipip-facet-card">
+        <summary>
+          <strong>${name}</strong>
+          <span>${fd.average}/5 · ~${fd.percentile}% · ${IPIP.levelLabel(fd.level, lang)}</span>
+          <span class="ipip-facet-hint">ⓘ ${T(BL("Was heißt das?", "What does this mean?"))}</span>
+        </summary>
+        ${explain ? `<p class="ipip-facet-explain">${T(explain)}</p>` : ""}
+      </details>`;
     }
     return html + "</div></details>";
+  }
+
+  function renderReadingHelp(lang, T) {
+    const F = IPIPInterpret.FIELD_EXPLAIN;
+    return `<details class="ipip-legend">
+      <summary>${T(BL("Wie lese ich diese Auswertung? (Mittel, Perzentil, hoch/niedrig)", "How do I read these results? (mean, percentile, high/low)"))}</summary>
+      <div class="ipip-legend-body">
+        <p><strong>${T(BL("Mittelwert", "Mean"))}</strong> — ${T(F.mean)}</p>
+        <p><strong>${T(BL("Perzentil", "Percentile"))}</strong> — ${T(F.percentile)}</p>
+        <p><strong>${T(BL("hoch / mittel / niedrig", "high / average / low"))}</strong> — ${T(F.level)}</p>
+        <p><strong>${T(BL("Facetten", "Facets"))}</strong> — ${T(F.facets)}</p>
+        <p style="margin-bottom:0"><a href="../wissen/big-five-auswertung/" style="color:var(--cyber-cyan)">${T(BL("Ausführlicher Artikel: Big-Five-Auswertung verstehen →", "Full article: understanding your Big Five results →"))}</a></p>
+      </div>
+    </details>`;
   }
 
   function renderProfilePanel(profile, lang, T, hdSummary, jungSummary, b5Summary) {
@@ -134,6 +153,7 @@
         "Percentile basieren auf Johnson-Internet-Stichproben-Normen (approx.). Explorative HD-Vergleiche — keine validierte Zuordnung.",
         "Percentiles based on Johnson internet-sample norms (approx.). Exploratory HD comparisons — not a validated mapping."
       ))}</p>
+      ${renderReadingHelp(lang, T)}
       <div class="oejts-dim-grid">${domainCards}</div>
       ${facetBlocks}
       <div class="oejts-deutung-panel">
