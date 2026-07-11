@@ -164,8 +164,16 @@
 
     document.querySelectorAll("[data-ipip-answer]").forEach(input => {
       input.addEventListener("change", e => {
-        setAnswers({ ...answers, [Number(e.target.dataset.ipipAnswer)]: Number(e.target.value) });
+        const num = Number(e.target.dataset.ipipAnswer);
+        const val = Number(e.target.value);
+        const newAnswers = { ...answers, [num]: val };
+        setAnswers(newAnswers);
         flush();
+        if (qIndex >= IPIP.TOTAL - 1) {
+          setStep(IPIP.isTestComplete(newAnswers) ? "results" : "intro");
+        } else {
+          setQIndex(qIndex + 1);
+        }
         rerender();
       });
     });
