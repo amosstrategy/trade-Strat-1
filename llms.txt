@@ -42,6 +42,11 @@ Details: /wissen/methodik/
 A hypothesis that emotional waves (especially in defined Solar Plexus) function as timing sensors
 for decisions — explored in research, not clinically proven.
 
+### What is the Big Five / IPIP integration?
+Johnson IPIP-NEO-120 (Public Domain, 120 items, 30 facets) in /app/ tab «Big Five».
+HD feature vector + export for proband research — exploratory, not validated mapping.
+Details: /wissen/forschung/big-five/
+
 ### What is Zeitqualität / collective weather?
 Daily transit overlay on your fixed design — like weather forecast for decision timing.
 

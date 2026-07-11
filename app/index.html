@@ -1615,6 +1615,11 @@
     .lens-badge strong { color: var(--accent); margin-right: 4px; font-weight: 600; }
     .lens-badge.lens-hd { border-color: rgba(168,85,247,.25); }
     .lens-badge.lens-jung { border-color: rgba(0,245,255,.2); }
+    .lens-badge.lens-b5 { border-color: rgba(201,162,75,.25); }
+    .ipip-facet-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+    .ipip-facet-card { border: 1px solid rgba(255,255,255,.06); border-radius: 10px; padding: 10px; font-size: .78rem; color: var(--muted); }
+    .ipip-facet-card strong { display: block; color: var(--bone); font-size: .8rem; margin-bottom: 4px; }
+    @media (max-width: 640px) { .ipip-facet-grid { grid-template-columns: 1fr; } }
     .oejts-profile-panel { margin-bottom: 14px; }
     .oejts-profile-form { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: end; margin-bottom: 10px; }
     .oejts-profile-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
@@ -2277,15 +2282,19 @@
   </script>
   <script type="module" src="hd-bootstrap.mjs?v=8"></script>
   <script src="hd-engine.js?v=8"></script>
-  <script src="hd-logic.js?v=8"></script>
+  <script src="hd-logic.js?v=9"></script>
   <script src="zeitqualitaet-core.js?v=9"></script>
   <script src="oejts-core.js?v=1"></script>
   <script src="oejts-interpret.js?v=2"></script>
+  <script src="ipip-data.js?v=1"></script>
+  <script src="ipip-core.js?v=1"></script>
+  <script src="ipip-interpret.js?v=1"></script>
+  <script src="ipip-ui.js?v=1"></script>
   <main class="app" id="app"></main>
 
   <script>
     const BL = (de, en) => ({ de, en });
-    const TAB_IDS = new Set(["weather", "result", "chart", "penta", "jung", "admin"]);
+    const TAB_IDS = new Set(["weather", "result", "chart", "penta", "jung", "bigfive", "admin"]);
     const LEGACY_TAB_MAP = { daily: "weather", heute: "weather", input: "chart" };
     const showAdmin = new URLSearchParams(location.search).get("admin") === "1";
     const normalizeTabId = id => LEGACY_TAB_MAP[id] || id;
@@ -2364,6 +2373,9 @@
     let oejtsAnswers = {};
     let oejtsQIndex = 0;
     let oejtsStep = "intro";
+    let ipipAnswers = {};
+    let ipipQIndex = 0;
+    let ipipStep = "intro";
     const getOejtsAnswersForProfile = id => (id === activeProfile ? oejtsAnswers : (ProfileStore.getOejts(id)?.answers || {}));
     const flushOejtsSession = (profileId = activeProfile) => {
       ProfileStore.saveOejts(profileId, { answers: { ...oejtsAnswers }, step: oejtsStep });
@@ -2373,6 +2385,16 @@
       oejtsAnswers = data?.answers ? { ...data.answers } : {};
       oejtsStep = data?.step || (OEJTS.isTestComplete(oejtsAnswers) ? "results" : "intro");
       oejtsQIndex = 0;
+    };
+    const getIpipAnswersForProfile = id => (id === activeProfile ? ipipAnswers : (ProfileStore.getBigFive(id)?.answers || {}));
+    const flushIpipSession = (profileId = activeProfile) => {
+      ProfileStore.saveBigFive(profileId, { answers: { ...ipipAnswers }, step: ipipStep });
+    };
+    const loadIpipSession = profileId => {
+      const data = ProfileStore.getBigFive(profileId);
+      ipipAnswers = data?.answers ? { ...data.answers } : {};
+      ipipStep = data?.step || (IPIP.isTestComplete(ipipAnswers) ? "results" : "intro");
+      ipipQIndex = 0;
     };
     const migrateGlobalOejts = () => {
       const legacy = loadJSON(STORAGE_KEYS.oejts, null);
@@ -2403,12 +2425,20 @@
       if (count > 0) return BL(`${count}/32`, `${count}/32`);
       return BL("—", "—");
     };
+    const profileBigFiveSummary = id => {
+      const answers = getIpipAnswersForProfile(id);
+      const count = IPIP.answeredCount(answers);
+      if (IPIP.isTestComplete(answers)) return BL("120/120", "120/120");
+      if (count > 0) return BL(`${count}/120`, `${count}/120`);
+      return BL("—", "—");
+    };
     const profileSelectOptions = selectedId => Object.values(getAllProfiles())
       .sort((a, b) => String(a.name || a.id).localeCompare(String(b.name || b.id)))
       .map(p => {
         const hd = T(profileHdSummary(p));
         const jung = T(profileJungSummary(p.id));
-        return `<option value="${p.id}" ${p.id === selectedId ? "selected" : ""}>${p.name} · HD: ${hd} · Jung: ${jung}</option>`;
+        const b5 = T(profileBigFiveSummary(p.id));
+        return `<option value="${p.id}" ${p.id === selectedId ? "selected" : ""}>${p.name} · HD: ${hd} · Jung: ${jung} · B5: ${b5}</option>`;
       }).join("");
     const pentaOn = loadJSON(STORAGE_KEYS.penta, { daniel: true, patrick: true, paradise: true });
     const savePentaOn = () => saveJSON(STORAGE_KEYS.penta, pentaOn);
@@ -6364,6 +6394,7 @@
     function renderGlobalProfileBar(profile) {
       const hd = T(profileHdSummary(profile));
       const jung = T(profileJungSummary(profile.id));
+      const b5 = T(profileBigFiveSummary(profile.id));
       return `
         <section class="panel global-profile-bar">
           <div class="global-profile-grid">
@@ -6378,6 +6409,7 @@
               <div class="profile-lens-row">
                 <span class="lens-badge lens-hd"><strong>HD</strong> ${hd}</span>
                 <span class="lens-badge lens-jung"><strong>Jung</strong> ${jung}</span>
+                <span class="lens-badge lens-b5"><strong>OCEAN</strong> ${b5}</span>
               </div>
             </div>
           </div>
@@ -6519,7 +6551,8 @@
         { id: "result", label: BL("Dein Chart", "Your chart") },
         { id: "chart", label: BL("Eingabe", "Input") },
         { id: "penta", label: BL("Penta", "Penta") },
-        { id: "jung", label: BL("Jung", "Jung") }
+        { id: "jung", label: BL("Jung", "Jung") },
+        { id: "bigfive", label: BL("Big Five", "Big Five") }
       ];
       if (showAdmin) tabs.push({ id: "admin", label: BL("Admin", "Admin") });
       return `<nav class="tabs" aria-label="Navigation">${tabs.map(tab => `<button type="button" class="tab-btn ${activeTab === tab.id ? "active" : ""}" data-tab="${tab.id}">${T(tab.label)}</button>`).join("")}</nav>`;
@@ -6806,6 +6839,14 @@
           </div>
 
           <div class="admin-section">
+            <h3 style="font-size:.85rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin:0 0 8px">${T(BL("Big Five / HD Forschungs-Export", "Big Five / HD research export"))}</h3>
+            <p style="color:var(--muted);line-height:1.5;margin:0 0 10px;font-size:.85rem">${T(BL("IPIP-NEO-120 + HD-Feature-Vektor pro Profil — für Probanden-Phase und dimensionale Korrelationsstudie.", "IPIP-NEO-120 + HD feature vector per profile — for proband phase and dimensional correlation study."))}</p>
+            <div class="toolbar" style="margin-bottom:12px">
+              <button type="button" id="adminExportB5Hd">${T(BL("Alle Profile exportieren", "Export all profiles"))}</button>
+            </div>
+          </div>
+
+          <div class="admin-section">
             <h3 style="font-size:.85rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin:0 0 8px">${T(BL("Backup", "Backup"))}</h3>
             <div class="toolbar">
               <button type="button" id="adminExportDb">${T(BL("Profil-DB exportieren", "Export profile DB"))}</button>
@@ -7007,6 +7048,18 @@
         </section>
         ${renderFlowCtas("penta")}`;
       const jungView = activeTab === "jung" ? renderOejtsTab(profile) : "";
+      const bigfiveView = activeTab === "bigfive" ? IPIPUI.renderIpipTab({
+        profile,
+        answers: ipipAnswers,
+        step: ipipStep,
+        qIndex: ipipQIndex,
+        lang,
+        T,
+        hdSummary: T(profileHdSummary(profile)),
+        jungSummary: T(profileJungSummary(profile.id)),
+        b5Summary: T(profileBigFiveSummary(profile.id)),
+        getProfileRecord: getProfileRecord
+      }) : "";
       const adminView = activeTab === "admin" && showAdmin ? renderAdminTab() : "";
 
       document.getElementById("app").innerHTML = `
@@ -7017,6 +7070,7 @@
         <div class="tab-panel ${activeTab === "chart" ? "" : "hidden"}">${chartView}</div>
         <div class="tab-panel ${activeTab === "penta" ? "" : "hidden"}">${pentaView}</div>
         <div class="tab-panel ${activeTab === "jung" ? "" : "hidden"}">${jungView}</div>
+        <div class="tab-panel ${activeTab === "bigfive" ? "" : "hidden"}">${bigfiveView}</div>
         <div class="tab-panel ${activeTab === "admin" ? "" : "hidden"}">${adminView}</div>
         <p class="footer">${T(BL("Profil-Datenbank v2 (hd-profile-db-v2) · Engine v4 · Chart nur bei «Berechnen & Speichern».", "Profile database v2 (hd-profile-db-v2) · Engine v4 · Chart only on «Calculate & save»."))} · <a href="../" style="color:var(--accent)">${T(BL("Readings & About", "Readings & About"))}</a>${showAdmin ? "" : ` · <a href="?admin=1" style="color:var(--muted)">${T(BL("Admin", "Admin"))}</a>`}</p>
       `;
@@ -7083,8 +7137,10 @@
       const profileSelect = document.getElementById("profileSelect");
       if (profileSelect) profileSelect.addEventListener("change", e => {
         flushOejtsSession(activeProfile);
+        flushIpipSession(activeProfile);
         activeProfile = e.target.value;
         loadOejtsSession(activeProfile);
+        loadIpipSession(activeProfile);
         renderApp();
       });
 
@@ -7193,6 +7249,22 @@
         renderApp();
       });
 
+      if (activeTab === "bigfive") {
+        IPIPUI.bindIpipEvents({
+          profile,
+          answers: ipipAnswers,
+          step: ipipStep,
+          qIndex: ipipQIndex,
+          setAnswers: v => { ipipAnswers = v; },
+          setStep: v => { ipipStep = v; },
+          setQIndex: v => { ipipQIndex = v; },
+          flush: flushIpipSession,
+          rerender: renderApp,
+          T,
+          getProfileRecord
+        });
+      }
+
       const adminPanel = document.getElementById("adminPanel");
       if (adminPanel) {
         adminPanel.addEventListener("click", event => {
@@ -7211,8 +7283,10 @@
           const openBtn = event.target.closest("[data-admin-open]");
           if (openBtn) {
             flushOejtsSession(activeProfile);
+            flushIpipSession(activeProfile);
             activeProfile = openBtn.dataset.adminOpen;
             loadOejtsSession(activeProfile);
+            loadIpipSession(activeProfile);
             adminEditingId = null;
             setActiveTab("chart");
             renderApp();
@@ -7318,6 +7392,29 @@
           if (!confirm(T(BL("Konkordanz-Datensatz loeschen?", "Delete concordance dataset?")))) return;
           localStorage.removeItem(STORAGE_KEYS.concordance);
           renderApp();
+        });
+
+        const adminExportB5Hd = document.getElementById("adminExportB5Hd");
+        if (adminExportB5Hd) adminExportB5Hd.addEventListener("click", () => {
+          flushIpipSession(activeProfile);
+          const records = listProfileRecords(PROFILES);
+          const profiles = getAllProfiles();
+          const payload = {
+            exportedAt: new Date().toISOString(),
+            instrument: "IPIP-NEO-120",
+            license: "Public Domain (IPIP) · Johnson 2014",
+            profiles: records.map(r => {
+              const b5 = ProfileStore.getBigFive(r.id);
+              return IPIP.exportResearchBundle(r.id, r, profiles[r.id], b5?.answers || {});
+            })
+          };
+          const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `paradise-b5-hd-all-${isoDate(today())}.json`;
+          a.click();
+          URL.revokeObjectURL(url);
         });
 
         const adminExportDb = document.getElementById("adminExportDb");
@@ -7513,6 +7610,7 @@
         ProfileStore.migrateBirthOnly(PROFILES);
         migrateGlobalOejts();
         loadOejtsSession(activeProfile);
+        loadIpipSession(activeProfile);
         ensurePentaRegistry();
         if (!readTabFromHash()) {
           const p = getAllProfiles()[activeProfile] || PROFILES.daniel;

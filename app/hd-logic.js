@@ -382,7 +382,8 @@
           tone,
           birth: birth ? { ...birth, savedAt: new Date().toISOString() } : existing?.birth || null,
           chart: chartData,
-          oejts: existing?.oejts || null
+          oejts: existing?.oejts || null,
+          bigfive: existing?.bigfive || null
         };
         saveDb(db);
         return db[id];
@@ -390,7 +391,7 @@
       clearPerson(id, defaults) {
         const db = loadDb() || {};
         if (defaults[id]) {
-          db[id] = { id, name: defaults[id].name, tone: defaults[id].tone, birth: null, chart: null, oejts: null };
+          db[id] = { id, name: defaults[id].name, tone: defaults[id].tone, birth: null, chart: null, oejts: null, bigfive: null };
         } else {
           delete db[id];
         }
@@ -398,7 +399,7 @@
       },
       addCustomPerson(id, name, tone) {
         const db = loadDb() || {};
-        db[id] = { id, name, tone, birth: null, chart: null, oejts: null };
+        db[id] = { id, name, tone, birth: null, chart: null, oejts: null, bigfive: null };
         saveDb(db);
         return db[id];
       },
@@ -416,6 +417,21 @@
         };
         saveDb(db);
         return db[id].oejts;
+      },
+      getBigFive(id) {
+        const db = loadDb() || {};
+        return db[id]?.bigfive || null;
+      },
+      saveBigFive(id, { answers, step }) {
+        const db = loadDb() || {};
+        if (!db[id]) db[id] = { id, name: id, tone: null, birth: null, chart: null };
+        db[id].bigfive = {
+          answers: answers || {},
+          step: step || "intro",
+          savedAt: new Date().toISOString()
+        };
+        saveDb(db);
+        return db[id].bigfive;
       },
       listRecords(defaults) {
         const db = migrateBirthOnly(defaults);

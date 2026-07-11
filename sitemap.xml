@@ -28,6 +28,18 @@
     <priority>0.85</priority>
   </url>
   <url>
+    <loc>https://paradise.ventures/wissen/forschung/big-five/</loc>
+    <xhtml:link rel="alternate" hreflang="de" href="https://paradise.ventures/wissen/forschung/big-five/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://paradise.ventures/en/knowledge/research/big-five/"/>
+    <changefreq>monthly</changefreq>
+    <priority>0.82</priority>
+  </url>
+  <url>
+    <loc>https://paradise.ventures/en/knowledge/research/big-five/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.82</priority>
+  </url>
+  <url>
     <loc>https://paradise.ventures/wissen/methodik/</loc>
     <xhtml:link rel="alternate" hreflang="de" href="https://paradise.ventures/wissen/methodik/"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://paradise.ventures/en/knowledge/methodology/"/>
