@@ -43,8 +43,9 @@ A hypothesis that emotional waves (especially in defined Solar Plexus) function 
 for decisions — explored in research, not clinically proven.
 
 ### What is the Big Five / IPIP integration?
-Johnson IPIP-NEO-120 (Public Domain, 120 items, 30 facets) in /app/ tab «Big Five».
+Johnson IPIP-NEO-120 (Public Domain, full 120 items, 30 facets — no short form) in /app/ tab «Big Five».
 HD feature vector + export for proband research — exploratory, not validated mapping.
+Scoring and export require all 120 answers.
 Details: /wissen/forschung/big-five/
 
 ### What is Zeitqualität / collective weather?

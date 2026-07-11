@@ -1,6 +1,9 @@
 /**
  * IPIP-NEO-120 — Johnson (2014), Public Domain
  * https://ipip.ori.org/ · https://doi.org/10.1016/j.jrp.2014.05.003
+ *
+ * Policy: full 120-item instrument only — no IPIP-50 or other short forms.
+ * Scoring, facets, and research export require 120/120 answers.
  */
 (function (global) {
   const BL = (de, en) => ({ de, en });

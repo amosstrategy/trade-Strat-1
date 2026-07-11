@@ -72,10 +72,10 @@
       return `${profilePanel}<section class="panel">
         <h2>${T(BL("Big Five · IPIP-NEO-120", "Big Five · IPIP-NEO-120"))}</h2>
         <p class="oejts-intro">${T(BL(
-          "Johnson IPIP-NEO-120 (2014) — Public Domain, wissenschaftlich etabliertes Five-Factor-Modell. 120 Items, 5 Domänen (OCEAN), 30 Facetten. Keine Lizenzgebühren — geeignet für Forschung und Probanden-Export.",
-          "Johnson IPIP-NEO-120 (2014) — Public Domain, established Five-Factor Model. 120 items, 5 domains (OCEAN), 30 facets. No license fees — suitable for research and proband export."
+          "Johnson IPIP-NEO-120 (2014) — Public Domain, wissenschaftlich etabliertes Five-Factor-Modell. Vollständiger Test: 120 Items, 5 Domänen (OCEAN), 30 Facetten — keine Kurzversion, kein IPIP-50. Ergebnis und Export erst nach allen 120 Antworten.",
+          "Johnson IPIP-NEO-120 (2014) — Public Domain, established Five-Factor Model. Full test only: 120 items, 5 domains (OCEAN), 30 facets — no short form, no IPIP-50. Results and export only after all 120 answers."
         ))}</p>
-        <div class="small-card">${T(BL("Dauer ca. 10–15 Minuten · Antworten pro Profil lokal gespeichert", "About 10–15 minutes · Answers saved locally per profile"))}</div>
+        <div class="small-card">${T(BL("Vollständig · ca. 10–15 Minuten · 120/120 für Auswertung · pro Profil lokal gespeichert", "Full test · about 10–15 minutes · 120/120 required for scoring · saved locally per profile"))}</div>
         <div class="oejts-nav">
           <button type="button" class="btn-primary" id="ipipStart">${T(BL("Test starten", "Start test"))}</button>
           ${answered ? `<button type="button" id="ipipContinue">${T(BL(`Fortsetzen (${answered}/${total})`, `Continue (${answered}/${total})`))}</button>` : ""}
