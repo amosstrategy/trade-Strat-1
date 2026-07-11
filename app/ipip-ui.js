@@ -15,6 +15,38 @@
     </div>`;
   }
 
+  function domainNumbersExplain(domain, d, lang, T) {
+    const meta = IPIP.domainMeta(domain);
+    const pct = d.percentile;
+    const lowLabel = lang === "de" ? meta.lowDe : meta.lowEn;
+    const highLabel = lang === "de" ? meta.highDe : meta.highEn;
+    const meanTendency = d.average > 3.1
+      ? BL("eher zugestimmt", "mostly agreed")
+      : d.average < 2.9
+        ? BL("eher abgelehnt", "mostly disagreed")
+        : BL("neutral geantwortet", "answered neutrally");
+    const levelText = d.level === "high"
+      ? BL(`«hoch» heißt hier: ${highLabel}. Trade-off, keine Note — der Gegenpol wäre: ${lowLabel}.`,
+           `«high» here means: ${highLabel}. A trade-off, not a grade — the opposite pole would be: ${lowLabel}.`)
+      : d.level === "low"
+        ? BL(`«niedrig» heißt hier: ${lowLabel}. Trade-off, keine Note — der Gegenpol wäre: ${highLabel}.`,
+             `«low» here means: ${lowLabel}. A trade-off, not a grade — the opposite pole would be: ${highLabel}.`)
+        : BL(`«mittel» heißt: du liegst zwischen den Polen ${lowLabel} ↔ ${highLabel} — situativ mal das eine, mal das andere.`,
+             `«average» means: you sit between the poles ${lowLabel} ↔ ${highLabel} — situationally one or the other.`);
+    return `<details class="ipip-numbers">
+      <summary>ⓘ ${T(BL("Diese Zahlen erklärt", "These numbers explained"))}</summary>
+      <p><strong>${T(BL("Mittel", "Mean"))} ${d.average}/5</strong> — ${T(BL(
+        `Durchschnitt deiner 24 Antworten zu diesem Bereich (negativ formulierte Fragen automatisch umgepolt). Du hast hier im Schnitt ${T(meanTendency)}.`,
+        `Average of your 24 answers in this area (reverse-keyed items flipped automatically). On average you ${T(meanTendency)} here.`
+      ))}</p>
+      <p><strong>${T(BL("Perzentil", "Percentile"))} ~${pct}</strong> — ${T(BL(
+        `rund ${pct} % der Vergleichsgruppe (Johnson-Norm, >600.000 Personen) liegen unter deinem Wert, ~${100 - pct} % darüber. Einordnung, keine Note.`,
+        `about ${pct}% of the comparison sample (Johnson norms, >600,000 people) score below you, ~${100 - pct}% above. A placement, not a grade.`
+      ))}</p>
+      <p style="margin-bottom:0"><strong>${IPIP.levelLabel(d.level, lang)}</strong> — ${T(levelText)}</p>
+    </details>`;
+  }
+
   function renderDomainCard(domain, result, notes, lang, T) {
     const meta = IPIP.domainMeta(domain);
     const d = result.domains[domain];
@@ -28,6 +60,7 @@
         <span style="flex:1"></span>
       </div>
       <div style="font-size:.75rem;color:var(--muted)">${T(BL("Mittel", "Mean"))}: ${d.average} / 5</div>
+      ${domainNumbersExplain(domain, d, lang, T)}
       <p style="margin:8px 0 0;font-size:.78rem;color:var(--muted);line-height:1.45">${T(notes?.summary)}</p>
       ${note ? `<p style="margin:8px 0 0;font-size:.78rem;color:var(--accent);line-height:1.45">${T(note)}</p>` : ""}
     </div>`;
@@ -40,6 +73,10 @@
       const fd = result.facets[domain][f];
       const name = IPIP.facetName(domain, f, lang);
       const explain = IPIPInterpret.FACET_EXPLAIN?.[domain]?.[f];
+      const numbersLine = T(BL(
+        `Deine Zahlen: Mittel ${fd.average}/5 aus 4 Fragen · ~${fd.percentile} % der Vergleichsgruppe liegen darunter · Stufe: ${IPIP.levelLabel(fd.level, lang)}.`,
+        `Your numbers: mean ${fd.average}/5 from 4 questions · ~${fd.percentile}% of the comparison sample score below · level: ${IPIP.levelLabel(fd.level, lang)}.`
+      ));
       html += `<details class="ipip-facet-card">
         <summary>
           <strong>${name}</strong>
@@ -47,6 +84,7 @@
           <span class="ipip-facet-hint">ⓘ ${T(BL("Was heißt das?", "What does this mean?"))}</span>
         </summary>
         ${explain ? `<p class="ipip-facet-explain">${T(explain)}</p>` : ""}
+        <p class="ipip-facet-numbers">${numbersLine}</p>
       </details>`;
     }
     return html + "</div></details>";
