@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Type Recognition Through Emotion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600;6..72,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#12100E;--paper:#F3ECDE;--ink:#211C16;--muted:#8A7F6E;--line2:#DDD2BC;--flow:#4FA88B;--swing:#C56A4A;--gold:#D2A24C;--violet:#8C7BB0;--blue:#5A82A8}
+*{margin:0;padding:0;box-sizing:border-box}
+html{background:#E8DCC4}
+body{font-family:'Newsreader',Georgia,serif;color:var(--ink);line-height:1.5;font-size:15px}
+.page{max-width:900px;margin:0 auto 20px;background:var(--paper);padding:34px 40px}
+@media print{.page{margin:0;padding:14mm}@page{size:A4;margin:0}.card{break-inside:avoid}}
+h1{font-family:'Fraunces','Newsreader',serif;font-weight:700;font-size:27px;letter-spacing:-.01em;margin-bottom:4px}
+.sub{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--swing);margin-bottom:18px}
+.intro{font-size:15px;color:var(--ink);border-left:3px solid var(--gold);padding-left:14px;margin-bottom:8px}
+h2{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--swing);margin:26px 0 12px;font-weight:500}
+.card{border:1px solid var(--line2);border-radius:4px;margin-bottom:16px;overflow:hidden}
+.card-head{padding:12px 16px;color:#fff;display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.card-head .t{font-family:'Fraunces','Newsreader',serif;font-weight:700;font-size:19px}
+.card-head .pct{font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:.9;letter-spacing:.08em}
+.card-head .aura{font-family:'IBM Plex Sans',sans-serif;font-size:11px;opacity:.85;font-style:normal}
+.gen{background:#8A5A2B}.mg{background:#A5793C}.pro{background:#4A6785}.man{background:#8F3120}.ref{background:#5F5083}
+.card-body{padding:14px 16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 22px}
+@media(max-width:640px){.grid2{grid-template-columns:1fr}}
+.blk{margin-bottom:11px}
+.blk h4{font-family:'IBM Plex Sans',sans-serif;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:3px}
+.blk p{font-size:13.5px;line-height:1.44;margin:0}
+.blk .self{color:var(--blue);font-weight:600}
+.blk .other{color:var(--gold);font-weight:600}
+.sig{color:#2E7A61;font-weight:600}
+.stages{display:flex;gap:0;margin:4px 0 0;border-radius:3px;overflow:hidden;border:1px solid var(--line2)}
+.stages .s{flex:1;padding:7px 8px;font-size:11px;line-height:1.3;border-right:1px solid var(--line2)}
+.stages .s:last-child{border-right:0}
+.stages .s b{display:block;font-family:'IBM Plex Mono',monospace;font-size:8.5px;letter-spacing:.05em;text-transform:uppercase;margin-bottom:2px}
+.s1{background:#FBF6EA}.s2{background:#F6E4CE}.s3{background:#EFC9A8}.s4{background:#E0A98A}
+.s1 b{color:#8A7F6E}.s2 b{color:#B0764A}.s3 b{color:#9E5A32}.s4 b{color:#8F3120}
+.g1{background:#EAF3ED}.g2{background:#D3E8DA}.g3{background:#B0D8C0}.g4{background:#8AC7A3}
+.g1 b{color:#5C8A72}.g2 b{color:#3E7A5B}.g3 b{color:#2E7050}.g4 b{color:#1F5E40}
+.grow-note{font-size:12px;color:#2E7A61;font-style:italic;margin-top:5px}
+.window{font-size:12px;color:var(--swing);font-style:italic;margin-top:5px}
+.comm{background:var(--bg);color:var(--paper);border-radius:4px;padding:22px 24px;margin-top:8px}
+.comm h3{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
+.comm p{font-size:13.5px;color:#D8CEBC;margin-bottom:12px;line-height:1.5}
+.comm table{width:100%;border-collapse:collapse;font-size:12.5px;margin:8px 0}
+.comm td,.comm th{text-align:left;padding:7px 9px;border-bottom:1px solid #2E2A24;vertical-align:top}
+.comm th{font-family:'IBM Plex Sans',sans-serif;font-size:9.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--gold);font-weight:600}
+.comm td:first-child{color:var(--paper);font-weight:600;white-space:nowrap}
+.comm .health{color:#6FBFA0}.comm .sick{color:#D98A6A}
+.foot{font-size:11px;color:var(--muted);font-family:'IBM Plex Sans',sans-serif;margin-top:16px;border-top:1px solid var(--line2);padding-top:10px;line-height:1.5}
+.key{background:#EFE4CC;border-radius:4px;padding:10px 14px;font-size:12px;margin-bottom:16px;line-height:1.5}
+.key b{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.05em;text-transform:uppercase}
+.key .self{color:var(--blue)}.key .other{color:var(--gold)}
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>Type Recognition Through Emotion</h1>
+<div class="sub">Reference guide · Personality (inner view) × Design (outer view) · Early-warning stages · Community diagnosis</div>
+
+<div class="intro">Emotion is a sensor, not an identity. It produces a <em>hypothesis</em> about type, not a diagnosis — the chart comes from birth data. This tool reads from two sides: <span class="self">how it feels from the inside</span> (Personality — what you sense yourself) and <span class="other">how it looks from the outside</span> (Design — what others observe). Together they form the full picture, because people often see themselves differently from how they come across.</div>
+
+<div class="key">
+<b class="self">■ Inside</b> = what the person feels and asks themselves (Personality side). &nbsp; <b class="other">■ Outside</b> = what you can observe about them in the room (Design side). &nbsp; Each card has <b>two progressions</b>: the <b style="color:#2E7A61">green blooming stages</b> (how the right thing grows, from first sign to full power) and the <b style="color:#9E5A32">early-warning stages</b> (how it tips, from first sign to too late). <b>Goal: recognize and nourish green growth early; catch the tipping early, on the left.</b>
+</div>
+
+<h2>The five types</h2>
+
+<!-- GENERATOR -->
+<div class="card">
+  <div class="card-head gen"><span class="t">Generator</span><span class="aura">Aura: open &amp; enveloping</span><span class="pct">~37%</span></div>
+  <div class="card-body">
+    <div class="grid2">
+      <div class="blk"><h4>Recognition · Language &amp; questions</h4><p><span class="other">Outside:</span> responds to offers instead of starting on their own. Answers with sounds (mm-hmm / nah) before words come. Asks “does this light me up?”, “do I want in?”. Steady energy when they love what they do.</p></div>
+      <div class="blk"><h4>Drive</h4><p><span class="self">Inside:</span> needs a counterpart, a question, something to respond to. Starting from nothing feels wrong. The gut knows yes/no immediately.</p></div>
+    </div>
+    <div class="blk"><h4>In power · Blooming stages (Signature: Satisfaction)</h4>
+      <div class="stages">
+        <div class="s g1"><b>1 Sign</b>Calm returns. Responds again instead of forcing. First curiosity.</div>
+        <div class="s g2"><b>2 Flow</b>Steady energy on one thing. Loses track of time while doing.</div>
+        <div class="s g3"><b>3 Mastery</b>Gets genuinely good. Others come with offers because they radiate.</div>
+        <div class="s g4"><b>4 Full power</b>Tired-satisfied in the evening. A full “that was it.” Draws life in.</div>
+      </div>
+      <p class="grow-note">Visible in the environment: the steady hum, no rush, no forcing. Amplify: give them real options their gut can answer to.</p>
+    </div>
+    <div class="blk"><h4>Out of power · Early-warning stages (Not-Self: Frustration)</h4>
+      <div class="stages">
+        <div class="s s1"><b>1 Noise</b>Restlessness, impatience. “Something’s off.” No name for it yet.</div>
+        <div class="s s2"><b>2 Signal</b>Active frustration. Pushes harder at the wrong thing.</div>
+        <div class="s s3"><b>3 Alarm</b>Resignation. “Just do what you’re told.” Gut goes quiet.</div>
+        <div class="s s4"><b>4 Too late</b>Burnout, flatness, depression-like.</div>
+      </div>
+      <p class="window">Visible in the environment from stage 1: the steadily energized one becomes restless-irritable. Intervene: “What did you actually say yes to here — and did you want that?”</p>
+    </div>
+  </div>
+</div>
+
+<!-- MG -->
+<div class="card">
+  <div class="card-head mg"><span class="t">Manifesting Generator</span><span class="aura">Aura: open &amp; enveloping</span><span class="pct">~33%</span></div>
+  <div class="card-body">
+    <div class="grid2">
+      <div class="blk"><h4>Recognition · Language &amp; questions</h4><p><span class="other">Outside:</span> does several things at once, skips steps, drops what feels wrong. Fast, impatient with slowness. Asks “can’t this go faster?”</p></div>
+      <div class="blk"><h4>Drive</h4><p><span class="self">Inside:</span> gut-yes plus urge to act immediately. Quitting isn’t failure — it’s sorting out the wrong path. Must briefly inform before charging ahead.</p></div>
+    </div>
+    <div class="blk"><h4>In power · Blooming stages (Signature: Satisfaction + Peace)</h4>
+      <div class="stages">
+        <div class="s g1"><b>1 Sign</b>Gut-yes plus a brief inform. No more charging off.</div>
+        <div class="s g2"><b>2 Flow</b>Multi-track, but directed. Skips steps others need.</div>
+        <div class="s g3"><b>3 Mastery</b>Finds the fastest path for everyone. Becomes the group’s accelerator.</div>
+        <div class="s g4"><b>4 Full power</b>Satisfaction + clear runway. Does in hours what others take days for.</div>
+      </div>
+      <p class="grow-note">Visible: fast, but no longer frantic — the pace now serves. Amplify: let them take shortcuts without insisting on the “right order.”</p>
+    </div>
+    <div class="blk"><h4>Out of power · Early-warning stages (Not-Self: Frustration + Anger)</h4>
+      <div class="stages">
+        <div class="s s1"><b>1 Noise</b>Restlessness + irritability. Starts things, doesn’t finish.</div>
+        <div class="s s2"><b>2 Signal</b>Frustration (wrong thing) tips into anger (blocked, not informed).</div>
+        <div class="s s3"><b>3 Alarm</b>Drops everything, even the right thing. Scorched earth.</div>
+        <div class="s s4"><b>4 Too late</b>Burnout + resentment at once. Torn apart.</div>
+      </div>
+      <p class="window">Double signal — that’s why it’s intense. In the environment: becomes frantic AND snippy at the same time. Intervene: “Which of these do you really want — and who do you need to inform?”</p>
+    </div>
+  </div>
+</div>
+
+<!-- PROJECTOR -->
+<div class="card">
+  <div class="card-head pro"><span class="t">Projector</span><span class="aura">Aura: focused &amp; penetrating</span><span class="pct">~20%</span></div>
+  <div class="card-body">
+    <div class="grid2">
+      <div class="blk"><h4>Recognition · Language &amp; questions</h4><p><span class="other">Outside:</span> sees through others, offers insights, asks deep questions about <em>you</em>. In groups, sits slightly at the edge until invited. Asks “may I add something?”, “do you see that too?”</p></div>
+      <div class="blk"><h4>Drive</h4><p><span class="self">Inside:</span> waits for invitation/recognition, quickly feels exhaustion in groups (absorbs others’ energy). Longs to be seen for who they really are.</p></div>
+    </div>
+    <div class="blk"><h4>In power · Blooming stages (Signature: Success)</h4>
+      <div class="stages">
+        <div class="s g1"><b>1 Sign</b>Stops pushing in. Waits, rests in themselves. No sarcasm.</div>
+        <div class="s g2"><b>2 Invitation</b>Gets asked. Their insight lands because it was requested.</div>
+        <div class="s g3"><b>3 Impact</b>Guides without pushing. People seek their view of them.</div>
+        <div class="s g4"><b>4 Success</b>Recognized for who they really are. Seen, not spent.</div>
+      </div>
+      <p class="grow-note">Visible: relaxed at the edge, present rather than pushing, sharp gaze without bitterness. Amplify: invite them explicitly and ask for their perspective.</p>
+    </div>
+    <div class="blk"><h4>Out of power · Early-warning stages (Not-Self: Bitterness)</h4>
+      <div class="stages">
+        <div class="s s1"><b>1 Noise</b><b style="color:#9E5A32">Sarcasm.</b> Pointed comments, unsolicited “tips,” still charming.</div>
+        <div class="s s2"><b>2 Signal</b>Bitterness. “Nobody sees me. I give and give.” Personal.</div>
+        <div class="s s3"><b>3 Alarm</b>Withdrawal + superiority. “I’m above all this.”</div>
+        <div class="s s4"><b>4 Too late</b>Health collapse (worked like a Generator).</div>
+      </div>
+      <p class="window"><strong>With bitterness, it’s already too late.</strong> The first tangible signal is sarcasm — intervene here: “Where are you giving right now without anyone asking you?”</p>
+    </div>
+  </div>
+</div>
+
+<!-- MANIFESTOR -->
+<div class="card">
+  <div class="card-head man"><span class="t">Manifestor</span><span class="aura">Aura: closed &amp; repelling</span><span class="pct">~9%</span></div>
+  <div class="card-body">
+    <div class="grid2">
+      <div class="blk"><h4>Recognition · Language &amp; questions</h4><p><span class="other">Outside:</span> starts things from nothing, comes across as independent, hard to read. Others sometimes feel unconsciously pushed away. Doesn’t ask much — announces. “I’m doing this now.”</p></div>
+      <div class="blk"><h4>Drive</h4><p><span class="self">Inside:</span> inner impulse to initiate, wants a clear runway, hates control. Must inform (not ask), or resistance shows up.</p></div>
+    </div>
+    <div class="blk"><h4>In power · Blooming stages (Signature: Peace)</h4>
+      <div class="stages">
+        <div class="s g1"><b>1 Sign</b>Informs on their own before starting. The fuse gets longer.</div>
+        <div class="s g2"><b>2 Clear runway</b>Announces — no resistance comes. Moves unhindered.</div>
+        <div class="s g3"><b>3 Impulse</b>Sets in motion what no one else starts. Others follow the impulse.</div>
+        <div class="s g4"><b>4 Peace</b>Calm, independent, undisturbed. Acts without having to fight.</div>
+      </div>
+      <p class="grow-note">Visible: initiatory, but no longer abrupt — shares instead of ambushing. Amplify: don’t control; being informed is enough, then give space.</p>
+    </div>
+    <div class="blk"><h4>Out of power · Early-warning stages (Not-Self: Anger)</h4>
+      <div class="stages">
+        <div class="s s1"><b>1 Noise</b>Irritability, short fuse, impatience with “brakes.”</div>
+        <div class="s s2"><b>2 Signal</b>Explosive anger. “Just let me DO it.” (not informed → resistance)</div>
+        <div class="s s3"><b>3 Alarm</b>Cold withdrawal. Shuts everyone out. “I’ll do it alone.”</div>
+        <div class="s s4"><b>4 Too late</b>Paranoia pattern. Sees resistance everywhere.</div>
+      </div>
+      <p class="window">In the environment: becomes abrupt and shuts down. Intervene: “Who didn’t you inform before you went ahead?”</p>
+    </div>
+  </div>
+</div>
+
+<!-- REFLECTOR -->
+<div class="card">
+  <div class="card-head ref"><span class="t">Reflector</span><span class="aura">Aura: permeable &amp; sampling</span><span class="pct">~1%</span></div>
+  <div class="card-body">
+    <div class="grid2">
+      <div class="blk"><h4>Recognition · Language &amp; questions</h4><p><span class="other">Outside:</span> mirrors the group, seems different every day, remarkably wise about the community’s climate. Asks “how are we all doing?”, speaks about the group as a whole.</p></div>
+      <div class="blk"><h4>Drive</h4><p><span class="self">Inside:</span> takes everything in, needs ~28 days (lunar cycle) for big decisions. Feels most at ease in the right place with the right people.</p></div>
+    </div>
+    <div class="blk"><h4>In power · Blooming stages (Signature: Surprise)</h4>
+      <div class="stages">
+        <div class="s g1"><b>1 Sign</b>Takes time, no longer jumps. Lets the lunar cycle run.</div>
+        <div class="s g2"><b>2 Right place</b>Finds the right people, the right environment. Feels held.</div>
+        <div class="s g3"><b>3 Mirror</b>Clearly mirrors the group’s climate back. Becomes the wise voice of the whole.</div>
+        <div class="s g4"><b>4 Surprise</b>Marvels at the unexpected. Their well-being = the group is healthy.</div>
+      </div>
+      <p class="grow-note">Visible: lights up, speaks lovingly about the community. Their blooming is the fever thermometer — if they’re well, everyone is well. Amplify: give them time and keep the environment healthy.</p>
+    </div>
+    <div class="blk"><h4>Out of power · Early-warning stages (Not-Self: Disappointment)</h4>
+      <div class="stages">
+        <div class="s s1"><b>1 Noise</b>Quiet dissatisfaction. “Is this really all there is?”</div>
+        <div class="s s2"><b>2 Signal</b>Jumps. Switches group, place, identity — searching for an image that holds.</div>
+        <div class="s s3"><b>3 Alarm</b>Cynicism. “Nothing is real; everyone’s playing roles.”</div>
+        <div class="s s4"><b>4 Too late</b>Identity crisis. Confuses themselves with what was mirrored.</div>
+      </div>
+      <p class="window">The Reflector is the early-warning sensor for the whole community. Their disappointment often measures the group, not them. Intervene: “What is our community missing right now?”</p>
+    </div>
+  </div>
+</div>
+
+<div style="page-break-before:always"></div>
+
+<h2>The second axis · Source or receiver</h2>
+<div class="intro" style="border-color:var(--violet)">Beyond type: <strong>does the emotion run from the inside or from the outside?</strong> Defined Solar Plexus (~50%) = own wave, high↔low in their own rhythm, independent of the room — <em>sends</em>. Open Solar Plexus (~50%, all Reflectors + most Projectors) = absorbs and amplifies others’ emotion — <em>receives</em>, goes quiet alone. <span class="other">Test in the environment:</span> Does the person’s mood tip with the room and settle when alone? → open. Do they run their own up-and-down no matter who’s there? → defined. <strong>This crosses with type</strong> (a Generator can be emotional or not; a Projector too) — only Reflectors are always open.</div>
+
+<div class="window" style="margin-bottom:20px">Important for recognizing others: An <strong>open</strong> Projector or Reflector can show all four Not-Self emotions in turn, because they mirror the field. The switching itself is the clue to “open.” Only Generator/MG (frustration) and pure Manifestor (anger) show stable, own signals. With the others, separate mirror from self first: What remains when the person is alone?</div>
+
+<h2>Community diagnosis · Reading the emotional climate</h2>
+
+<div class="comm">
+  <h3>◇ From individual types to the group picture</h3>
+  <p>A community is healthy when each type lives their <span class="health">Signature</span>, not their Not-Self. You don’t need to know charts to read the climate — the emotions in the room reveal it. Scan the group for these patterns:</p>
+
+  <table>
+    <thead><tr><th>When you see in the room…</th><th>…the community is</th></tr></thead>
+    <tbody>
+      <tr><td class="health">Satisfied makers, heard advisors, calm starters, marveling mirrors</td><td class="health">Healthy. Everyone on their path. Circulation — energy flows, no one against anyone.</td></tr>
+      <tr><td class="sick">Many frustrated Generators</td><td class="sick">The group forces people into wrong work / yes without gut. Structure problem: wrong roles.</td></tr>
+      <tr><td class="sick">Sarcasm &amp; bitterness (Projectors)</td><td class="sick">The guides aren’t invited/heard. Knowledge dissipates. Early signal = sarcasm — there’s still time.</td></tr>
+      <tr><td class="sick">Bottled anger &amp; cold withdrawals (Manifestors)</td><td class="sick">Too much control, too little information. Initiators get blocked instead of informed.</td></tr>
+      <tr><td class="sick">Jumping, cynical Reflectors</td><td class="sick">Alarm level for the WHOLE group. The Reflector measures the collective — their disappointment is your fever thermometer.</td></tr>
+    </tbody>
+  </table>
+
+  <p style="margin-top:14px"><strong style="color:var(--gold)">The adaptive rule:</strong> Always intervene at the <em>earliest</em> stage you see — not when it blows up. Sarcasm before bitterness. Irritability before explosion. Restlessness before burnout. “Is this all?” before identity crisis. And watch the Reflector first — they show the climate before the others can name it.</p>
+
+  <p><strong style="color:var(--gold)">The circulation lever:</strong> A tipping community oscillates (A against B, camp against camp, extractive). A healthy one circulates (each type nourishes the next: Manifestor starts → Generators build → Projectors guide → Reflector mirrors back). The task isn’t to suppress emotions, but to lead each person back to their Signature. Then abundance flows for everyone, instead of oscillating between winners and losers.</p>
+</div>
+
+<div class="foot">
+Reference guide, part of the Paradise HD book project. Percentages are population approximations. Emotion produces hypotheses, not a diagnosis — the chart comes from birth date, time, and place. Aura types and Not-Self/Signature pairs after Ra Uru Hu; early-warning escalation and community diagnosis are Paradise HD extensions.
+</div>
+
+</div>
+</body>
+</html>
