@@ -136,6 +136,27 @@ Bei **Rest 1.000 €** sind 100 € schon **10 %** — und der Einkaufswagen kos
 
 ---
 
+## 5b. Muss der deutsche *Staat* Insolvenz anmelden? (Wortlaut InsO)
+
+**Frage:** Wendet man die Insolvenzordnung so an, wie sie geschrieben steht — müsste Deutschland (Bund) ein Insolvenzverfahren / eine „private Insolvenz“ eröffnen?
+
+### Antwort: **Nein.**
+
+**Wortlaut § 12 Abs. 1 Nr. 1 InsO:**
+
+> „Unzulässig ist das Insolvenzverfahren über das Vermögen  
+> 1. des Bundes oder eines Landes; …“
+
+Quelle: https://www.gesetze-im-internet.de/inso/__12.html
+
+Das ist kein Wirtschaftsgutachten. Das ist ein **Verbot**. Für Bund und Länder ist ein Insolvenzverfahren nach der InsO **unzulässig** — also weder Pflicht noch Zulässigkeit, ein solches Verfahren zu eröffnen.  
+Zusätzlich: **Verbraucherinsolvenz** (§§ 304 ff. InsO) gilt für **natürliche Personen**, nicht für den Bund als Staat.
+
+**Was das bedeutet (ohne Schönfärberei):**  
+Der Staat ist nicht „gesünder geprüft“ als die Haushalte unter § 17. Er ist **gesetzlich von derselben Prüfung ausgenommen**. Ob der Bund unter einer rein privaten §-17-Logik (fällige Schulden nur aus laufenden Mitteln, ohne neue Anleihen) „zahlungsunfähig“ *wirkte*, ist eine andere, hypothetische Frage — **nach geltendem Recht stellt sich die Anmeldepflicht nicht**, weil § 12 das Verfahren sperrt. Haushaltsregeln laufen über **GG Art. 109 / 115** (Schuldenbremse), nicht über die InsO.
+
+---
+
 ## 6. Die eine Wahrheit in einem Satz
 
 **4.000 brutto → oft ~2.300–2.550 netto → Stadt gerne ~1.000–1.200 warm → Rest ~1.100–1.400 € (real kleiner durch Essen +36 %, Energie +43 %).** Fast ein Drittel hat keinen 1.300-€-Puffer — das ist **drohende oder faktische Zahlungsunfähigkeit bei Schock**, nicht „Eigentlich läuft’s“. Wer 100–500 € Services verkauft, verkauft an den Rest der *gepufferten* Minderheit.
@@ -151,6 +172,7 @@ Bei **Rest 1.000 €** sind 100 € schon **10 %** — und der Einkaufswagen kos
   https://www.destatis.de/DE/Themen/Wirtschaft/Preise/Verbraucherpreisindex/_inhalt.html  
 - Destatis Gesundheitsausgaben 2024 (**538 Mrd. €**, +7,6 %); Entbehrung / 1.300-€-Puffer  
 - InsO **§ 17** Zahlungsunfähigkeit, **§ 18** drohende Zahlungsunfähigkeit — https://www.gesetze-im-internet.de/inso/__17.html  
+- InsO **§ 12 Abs. 1 Nr. 1**: Insolvenzverfahren über Vermögen von Bund/Land **unzulässig** — https://www.gesetze-im-internet.de/inso/__12.html  
 - BaFin / Creditreform: ~5,67 Mio. Überschuldete 2025  
 - BMG/BMAS/vdek: SV-Sätze 2026  
 - Brutto-Netto: SK-1-Rechner 2026 (keine Steuerberatung)  
