@@ -26,49 +26,73 @@ Rechnerisch oft eher **~2.500–2.600** (SK 1, keine Kirche). **Oft weniger** tr
 
 ---
 
-## 2. Dann Wohnen: nochmal ~¼ bis ⅓ weg
+## 2. Realistische Mieten — nicht der Statistik-Durchschnitt
 
-Destatis 2025: Wohnkosten im Schnitt **~24 %** des verfügbaren HH-Einkommens; **Alleinlebende ~33 %**; Armutsgefährdete **~44 %**.
+Destatis-Mittelwerte wirken harmlos: 2022 im Schnitt **~598 € Bruttokalt** / Mietbelastung **~28 %**. Das ist **inkl. Altmietverträge auf dem Land**. Wer **neu** in einer Stadt sucht, zahlt oft ganz anders.
 
-| Situation | Netto (ca.) | Wohnen (ca.) | **Rest „zum Leben“** |
-|-----------|-------------|--------------|----------------------|
-| 3.500 brutto, Single, SK1+KiSt | ~2.300 € | ~760 € (33 %) | **~1.540 €** |
-| 4.000 brutto, Single, optimistisch | ~2.550 € | ~840 € | **~1.710 €** |
-| 4.000 brutto, Single, „oft weniger“ | ~2.300 € | ~800 € | **~1.500 €** |
-| Median-HH netto Destatis | 3.176 € | ~765 € (24 %) | **~2.410 €** *(oft 2 Personen)* |
-| Paar, zwei×3.500 brutto, SK4/4 | ~4.600–4.800 € | ~1.000–1.200 € | **~3.500–3.800 €** |
+**Realistische Warmmiete (Kalt + Nebenkosten + Heizung), Alltag 2025/26:**
 
-Aus dem Rest kommen: Essen, Strom, Mobilität, Versicherung, Kinder, Dispo, Altersvorsorge — **danach** erst Abos.
+| Wohnung | typische Warmmiete | wo |
+|---------|-------------------|-----|
+| 1-Zimmer / kleines Studio | **700–950 €** | Mittelstadt / Rand |
+| 1–2 Zimmer Single-Stadt | **900–1.300 €** | Großstadt, Neuvertrag |
+| 2–3 Zimmer | **1.200–1.800 €** | Stadt |
+| „Billig“ nur mit Glück/WG/Altmiete | **500–700 €** | nicht der Normalfall für Neueinzug |
+
+Destatis stützt die Richtung: Großstadt Bruttokalt **9,60 €/m²** (Neuvermietung ab 2019: **11 €/m²**) → 55 m² schon **~530–605 € kalt**, plus warm oft **+200–350 €** → schnell **850–1.100 € warm**. Alleinlebende: Wohnkostenanteil im Schnitt **~33 %**; armutsgefährdet **~44–49 %**.
+
+**Der Fall, den du meinst — und der oft stimmt:**
+
+| Netto | realistische Warmmiete | Belastung | **Rest** |
+|-------|------------------------|-----------|----------|
+| **~2.000 €** | **~1.000 €** | **~50 %** | **~1.000 €** |
+| ~2.300 € (≈3.500 brutto) | **~1.000–1.100 €** | ~45–48 % | **~1.200–1.300 €** |
+| ~2.550 € (≈4.000 brutto, gut) | **~1.100–1.200 €** Stadt | ~43–47 % | **~1.350–1.450 €** |
+| ~2.550 € mit Altmiete/Land | ~700–850 € | ~28–33 % | **~1.700–1.850 €** |
+| Median-HH 3.176 € (oft 2 Personen) | ~900–1.400 € | ~28–44 % | **~1.800–2.300 €** für **zwei** |
+| Paar, zwei×3.500 brutto | ~1.400–1.800 € | ~30–38 % | **~2.800–3.400 €** |
+
+**Quirk:** Wer **2.000 € netto** hat und **1.000 € Miete** zahlt, hat **die Hälfte weg**, bevor Essen, Strom, Ticket, Handy, Kleidung, Rücklagen anfangen. Destatis-„24 % Wohnkosten“ beschreibt **nicht** diesen Stadt-Single mit Neuvertrag.
 
 ---
 
 ## 3. Wer kann dann 100 / 200 / 500 / 5.000 €/Monat?
 
-Nicht „wer hat 4.000 brutto“, sondern **wer hat nach Abgaben + Wohnen noch Luft**.
+Rechnung mit **realistischer Stadtmiete**, nicht mit Statistik-Durchschnitt:
 
-| Preis | Realistisch tragfähig (Schätzung) | Lesart |
-|-------|-----------------------------------|--------|
-| **100 €** | eher **oberes Drittel** der *Singles mit eigenem HH*; bei Paaren größer | Konkurrent: Stromnachzahlung, Tankfüllung |
-| **200 €** | **~15–25 %** der Haushalte | schon Premium / „zweites Abo zu viel“ |
-| **500 €** | **~5–10 %** | oberes Viertel + Doppelverdiener ohne hohe Miete |
-| **5.000 €** | **~1 %** / Firmen | Privat fast nie; B2B |
+| Netto → Miete → Rest | 100 € Abo | 200 € | 500 € | 5.000 € |
+|----------------------|-----------|-------|-------|---------|
+| 2.000 → 1.000 → **1.000** | knallt (10 % vom Rest) | nein | nein | nein |
+| 2.300 → 1.100 → **1.200** | hart / oft Dispo | nein | nein | nein |
+| 2.550 → 1.200 → **1.350** | möglich, fragil | hart | nein | nein |
+| 3.200 HH → 1.200 → **2.000** (2 Pers.) | eher ja | grenzwertig | nein | nein |
+| 5.000+ HH / Top | ja | ja | selektiv | nur Firma/Top |
 
-**Faustregel:** Ein dauerhaftes Abo sollte nicht mehr als **~5 % des Netto** oder **~8–10 % des Rests nach Miete** fressen, sonst stirbt es am nächsten Autoreparatur-Monat.  
-→ Bei **2.300 € netto** sind 5 % = **115 €**. **200 €** ist schon grenzwertig. **500 €** ist Luxus. **5.000 €** ist ein anderes Universum.
+| Preis | tragfähig mit *realer* Stadt-Miete (Schätzung) |
+|-------|-----------------------------------------------|
+| **100 €** | eher **~20–30 %** der Haushalte — nicht die 2.000-netto-Stadt-Singles |
+| **200 €** | **~10–18 %** |
+| **500 €** | **~4–8 %** |
+| **5.000 €** | **~1 %** / B2B |
+
+**Faustregel:** Nach Miete sollten Abos **kein zweistelliger Anteil vom Rest** sein.  
+Bei **Rest 1.000 €** sind 100 € schon **10 %** — das ist der Monat, in dem die Waschmaschine stirbt.
 
 ---
 
 ## 4. Die eine Wahrheit in einem Satz
 
-**Brutto klingt nach Mittelstand. Netto ist oft ein Drittel weniger. Nach Miete bleibt die Hälfte vom Netto — und davon leben die Leute.** Wer Services für 100–500 € plant, verkauft nicht an „Deutschland mit 4.000 €“, sondern an den **Rest nach ~35 % Abgaben und ~25–33 % Wohnen**.
+**4.000 brutto → oft ~2.300–2.550 netto → in der Stadt gerne ~1.000–1.200 warm → Rest ~1.100–1.400 € für alles.** Wer 100–500 € Services verkauft, verkauft nicht an „Deutschland verdient gut“, sondern an den **Rest nach Abgaben und echter Miete** — und bei **2.000 netto / 1.000 Miete** ist der Markt für Premium-Abos praktisch zu.
 
 ---
 
 ## Quellen (kurz)
 
 - Destatis: Median Bruttojahresverdienst Vollzeit 2025 **54.066 €**; HH-Netto-Median EU-SILC 2025 **3.176 €/Monat**  
-- Destatis: Wohnkostenanteil 2025 **24,1 %** / Alleinlebende **33,2 %**  
-- BMG/BMAS/vdek: SV-Sätze 2026 (KV 14,6 %+Zusatz Ø 2,9 %; RV 18,6 %; AV 2,6 %; PV 3,6 %+kinderlos)  
-- Brutto-Netto-Illustrationswerte: gängige SK-1-Rechner 2026 (keine Steuerberatung)
+- Destatis: Wohnkostenanteil 2025 **24,1 %** / Alleinlebende **33,2 %** / armutsgefährdet **~44 %**  
+- Destatis Mikrozensus Wohnen 2022: Ø Bruttokalt **~598 €**, **8,70 €/m²**; Großstadt **9,60 €/m²**, Neuvermietung **11 €/m²**; Mietbelastung Ø **~28 %**  
+- BMG/BMAS/vdek: SV-Sätze 2026  
+- Brutto-Netto: SK-1-Rechner 2026 (keine Steuerberatung)  
+- Stadtmieten 900–1.300 € warm: **Illustrativ/Alltag**, bewusst über dem Destatis-Kalt-Mittel (Altmieten/Fläche)
 
 *Ausführlicher Kontext:* `reports/deutschland-einkommen-schulden-ki-2026.md`
