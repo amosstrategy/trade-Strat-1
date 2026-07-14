@@ -100,21 +100,25 @@ Rechnung mit **realistischer Stadtmiete** + **teurerem Warenkorb** (Essen/Energi
 
 | Netto → Miete → Rest | 100 € Abo | 200 € | 500 € | 5.000 € |
 |----------------------|-----------|-------|-------|---------|
-| 2.000 → 1.000 → **1.000** | knallt (10 % vom Rest; Essen schon +36 %) | nein | nein | nein |
-| 2.300 → 1.100 → **1.200** | hart / oft Dispo | nein | nein | nein |
-| 2.550 → 1.200 → **1.350** | möglich, fragil | hart | nein | nein |
-| 3.200 HH → 1.200 → **2.000** (2 Pers.) | eher ja | grenzwertig | nein | nein |
-| 5.000+ HH / Top | ja | ja | selektiv | nur Firma/Top |
+| 2.000 → 1.000 → **1.000** | **nein** (10 % vom Rest; Essen +36 %) | **nein** | **nein** | **nein** |
+| 2.300 → 1.100 → **1.200** | **nein** (hart = Dispo, nicht tragfähig) | **nein** | **nein** | **nein** |
+| 2.550 → 1.200 → **1.350** | **nein** (fragil zählt hier als nein) | **nein** | **nein** | **nein** |
+| 3.200 HH → 1.200 → **2.000** (2 Pers.) | grenzwertig / eher nein* | **nein** | **nein** | **nein** |
+| 5.000+ HH / Top | ja | eher ja | selektiv | nur Firma/Top |
 
-| Preis | tragfähig mit *realer* Stadt-Miete + Inflationsdruck (Schätzung) |
-|-------|------------------------------------------------------------------|
-| **100 €** | eher **~20–30 %** der Haushalte — nicht die 2.000-netto-Stadt-Singles |
-| **200 €** | **~10–18 %** |
-| **500 €** | **~4–8 %** |
-| **5.000 €** | **~1 %** / B2B |
+\*Zweipersonen-Haushalt: 100 € ist für *eine* Person oft schon zu viel vom gemeinsamen Rest; „eher ja“ nur ohne Auto/Kind/Schulden.
 
-**Faustregel:** Nach Miete sollten Abos **kein zweistelliger Anteil vom Rest** sein.  
-Bei **Rest 1.000 €** sind 100 € schon **10 %** — und der Einkaufswagen kostet seit 2020 ein Drittel mehr.
+**Dieselbe Logik in % der Haushalte** (keine zweite, optimistischere Wahrheit — nur die Zeilen oben, hochgerechnet):
+
+| Preis | tragfähig (Schätzung, konsistent mit Tabelle oben) | entspricht ungefähr |
+|-------|----------------------------------------------------|---------------------|
+| **100 €** | **~5–12 %** | im Wesentlichen **oberes HH-Viertel mit Luft**, nicht Stadt-Singles |
+| **200 €** | **~3–8 %** | klar Top / Doppelverdiener ohne hohe Fixkosten |
+| **500 €** | **~1–4 %** | Top-Einkommensband |
+| **5.000 €** | **≪ 1 %** / **B2B** | fast nie Privat |
+
+**Faustregel:** Nach Miete dürfen Abos **keinen zweistelligen Anteil vom Rest** sein — sonst = **nein**, nicht „irgendwie möglich“.  
+Bei Rest **1.000 €** sind 100 € = **10 %** → nach dieser Regel **nein**. Der Einkaufswagen kostet seit 2020 ein Drittel mehr; das macht die Grenze nicht weicher, sondern härter.
 
 ---
 
