@@ -76,14 +76,23 @@ BLS CPI-U (chain of Dec–Dec rates ≈ **+24–25%** all-items Dec 2020 → Dec
 
 After **tax + rent + inflated food/energy/health**, not after “median income”:
 
-| Price | Households that could *without clear distress* (estimate) |
-|-------|----------------------------------------------------------|
-| **~$110 (€100)** | **~20–30%** — not the no-$400-buffer bloc |
-| **~$220 (€200)** | **~10–18%** |
-| **~$550 (€500)** | **~$4–8%** |
-| **~$5,500 (€5,000)** | **~1–2%** / employers |
+Same rule as the Germany table: **double-digit share of post-rent residual = no** (not “maybe”).
 
-If take-home **$2,000** and rent **$1,000**, residual **$1,000** — a **$110** subscription is **11%** of life money. Same math as Germany.
+| Take-home → rent → left | ~$110 | ~$220 | ~$550 | ~$5,500 |
+|-------------------------|-------|-------|-------|---------|
+| $2,000 → $1,000 → **$1,000** | **no** (11%) | **no** | **no** | **no** |
+| $2,500 → $1,300 → **$1,200** | **no** | **no** | **no** | **no** |
+| $3,200 HH → $1,600 → **$1,600** (2 adults) | borderline / no* | **no** | **no** | **no** |
+| $5,000+ HH / top | yes | rather yes | selective | firm / top |
+
+| Price | Households that clear the rule (estimate — matches rows above) |
+|-------|----------------------------------------------------------------|
+| **~$110 (€100)** | **~5–12%** |
+| **~$220 (€200)** | **~3–8%** |
+| **~$550 (€500)** | **~1–4%** |
+| **~$5,500 (€5,000)** | **≪1%** / employers |
+
+If take-home **$2,000** and rent **$1,000**, residual **$1,000** — **$110** is **11%** → **no**.
 
 ---
 
