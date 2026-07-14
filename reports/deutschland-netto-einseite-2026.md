@@ -54,35 +54,73 @@ Destatis stützt die Richtung: Großstadt Bruttokalt **9,60 €/m²** (Neuvermie
 
 **Quirk:** Wer **2.000 € netto** hat und **1.000 € Miete** zahlt, hat **die Hälfte weg**, bevor Essen, Strom, Ticket, Handy, Kleidung, Rücklagen anfangen. Destatis-„24 % Wohnkosten“ beschreibt **nicht** diesen Stadt-Single mit Neuvertrag.
 
+**Wichtig bei Jahresvergleichen:** Destatis-Miete 2022 (**~598 € kalt**) darf man **nicht** 1:1 neben 2026-Warmmieten legen, ohne Inflation. Siehe §3.
+
 ---
 
-## 3. Wer kann dann 100 / 200 / 500 / 5.000 €/Monat?
+## 3. Inflation: Essen, Energie, Medizin — Nominal ≠ real
 
-Rechnung mit **realistischer Stadtmiete**, nicht mit Statistik-Durchschnitt:
+Destatis VPI, Basis **2020 = 100**. Wer 2021–2026 Nominalzahlen vergleicht, ohne das zu teilen, **lügt sich die Kaufkraft schön**.
+
+| Index (Jahresdurchschnitt) | 2021 | 2022 | 2023 | 2024 | **2025** | **vs. 2020** |
+|----------------------------|------|------|------|------|----------|--------------|
+| **Gesamt** | 103,1 | 110,2 | 116,7 | 119,3 | **121,9** | **+22 %** |
+| **Nahrungsmittel** | 103,1 | 116,9 | 131,4 | 133,2 | **135,9** | **+36 %** |
+| Nahrung + alkoholfreie Getränke | 103,1 | 116,0 | 130,3 | 132,8 | **136,2** | **+36 %** |
+| **Energie** (Haushalt + Kraftstoffe) | 110,8 | 143,7 | 151,3 | 146,5 | **143,0** | **+43 %** |
+| darunter **Haushaltsenergie** | 102,6 | 136,1 | 155,1 | 150,3 | **146,9** | **+47 %** |
+| **Erdgas** (JD 2025) | — | — | — | — | **191,2** | **+91 %** |
+| Wohnung/Wasser/Strom/Gas (Abt. 04) | 101,7 | 109,1 | 114,5 | 115,9 | **117,5** | **+18 %** |
+| **Gesundheit** (VPI-Warenkorb) | 100,5 | 101,8 | 104,9 | 107,8 | **110,8** | **+11 %** |
+| Nettokaltmiete (Index, Mai 2026) | — | — | — | — | ~111 | **~+11 %** |
+
+Jahresraten Gesamt: **+3,1 % (2021) → +6,9 % (2022) → +5,9 % (2023) → +2,2 % (2024) → +2,2 % (2025)**. Der Schock sitzt in **2022/23**; die Preise sind **nicht** zurück auf 2020.
+
+### Was das für den Rest nach Miete heißt
+
+Illustrativ: Rest **1.000 €** (Fall 2.000 netto / 1.000 Miete).
+
+| Posten | grob Anteil vom Rest | Preis seit 2020 | Effekt |
+|--------|----------------------|-----------------|--------|
+| Essen | ~300–400 € | **+36 %** | +110–145 € „für dieselbe Menge“ |
+| Energie/Heizen/Strom (über Warmmiete hinaus + Mobilität) | variabel | **+43 bis +91 %** (Gas) | der Puffer stirbt hier zuerst |
+| Gesundheit aus eigener Tasche | Zuzahlung, Medikamente, Zahn | VPI **+11 %**, aber… | …**Beitragssystem** stieg stärker |
+
+**Medizin-Quirk:** Der VPI „Gesundheit“ (+11 %) misst vor allem **Warenkorb-Preise**. Parallel explodieren die **Systemkosten**: Gesundheitsausgaben **538 Mrd. € (2024)**, **+7,6 % in einem Jahr**, Pflegeversicherung **+11,3 %**, Schätzung 2025 **~580 Mrd. €**. Das trifft Haushalte als **höherer Zusatzbeitrag / Pflegebeitrag** — oft unsichtbar im VPI, sichtbar auf der Gehaltsabrechnung und im Netto.
+
+**Löhne vs. Preise:** Median Brutto Vollzeit 2024→2025 stieg nominal (52.159 → 54.066 €, ~**+3,7 %**). Essen seit 2020 **+36 %**, Energie **+43 %**. Ein „höheres Gehalt“ von 2021 fühlt sich 2026 wie **weniger Einkaufswagen** an — deshalb die 2.300-€-Netto-Wahrnehmung.
+
+**Regel für diesen Bericht:** Jede Euro-Zahl aus 2021/22 ohne Inflationskorrektur ist für 2026 **zu optimistisch**. Besonders **Miete 2022**, **Energiepreise vor Ukraine**, **Lebensmittel vor 2022**.
+
+---
+
+## 4. Wer kann dann 100 / 200 / 500 / 5.000 €/Monat?
+
+Rechnung mit **realistischer Stadtmiete** + **teurerem Warenkorb** (Essen/Energie seit 2020), nicht mit Statistik-Durchschnitt von vorgestern:
 
 | Netto → Miete → Rest | 100 € Abo | 200 € | 500 € | 5.000 € |
 |----------------------|-----------|-------|-------|---------|
-| 2.000 → 1.000 → **1.000** | knallt (10 % vom Rest) | nein | nein | nein |
+| 2.000 → 1.000 → **1.000** | knallt (10 % vom Rest; Essen schon +36 %) | nein | nein | nein |
 | 2.300 → 1.100 → **1.200** | hart / oft Dispo | nein | nein | nein |
 | 2.550 → 1.200 → **1.350** | möglich, fragil | hart | nein | nein |
 | 3.200 HH → 1.200 → **2.000** (2 Pers.) | eher ja | grenzwertig | nein | nein |
 | 5.000+ HH / Top | ja | ja | selektiv | nur Firma/Top |
 
-| Preis | tragfähig mit *realer* Stadt-Miete (Schätzung) |
-|-------|-----------------------------------------------|
+| Preis | tragfähig mit *realer* Stadt-Miete + Inflationsdruck (Schätzung) |
+|-------|------------------------------------------------------------------|
 | **100 €** | eher **~20–30 %** der Haushalte — nicht die 2.000-netto-Stadt-Singles |
 | **200 €** | **~10–18 %** |
 | **500 €** | **~4–8 %** |
 | **5.000 €** | **~1 %** / B2B |
 
 **Faustregel:** Nach Miete sollten Abos **kein zweistelliger Anteil vom Rest** sein.  
-Bei **Rest 1.000 €** sind 100 € schon **10 %** — das ist der Monat, in dem die Waschmaschine stirbt.
+Bei **Rest 1.000 €** sind 100 € schon **10 %** — und der Einkaufswagen kostet seit 2020 ein Drittel mehr.
 
 ---
 
-## 4. Die eine Wahrheit in einem Satz
+## 5. Die eine Wahrheit in einem Satz
 
-**4.000 brutto → oft ~2.300–2.550 netto → in der Stadt gerne ~1.000–1.200 warm → Rest ~1.100–1.400 € für alles.** Wer 100–500 € Services verkauft, verkauft nicht an „Deutschland verdient gut“, sondern an den **Rest nach Abgaben und echter Miete** — und bei **2.000 netto / 1.000 Miete** ist der Markt für Premium-Abos praktisch zu.
+**4.000 brutto → oft ~2.300–2.550 netto → Stadt gerne ~1.000–1.200 warm → Rest ~1.100–1.400 €, der wegen Essen (+36 %) und Energie (+43 %, Gas ~+91 %) real kleiner ist als 2020.** Wer 100–500 € Services verkauft, verkauft an diesen Rest — nicht an Nominal-Brutto oder an Mietstatistiken ohne Inflation.
 
 ---
 
@@ -91,6 +129,9 @@ Bei **Rest 1.000 €** sind 100 € schon **10 %** — das ist der Monat, in dem
 - Destatis: Median Bruttojahresverdienst Vollzeit 2025 **54.066 €**; HH-Netto-Median EU-SILC 2025 **3.176 €/Monat**  
 - Destatis: Wohnkostenanteil 2025 **24,1 %** / Alleinlebende **33,2 %** / armutsgefährdet **~44 %**  
 - Destatis Mikrozensus Wohnen 2022: Ø Bruttokalt **~598 €**, **8,70 €/m²**; Großstadt **9,60 €/m²**, Neuvermietung **11 €/m²**; Mietbelastung Ø **~28 %**  
+- Destatis VPI 2020=100: Gesamt, Nahrung, Energie, Gesundheit, Abt. 04; Inflationsraten 2021–2025  
+  https://www.destatis.de/DE/Themen/Wirtschaft/Preise/Verbraucherpreisindex/_inhalt.html  
+- Destatis Gesundheitsausgaben 2024 (**538 Mrd. €**, +7,6 %)  
 - BMG/BMAS/vdek: SV-Sätze 2026  
 - Brutto-Netto: SK-1-Rechner 2026 (keine Steuerberatung)  
 - Stadtmieten 900–1.300 € warm: **Illustrativ/Alltag**, bewusst über dem Destatis-Kalt-Mittel (Altmieten/Fläche)
