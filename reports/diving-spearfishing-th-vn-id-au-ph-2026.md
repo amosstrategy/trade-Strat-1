@@ -176,6 +176,10 @@ Your current **no-equipment breath diving** helps **water comfort and apnea** (h
 
 If you love apnea more than tanks: **PADI Freediver / SSI / AIDA** instructor path. Often a better fit for spearfishing communities than scuba OWSI — and still requires formal courses, not “I free-dive alone therefore I teach.”
 
+### Parallel career: industrial / commercial diver
+
+If the goal is **Industrie-Taucher** (not sport instructor): PADI/SSI tickets do **not** qualify. See separate note: `reports/industrie-taucher-jobs-lizenzen-2026.md` (Germany IHK path, IMCA/ADAS/HSE/ADCI, where demand is hottest 2025–26).
+
 ### Can you “adapt”?
 
 Yes. Many instructors started as strong swimmers/free divers. Plan:
