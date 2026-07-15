@@ -1,5 +1,5 @@
 # Diving, spearfishing and underwater traps — private use rules  
-**Thailand · Vietnam · Indonesia · Australia** (+ Denmark note for the “random beach” idea)
+**Thailand · Vietnam · Indonesia · Australia · Philippines** (+ Denmark note for the “random beach” idea)
 
 **Stand:** July 2026  
 **Purpose:** Can you buy gear and go alone? Spear? Trap? Scuba or freedive? What blocks becoming an instructor if you only free-dive today?  
@@ -15,10 +15,10 @@
 | Spear on a normal non-reserve beach? | **Sometimes**, if: salt/tidal waters open, **breath-hold only**, license/fee where required, species/size limits, and **not** a swimming/exclusion zone. “Normal beach” is often still closed or restricted (e.g. NSW ocean beaches almost fully closed to spear). |
 | Can I fish with a spear? | Treat as **fishing**, not as diving sport. Rules of fisheries law apply. |
 | Underwater trap while diving? | Separate gear rules. Usually **tagged pots only**, species-specific licences (esp. lobster), often **illegal general fish traps**. Scuba + “drop any trap I like” = commonly illegal. |
-| Same rules with “complete diving gear”? | **Breathing gas changes everything.** Snorkel OK for spear almost everywhere legal. **Scuba/hookah + taking fish** is banned in Thailand practice, Indonesia practice, Australia states checked, Denmark/EU, and often treated as unfair / illegal elsewhere. |
+| Same rules with “complete diving gear”? | **Breathing gas changes everything.** Snorkel OK for spear almost everywhere legal. **Scuba/hookah + taking fish** is banned in Thailand practice, Indonesia practice, Australia states checked, Philippines (DOT sport-diving rules), Denmark/EU, and often treated as unfair / illegal elsewhere. |
 | Copenhagen-style casual beach? | Denmark: **saltwater freedive spear OK** with **fisketegn**, **no scuba**, daylight only, size/season/protection belts. Not “anything goes.” |
 
-**Core pattern across all four target countries:**  
+**Core pattern across all five target countries:**  
 **Private scuba diving ≠ private spearfishing.** And **tourism MPAs ≠ open coast.**
 
 ---
@@ -126,18 +126,33 @@ Legend:
 
 So even at a “normal” Danish beach: licence + freedive + rules — not gear-from-shop, go.
 
+### Philippines
+
+| Activity | Status | Notes |
+|----------|--------|--------|
+| Own scuba, recreational dive | 🟢 | Major training hubs (Anilao, Puerto Galera, Moalboal, Malapascua, Coron, etc.). DOT licence rules for dive *businesses*; private cert + local shop/boat is the normal path. |
+| Spearfishing breath-hold | 🟡 | Practised culturally, but **municipal waters are LGU-controlled**. Conservation bodies cite RA 10654 §95 (“active gear” in municipal waters) as covering spear/speargun unless the LGU designates spearfishing zones. Do **not** assume open coast = legal. |
+| Spearfishing + **scuba** / compressor | 🔴 | DOT *Rules and Regulations Governing the Business of Sport Scuba Diving* (2009): spearfishing using scuba is a **prohibited activity** for dive establishments/professionals. Compressor/scuba fishing also widely banned under Fisheries Code practice and local ordinances. 2025 CMAS case: divemaster revoked after scuba spear in a declared marine sanctuary (Cathedral Rocks / Anilao). |
+| Marine sanctuaries / MPAs / no-take | 🔴 | Fishing of any kind banned (e.g. Tubbataha: no fishing; gear must be stowed on entry). Thousands of local fish sanctuaries — maps differ by barangay/municipality. |
+| Speargun vs traditional spear | 🟡 | Some LGUs ban spearguns while allowing traditional handheld spears for residents; tourists rarely get customary rights. |
+| Fish traps / pens / cages (*bubo*, etc.) | 🔴 for DIY tourist | RA 8550 §51: traps/pens/cages only in **LGU-designated zones** with **licence**. Random underwater trap while diving = illegal. |
+| National recreational spear licence | 🟡 often none nationally | **Municipal fishing permit** / LGU ordinance still bite; “no national card” ≠ free rein. |
+| Selling catch as visitor | 🔴 | Commercial/municipal fishing needs permits; recreational tourist sale is not the model. |
+
+**Private takeaway:** The Philippines is **easy for scuba sightseeing**, hard for “buy a gun and spear the tourist reef.” Freedive spear may exist where an LGU allows it — ask the **municipal agriculture / fisheries office**, not only a hostel. Scuba + spear is a career-ender for dive pros and a clear ban under DOT sport-diving rules.
+
 ---
 
 ## 4. Decision matrix: what you asked, side by side
 
-| | Thailand | Vietnam | Indonesia | Australia | Denmark (beach example) |
-|--|----------|---------|-----------|-----------|---------------------------|
-| Buy scuba, dive only | Yes* | Yes* | Yes* | Yes* | Yes* |
-| Freedive + spear, open coast | Often yes outside parks | Maybe / local | Often yes outside MPAs | Yes where open + fee | Yes + fisketegn |
-| Scuba + spear | **No** | Assume **no** | **No** | **No** | **No** |
-| Spear in reserve/park | **No** | **No** | **No** (tourists) | **No** / closed lists | N/A / closed areas |
-| Drop your own underwater trap | Rarely DIY-legal | High risk | High risk / MPA no | Only typed tagged pots + licences | Need proper recreational gear licence |
-| Sell catch | Assume no recreational | Assume no | Assume no | Illegal recreational | No |
+| | Thailand | Vietnam | Indonesia | Australia | Philippines | Denmark (beach example) |
+|--|----------|---------|-----------|-----------|-------------|---------------------------|
+| Buy scuba, dive only | Yes* | Yes* | Yes* | Yes* | Yes* | Yes* |
+| Freedive + spear, open coast | Often yes outside parks | Maybe / local | Often yes outside MPAs | Yes where open + fee | **Only if LGU allows** (else active-gear ban) | Yes + fisketegn |
+| Scuba + spear | **No** | Assume **no** | **No** | **No** | **No** (DOT + fisheries practice) | **No** |
+| Spear in reserve/park | **No** | **No** | **No** (tourists) | **No** / closed lists | **No** (sanctuaries) | N/A / closed areas |
+| Drop your own underwater trap | Rarely DIY-legal | High risk | High risk / MPA no | Only typed tagged pots + licences | **No** without LGU zone + licence | Need proper recreational gear licence |
+| Sell catch | Assume no recreational | Assume no | Assume no | Illegal recreational | Assume **no** as visitor | No |
 
 \*With training, site fees, and no take of prohibited biota.
 
@@ -168,7 +183,7 @@ Yes. Many instructors started as strong swimmers/free divers. Plan:
 1. Get Open Water + build **logged** dives (quality, not only depth bravado).  
 2. Keep spearfishing on **freedive** days only — never mix tanks + gun where banned.  
 3. Build local legal knowledge as a professional duty (guests will ask to spear on scuba — your job is to refuse when illegal).  
-4. Pick a base country whose employment visa + agency recognition you can live with (Thailand training hubs vs Australia work rights are very different).
+4. Pick a base country whose employment visa + agency recognition you can live with (Thailand/Philippines training hubs vs Australia work rights are very different). The Philippines is one of the densest instructor-training markets in Asia — good for logged dives and cheap package IDCs, but work as a foreign instructor still needs immigration compliance.
 
 ---
 
@@ -191,7 +206,8 @@ Before any private spear or trap session:
 
 - **Private scuba sightseeing:** doable with training; buy gear if you want.  
 - **Private spearfishing:** usually **freedive-only**, zone-limited, sometimes licensed.  
-- **Scuba + spear on a random beach:** answer for your four countries is effectively **no**.  
+- **Scuba + spear on a random beach:** answer for your five countries is effectively **no**.  
+- **Philippines extra twist:** even freedive spear can be illegal in municipal waters unless the local government authorised zones — LGU ordinances beat “it looks like a normal beach.”  
 - **Underwater traps:** not a free add-on to dive gear — **fisheries licences and gear standards**.  
 - **Instructor dream:** start the **certified scuba ladder** (or free-dive instructor ladder) soon; your apnea background is an advantage, not a shortcut past standards.
 
@@ -203,6 +219,7 @@ Before any private spear or trap session:
 - Vietnam: Law on Fisheries 2017; provincial MPA rules; customs caution on spearguns  
 - Indonesia: Raja Ampat KKPD rules (tourist spearfishing ban; scuba take ban); Bali open-area practice  
 - Australia: NSW DPI spearfishing guide & closures; Queensland recreational equipment pages; WA lobster/dive gear rules  
+- Philippines: RA 8550 / RA 10654 (esp. §95 active gear in municipal waters; §51 fish traps licences); DOT Rules Governing Sport Scuba Diving (2009) — spearfishing using scuba prohibited; CCEF note on LGU spearfishing zones; Tubbataha park rules (no fishing; stow gear); CMAS PH 2025 scuba-spear sanction case  
 - Denmark: fisketegn.dk; EU Reg. 2019/1241 (spear guns recreational without aqualung, dawn–dusk); Danish UV-jagt summaries  
 - Instructor: PADI OWSI / IDC requirements  
 
